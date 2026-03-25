@@ -1,0 +1,72 @@
+.card-container {
+  position: relative;
+  width: 600px;  /* ปรับขนาดตามต้องการ */
+  height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 50px auto;
+}
+
+/* สไตล์พื้นฐานของสี่เหลี่ยมข้างหลัง */
+.bg-shape {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  z-index: 1; /* อยู่ชั้นล่าง */
+}
+
+/* สี่เหลี่ยมสีน้ำตาล (มุมซ้ายบน) */
+.brown {
+  background-color: #7d4e2d; /* สีน้ำตาลตามรูป */
+  top: 0;
+  left: 0;
+  border-top-left-radius: 50px; /* เพิ่มความโค้งมนที่มุม */
+}
+
+/* สี่เหลี่ยมสีแดง (มุมขวาล่าง) */
+.red {
+  background-color: #a80a0a; /* สีแดงตามรูป */
+  bottom: 0;
+  right: 0;
+  border-bottom-right-radius: 50px;
+}
+
+/* รูปภาพหลักที่อยู่ตรงกลางและทับข้างบน */
+.main-img {
+  position: relative;
+  margin-top: 4rem;
+  z-index: 2; /* เลขมากกว่าจะอยู่ข้างหน้า */
+  width: 600px; /* ปรับให้ใหญ่กว่าสี่เหลี่ยมนิดหน่อย */
+  filter: drop-shadow(10px 10px 20px rgba(0,0,0,0.2)); /* เพิ่มเงาให้ดูมีมิติ */
+}
+
+/* @media(max-width: 768px){
+  
+}
+@media(max-width: 500px){
+  body{
+      background-image: var(--background-mobile-theme);
+      height: 100dvh;
+  }
+  .NL .sidebar{
+    width: 100%;
+  }
+  i, a{
+      color: var(--text-color);
+      font-size: 1.5rem;
+  }
+}
+@media(max-width: 320px){
+  body{
+        background-image: var(--background-mobile-theme);
+        height: 100dvh;
+  }
+  .NL .sidebar{
+    width: 100%;
+  }
+  i, a{
+      color: var(--text-color);
+      font-size: 1.5rem;
+  }
+} */

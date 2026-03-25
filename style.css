@@ -1,20 +1,20 @@
 :root{
   --base-color: #A20003;
   --text-color: white;
-  --background-pc-theme: url(./assets/img/lightbg_pc.png);
+  --background-pc-theme: #FFF3C9;
   --hover-color: rgb(162, 0, 3, 0.3);
   --box-shadow-color: rgb(0, 0, 0, 0.7);
-  --background-mobile-theme:url(./assets/img/bg_light.png);
+  --background-mobile-theme:#FFF3C9;
   --border-bottom-color: rgba(255,255,255,0.2);
   --option-color: #A20003;
 }
 body.darkmode{
   --base-color: #3D4459;
   --text-color: white;
-  --background-pc-theme: url(./assets/img/dark_pc.jpg);
+  --background-pc-theme: #FFF3C9;
   --hover-color: rgba(87, 96, 130, 0.7);
   --box-shadow-color: rgb(0, 0, 0, 0.7);
-  --background-mobile-theme:url(./assets/img/bg_dark.png);
+  --background-mobile-theme:#FFF3C9;
   --border-bottom-color: rgba(255,255,255,0.2);
   --option-color: #2d3241;
 }
