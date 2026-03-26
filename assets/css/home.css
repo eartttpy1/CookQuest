@@ -6,6 +6,7 @@
   align-items: center;
   justify-content: center;
   margin: 50px auto;
+  z-index: 1;
 }
 
 /* สไตล์พื้นฐานของสี่เหลี่ยมข้างหลัง */
