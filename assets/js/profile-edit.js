@@ -69,15 +69,15 @@ editButtons.forEach(btn => {
     });
 });
 
-// ==================== STATS =======================
-async function loadProcessStats() {
-    const res = await authFetch("http://localhost:3000/api/process/stats");
-    const data = await res.json();
+// // ==================== STATS =======================
+// async function loadProcessStats() {
+//     const res = await authFetch("http://localhost:3000/api/process/stats");
+//     const data = await res.json();
 
-    completeCard.textContent = data.completed;
-    pendingCard.textContent = data.pending;
-}
+//     completeCard.textContent = data.completed;
+//     pendingCard.textContent = data.pending;
+// }
 
 // ==================== INIT ========================
 loadProfile();
-loadProcessStats();
+// loadProcessStats();
