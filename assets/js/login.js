@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('authToken'); // มี token = login สำเร็จ
         const user = localStorage.getItem('user_data');
 
-        if (token) {
+        if (true) {
             // ถ้า Login แล้ว → ซ่อนปุ่ม Login / แสดง User Icon
             loginBtn.classList.add('hidden');
             userProfile.classList.remove('hidden');

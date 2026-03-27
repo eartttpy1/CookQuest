@@ -60,6 +60,8 @@ body{
   height: 4em;
   list-style: none;
 }
+
+/* user */
 .NL .linkhref{
   height: 100%;
   padding: 0 30px;
@@ -76,6 +78,20 @@ body{
 }
 .NL  .linkhref span {
   font-size: 1.7rem;
+}
+/* admin */
+.NL .linkhref.admin{
+  height: 100%;
+  padding: 0 30px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: var(--text-color);
+}
+.NL  .linkhref.admin span {
+  text-align: center;
+  font-size: 1.1rem;
 }
 .NL .titlebar  .linkhref:hover{
   background-color: var(--hover-color);
