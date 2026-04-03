@@ -1,3 +1,31 @@
+:root{
+  --base-color: #800002;
+  --text-color: white;
+  --background-pc-theme: #FFF3C9;
+  --hover-color: rgb(162, 0, 3, 0.3);
+  --box-shadow-color: rgb(0, 0, 0, 0.7);
+  --background-mobile-theme:#FFF3C9;
+  --border-bottom-color: rgba(255,255,255,0.2);
+  --option-color: #ff696b;
+}
+body.darkmode{
+  --base-color: #3D4459;
+  --text-color: white;
+  --background-pc-theme: #FFF3C9;
+  --hover-color: rgba(87, 96, 130, 0.7);
+  --box-shadow-color: rgb(0, 0, 0, 0.7);
+  --background-mobile-theme:#FFF3C9;
+  --border-bottom-color: rgba(255,255,255,0.2);
+  --option-color: #2d3241;
+}
+
+.home-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 20px 20px;
+  gap: 20px;
+}
+
 .card-container {
   position: relative;
   width: 600px;  /* ปรับขนาดตามต้องการ */
@@ -41,33 +69,124 @@
   width: 600px; /* ปรับให้ใหญ่กว่าสี่เหลี่ยมนิดหน่อย */
   filter: drop-shadow(10px 10px 20px rgba(0,0,0,0.2)); /* เพิ่มเงาให้ดูมีมิติ */
 }
+main{
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-end;
+  margin-right: 20%;
+}
 
-/* @media(max-width: 768px){
-  
+h1{
+  font-size: 4rem;
+  color: var(--base-color);
+  text-shadow: 
+    -4px -4px 0 var(--text-color),  
+     4px -4px 0 var(--text-color),
+    -4px  4px 0 var(--text-color),
+     4px  4px 0 var(--text-color);
+  margin-top: 40px;
+}
+p{
+  font-size: 1.5rem;
+  color: var(--option-color);
+  margin-top: 20px;
+}
+
+
+
+.quest-button{
+  display: inline-block;
+  background-color: var(--base-color);
+  color: var(--text-color);
+  border: none;
+  padding: 10px 30px;
+  font-size: 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 30px;
+  box-shadow: 0 4px 6px var(--box-shadow-color);
+  transition: background-color 0.3s ease;
+}
+.quest-button:hover {
+  background-color: var(--hover-color);
+}
+
+.quest-button-content {
+  display: flex; /* ใช้ flex แทน grid */
+  align-items: center; /* จัดให้อยู่กลางแนวตั้งพร้อมกัน */
+  gap: 15px;
+}
+
+.quest-text {
+  font-size: 2.5rem; 
+  font-weight: normal; 
+  line-height: 1; 
+}
+
+.quest-icon {
+  width: auto; 
+  object-fit: contain; 
+  height: 4rem;
+  margin: 0;
+}
+
+.quest-button:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0px var(--box-shadow-color);
+}
+
+
+
+@media(max-width: 768px){
+  .card-container{
+    width: 400px;  /* ปรับขนาดตามต้องการ */
+    height: 400px;
+  }
+  .bg-shape {
+    width: 200px;
+    height: 200px;
+  }
+  .main-img {
+    margin-top: 4rem;
+    width: 400px;
+  }
 }
 @media(max-width: 500px){
-  body{
-      background-image: var(--background-mobile-theme);
-      height: 100dvh;
+  .home-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 10px;
+    gap: 5px;
   }
-  .NL .sidebar{
-    width: 100%;
+  .card-container{
+    width: 350px;  /* ปรับขนาดตามต้องการ */
+    height: 350px;
+    margin: 20px 20px;
   }
-  i, a{
-      color: var(--text-color);
-      font-size: 1.5rem;
+  .bg-shape {
+    width: 175px;
+    height: 175px;
+  }
+  .main-img {
+    margin-top: 3rem;
+    width: 350px;
   }
 }
 @media(max-width: 320px){
-  body{
-        background-image: var(--background-mobile-theme);
-        height: 100dvh;
+  .card-container{
+    width: 300px;  /* ปรับขนาดตามต้องการ */
+    height: 300px;
+    margin: 20px 20px;
   }
-  .NL .sidebar{
-    width: 100%;
+  .bg-shape {
+    width: 150px;
+    height: 150px;
   }
-  i, a{
-      color: var(--text-color);
-      font-size: 1.5rem;
+  .main-img {
+    margin-top: 3rem;
+    width: 300px;
   }
-} */
+} 

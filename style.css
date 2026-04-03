@@ -36,6 +36,10 @@ body{
     min-height: 100vh;
     overflow-x: hidden;
 }
+.thai{
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    font-weight: 600;
+}
 
 .NL{
   background-color:  var(--base-color);
