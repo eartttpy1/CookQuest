@@ -2,7 +2,7 @@
   --base-color: #800002;
   --text-color: white;
   --background-pc-theme: #FFF3C9;
-  --hover-color: rgb(162, 0, 3, 0.3);
+  --hover-color: rgb(128, 0, 2, 0.7);
   --box-shadow-color: rgb(0, 0, 0, 0.7);
   --background-mobile-theme:#FFF3C9;
   --border-bottom-color: rgba(255,255,255,0.2);
@@ -21,7 +21,7 @@ body.darkmode{
 
 .home-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 0.8fr 1.2fr;
   padding: 20px 20px;
   gap: 20px;
 }
@@ -74,7 +74,8 @@ main{
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-end;
-  margin-right: 20%;
+  margin-right: 5%;
+  text-align: center;
 }
 
 h1{
@@ -92,8 +93,6 @@ p{
   color: var(--option-color);
   margin-top: 20px;
 }
-
-
 
 .quest-button{
   display: inline-block;
@@ -141,27 +140,6 @@ p{
 
 @media(max-width: 768px){
   .card-container{
-    width: 400px;  /* ปรับขนาดตามต้องการ */
-    height: 400px;
-  }
-  .bg-shape {
-    width: 200px;
-    height: 200px;
-  }
-  .main-img {
-    margin-top: 4rem;
-    width: 400px;
-  }
-}
-@media(max-width: 500px){
-  .home-container{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 10px;
-    gap: 5px;
-  }
-  .card-container{
     width: 350px;  /* ปรับขนาดตามต้องการ */
     height: 350px;
     margin: 20px 20px;
@@ -173,6 +151,49 @@ p{
   .main-img {
     margin-top: 3rem;
     width: 350px;
+  }
+  h1{
+    font-size: 2.5rem;
+  }
+  p{
+    font-size: 1rem;
+  }
+  main{
+    width : 100%;
+    margin-right: 0;
+  }
+  .quest-button-content {
+    gap: 5px;
+  }
+  .quest-text {
+    font-size: 1.5rem; 
+  }
+  .quest-icon {
+    height: 2rem;
+    width: 2rem;
+    margin: 0;
+    padding: 0;
+  }
+}
+@media(max-width: 500px){
+  .home-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 10px;
+    gap: 5px;
+  }
+  main{
+    margin-right: 10%;
+  }
+  .quest-button-content {
+    gap: 5px;
+  }
+  .quest-text {
+    font-size: 2rem; 
+  }
+  .quest-icon {
+    height: 3rem;
   }
 }
 @media(max-width: 320px){
@@ -188,5 +209,24 @@ p{
   .main-img {
     margin-top: 3rem;
     width: 300px;
+  }
+
+  p{
+    font-size: 1rem;
+  }
+  main{
+    margin: auto;
+  }
+  .quest-button-content {
+    gap: 5px;
+  }
+  .quest-text {
+    font-size: 1.5rem; 
+  }
+  .quest-icon {
+    height: 2rem;
+    width: 2rem;
+    margin: 0;
+    padding: 0;
   }
 } 
