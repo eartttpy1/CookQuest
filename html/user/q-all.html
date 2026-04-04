@@ -18,6 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
     <!-- ============== Start  Stylesheet ============== -->
     <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="../../quest-style.css">
     <link rel="stylesheet" href="../../assets/css/quest.css">
     <!-- ============== Start  Script ============== -->
     <script src="../../assets/js/sidebar.js" defer></script>
@@ -99,6 +100,33 @@
 
         </ul>
     </nav>
+
+    <!-- ==============search Quest page content ============== -->
+    <div class="search-container">
+        <span class="search-label thai">ค้นหา</span>
+        <input type="text" class="search-input thai" placeholder="ชื่อเมนู, ส่วนผสม">
+        <button class="search-button">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+    </div>
+    <section>
+        <div class="filter-container">
+            <button class="filter-button" id="filter-button">
+                <i class="fa-solid fa-filter"></i>
+                <span>Filter</span>
+            </button>
+            <div class="filter-options hidden" id="filter-options">
+                <div class="filter-option" data-filter="all"><span class="thai">ทั้งหมด</span></div>
+                <div class="filter-option" data-filter="pending"><span class="thai">รอดำเนินการ</span></div>
+                <div class="filter-option" data-filter="completed"><span class="thai">เสร็จสิ้น</span></div>
+                <div class="filter-option" data-filter="self"><span class="thai">บันทึกสูตรอาหาร</span></div>
+            </div>
+        </div>
+
+        <div class="quest-list" id="quest-list">
+            <!-- Quest items will be dynamically added here -->
+        </div>
+    </section>
   
     <!-- ==============All Quest page content ============== -->
 
