@@ -40,6 +40,10 @@ body{
     font-family: "IBM Plex Sans Thai Looped", sans-serif;
     font-weight: 600;
 }
+.thaipattaya{
+    font-family: "Pattaya", sans-serif;
+    font-weight: 600;
+}
 
 .NL{
   background-color:  var(--base-color);
