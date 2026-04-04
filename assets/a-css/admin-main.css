@@ -50,6 +50,7 @@ body {
 
 .container {
   padding: 20px;
+  margin-top: 20px;
 }
 
 .card-row {
@@ -180,6 +181,12 @@ body {
   .requests {
     text-align: center;
   }
+
+  .card.outline i,
+  .card.wide .left i {
+    font-size: 40px;
+    padding: 10px;
+  }
 }
 
 @media (max-width: 500px) {
@@ -197,9 +204,8 @@ body {
     padding-bottom: 6vh;
   }
 
-  .card.wide .left i {
-    font-size: 40px;
-    padding: 15px;
+  .card.wide {
+    padding: 10px;
   }
 
   .action {
@@ -214,19 +220,25 @@ body {
     flex-direction: column;
     justify-content: center;
     text-align: center;
+    padding: 10px;
     gap: 10px;
   }
 
   .card.outline i,
   .card.wide .left i {
-    font-size: 36px;
-    padding: 12px;
+    font-size: 40px;
+    padding: 10px;
   }
 }
 
 @media (max-width: 320px) {
   .card {
     font-size: 16px;
+  }
+
+  .card.red {
+    padding-top: 8vh;
+    padding-bottom: 8vh;
   }
 
   .action {
@@ -247,6 +259,7 @@ body {
   }
 
   .container {
-    padding: 10px;
+    margin-top: 10px;
+    padding: 20px;
   }
 }
