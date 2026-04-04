@@ -1,0 +1,123 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.logo {
+  font-family: 'Pattaya', sans-serif;
+  font-weight: normal;
+}
+
+body {
+  background-color: #f3e7c6;
+}
+
+.header {
+  background-color: #b30000;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+}
+
+
+.menu {
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.profile {
+  width: 35px;
+  height: 35px;
+  background: #ddd;
+  border-radius: 50%;
+}
+
+.container {
+  padding: 20px;
+}
+
+.card-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.card {
+  flex: 1;
+  padding: 2vb;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 32px;
+}
+
+.card.red {
+  background-color: #b30000;
+  color: white;
+  padding-top: 12vh;
+  padding-bottom: 12vh;
+  font-weight: bold;
+}
+
+.card.wide {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 2px solid #b30000;
+  padding-right: 30px;
+  background: #eee;
+  margin-bottom: 20px;
+}
+
+.requests {
+  text-align: right;
+  font-family: 'Pattaya', sans-serif;
+  font-size: 18px;
+  color: #b30000;
+}
+
+.action {
+  font-family: 'Pattaya', sans-serif;
+  font-size: 32px;
+  color: #b30000;
+  font-weight: bold;
+}
+
+.card.outline {
+  border: 2px solid #b30000;
+  padding-right: 30px;
+  background: #eee;
+  color: #b30000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: bold;
+}
+
+.text {
+  font-family: 'Pattaya', sans-serif;
+}
+.icon {
+  width: 80px;
+  height: 80px;
+}
+
+.link-card {
+  text-decoration: none;
+  transition: all 0.2s ease;
+  color: inherit;
+  display: flex;
+}
+
+.link-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
+.link-card:active {
+  transform: scale(0.98);
+}
