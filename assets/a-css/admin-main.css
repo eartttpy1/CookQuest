@@ -1,7 +1,20 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+:root{
+  --base-color: #800002;
+  --text-color: white;
+  --background-theme: #FFF3C9;
+  --hover-color: rgb(162, 0, 3, 0.3);
+  --box-shadow-color: rgb(0, 0, 0, 0.7);
+  --border-bottom-color: rgba(255,255,255,0.2);
+  --option-color: #800002;
+}
+body.darkmode{
+  --base-color: #3D4459;
+  --text-color: white;
+  --background-theme: #FFF3C9;
+  --hover-color: rgba(87, 96, 130, 0.7);
+  --box-shadow-color: rgb(0, 0, 0, 0.7);
+  --border-bottom-color: rgba(255,255,255,0.2);
+  --option-color: #2d3241;
 }
 
 .logo {
@@ -10,12 +23,12 @@
 }
 
 body {
-  background-color: #f3e7c6;
+  background-color: var(--background-theme);
 }
 
 .header {
-  background-color: #b30000;
-  color: white;
+  background-color: var(--base-color);
+  color: var(--text-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,7 +44,7 @@ body {
 .profile {
   width: 35px;
   height: 35px;
-  background: #ddd;
+  background: white;
   border-radius: 50%;
 }
 
@@ -54,8 +67,8 @@ body {
 }
 
 .card.red {
-  background-color: #b30000;
-  color: white;
+  background-color: var(--base-color);
+  color: var(--text-color);
   padding-top: 12vh;
   padding-bottom: 12vh;
   font-weight: bold;
@@ -65,44 +78,47 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 2px solid #b30000;
-  padding-right: 30px;
-  background: #eee;
+  border: 2px solid var(--base-color);
+  padding:30px;
+  background: white;
   margin-bottom: 20px;
+}
+
+.card.wide .left i {
+  font-size: 50px;
+  color: var(--base-color);
 }
 
 .requests {
   text-align: right;
-  font-family: 'Pattaya', sans-serif;
   font-size: 18px;
-  color: #b30000;
+  color: var(--base-color);
 }
 
 .action {
-  font-family: 'Pattaya', sans-serif;
   font-size: 32px;
-  color: #b30000;
+  color: var(--base-color);
   font-weight: bold;
 }
 
 .card.outline {
-  border: 2px solid #b30000;
-  padding-right: 30px;
-  background: #eee;
-  color: #b30000;
+  border: 2px solid var(--base-color);
+  padding: 30px;
+  background: white;
+  color: var(--base-color);;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  margin-bottom: 20px;
   font-weight: bold;
 }
 
-.text {
-  font-family: 'Pattaya', sans-serif;
-}
-.icon {
-  width: 80px;
-  height: 80px;
+.card.outline i {
+  font-size: 50px;
+  color: var(--base-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .link-card {
@@ -120,4 +136,117 @@ body {
 
 .link-card:active {
   transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .card-row {
+    flex-direction: column;
+  }
+
+  .card {
+    font-size: 24px;
+  }
+
+  .card.red {
+    padding-top: 8vh;
+    padding-bottom: 8vh;
+  }
+
+  .card.wide {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .card.wide .left {
+    margin-bottom: 10px;
+  }
+
+  .card.outline {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    padding: 20px;
+    margin: 0 auto;
+  }
+
+  .card.wide .right {
+    align-items: center;
+  }
+
+  .requests {
+    text-align: center;
+  }
+}
+
+@media (max-width: 500px) {
+  .container {
+    padding: 15px;
+  }
+
+  .card {
+    font-size: 20px;
+    padding: 15px;
+  }
+
+  .card.red {
+    padding-top: 6vh;
+    padding-bottom: 6vh;
+  }
+
+  .card.wide .left i {
+    font-size: 40px;
+    padding: 15px;
+  }
+
+  .action {
+    font-size: 24px;
+  }
+
+  .requests {
+    font-size: 14px;
+  }
+
+  .card.outline {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .card.outline i,
+  .card.wide .left i {
+    font-size: 36px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 320px) {
+  .card {
+    font-size: 16px;
+  }
+
+  .action {
+    font-size: 18px;
+  }
+
+  .requests {
+    font-size: 12px;
+  }
+
+  .card.wide .left i {
+    font-size: 32px;
+    padding: 10px;
+  }
+
+  .card.outline i {
+    font-size: 32px;
+  }
+
+  .container {
+    padding: 10px;
+  }
 }
