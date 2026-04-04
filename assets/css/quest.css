@@ -1,0 +1,142 @@
+:root {
+    --bg-color: #FFF3C9;
+    --red-main: #800000;
+    --dark-grey: #333;
+}
+
+/* 1. Top Nav Styling */
+.top-nav {
+    display: flex;
+    justify-content: space-around;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: black;
+    border: 1px solid var(--red-main);
+    padding: 5px 10px;
+    border-radius: 10px;
+    background: white;
+    font-size: 14px;
+}
+
+/* ถ้าอยู่หน้าไหน ให้ใส่ class "active" ที่ลิ้งค์นั้น */
+.nav-link.active {
+    background-color: black;
+    color: white;
+    border-color: black;
+}
+
+/* 2. Category Dropdown Styling */
+.category-header {
+    border: 2px solid var(--red-main);
+    color: var(--red-main);
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 10px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.dropdown {
+    background: white;
+    border-radius: 8px;
+    position: relative;
+}
+
+.dropdown summary {
+    list-style: none;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+}
+
+.dropdown-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: white;
+    border-top: 1px solid #eee;
+}
+
+.dropdown-list li a {
+    display: block;
+    padding: 8px 15px;
+    text-decoration: none;
+    color: #666;
+    font-size: 13px;
+}
+
+/* 3. Quest Styling */
+.quest-card {
+    background-color: var(--red-main);
+    border-radius: 20px;
+    padding: 20px;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 20px;
+    color: white;
+    text-align: center;
+}
+
+.quest-title {
+    margin-top: 0;
+    font-style: italic;
+    font-size: 24px;
+}
+
+.quest-image-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.quest-image-grid img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+}
+
+.quest-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* เควสที่ล็อคไว้ */
+.quest-card.locked {
+    background-color: var(--dark-grey);
+    position: relative;
+}
+
+.lock-overlay {
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255,255,255,0.1);
+    border-radius: 15px;
+}
+
+.gold-text {
+    font-size: 40px;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 2px 2px black;
+}
