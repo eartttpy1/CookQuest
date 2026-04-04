@@ -53,7 +53,7 @@
             <ul class="mainIcon">
                 <li class="menu-button"><i width="26" height="26" class="fa-solid fa-bars"></i></a></li>     
             </ul>
-            <li class="logo"><a class="linkhref">CookQuest</a></li>
+            <li class="logo"><a class="linkhref thaipattaya">CookQuest</a></li>
             <ul class="titlebar">
                 <li class="hideOnMobile"><a class="linkhref" href="../../index.html">Home</a></li>
                 <li class="hideOnMobile"><a class="linkhref" href="q-all.html">quest</a></li>
@@ -109,24 +109,62 @@
             <i class="fa-solid fa-magnifying-glass"></i>
         </button>
     </div>
-    <section>
-        <div class="filter-container">
-            <button class="filter-button" id="filter-button">
-                <i class="fa-solid fa-filter"></i>
-                <span>Filter</span>
-            </button>
-            <div class="filter-options hidden" id="filter-options">
-                <div class="filter-option" data-filter="all"><span class="thai">ทั้งหมด</span></div>
-                <div class="filter-option" data-filter="pending"><span class="thai">รอดำเนินการ</span></div>
-                <div class="filter-option" data-filter="completed"><span class="thai">เสร็จสิ้น</span></div>
-                <div class="filter-option" data-filter="self"><span class="thai">บันทึกสูตรอาหาร</span></div>
+
+    <nav class="top-nav">
+        <a href="index.html" class="nav-link active"><span class="thai">ทั้งหมด</span></a>
+        <a href="pending.html" class="nav-link"><span class="thai">รอทำการ</span></a>
+        <a href="success.html" class="nav-link"><span class="thai">เสร็จสิ้น</span></a>
+        <a href="save.html" class="nav-link"><span class="thai">บันทึกสูตรอาหาร</span></a>
+    </nav>
+
+    <div class="content-container">
+        <div class="category-header">Category</div>
+
+        <div class="category-grid">
+            <details class="dropdown">
+                <summary>วัตถุดิบ <i class="arrow"></i></summary>
+                <ul class="dropdown-list">
+                    <li><a href="category.html?type=egg">เมนูไข่</a></li>
+                    <li><a href="category.html?type=chicken">เมนูไก่</a></li>
+                    <li><a href="category.html?type=pork">เมนูหมู</a></li>
+                </ul>
+            </details>
+
+            <details class="dropdown">
+                <summary>ประเภทอาหาร <i class="arrow"></i></summary>
+                <ul class="dropdown-list">
+                    <li><a href="category.html?type=breakfast">เมนูอาหารเช้า</a></li>
+                    <li><a href="category.html?type=single">เมนูอาหารจานเดียว</a></li>
+                </ul>
+            </details>
+            </div>
+
+        <div class="quest-section">
+            <a href="quest-detail.html" class="quest-card">
+                <h2 class="quest-title">4 จตุรเทพสเต็ก</h2>
+                <div class="quest-image-grid">
+                    <img src="steak1.jpg" alt="steak">
+                    <img src="steak2.jpg" alt="steak">
+                    <img src="steak3.jpg" alt="steak">
+                    <img src="steak4.jpg" alt="steak">
+                </div>
+                <div class="quest-footer">
+                    <span class="exp"><i class="star">★</i> 2000 EXP</span>
+                </div>
+            </a>
+
+            <div class="quest-card locked">
+                <h2 class="quest-title">ขนมหวานขั้นสูง</h2>
+                <div class="lock-overlay">
+                    <span class="lock-icon">🔒</span>
+                    <span class="gold-text">GOLD</span>
+                </div>
+                <div class="quest-footer">
+                    <span class="exp"><i class="star">★</i> 5000 EXP</span>
+                </div>
             </div>
         </div>
-
-        <div class="quest-list" id="quest-list">
-            <!-- Quest items will be dynamically added here -->
-        </div>
-    </section>
+    </div>
   
     <!-- ==============All Quest page content ============== -->
 

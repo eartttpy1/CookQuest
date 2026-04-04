@@ -1,0 +1,128 @@
+/* CONTAINER */
+.profile-container {
+  padding: 16px;
+}
+
+/* PROFILE */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  background: black;
+  border-radius: 50%;
+}
+
+.user-info h2 {
+  margin: 0;
+  font-family: "Inria Serif";
+}
+
+.edit-btn {
+  margin-top: 4px;
+  border: 1px solid #b30000;
+  background: none;
+  color: #b30000;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* STATS */
+.stats {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.card {
+  flex: 1;
+  background: #b30000;
+  color: white;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.recipe {
+  text-align: center;
+}
+
+/* BADGES */
+.badges {
+  margin-top: 20px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.badge-list {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.badge {
+  text-align: center;
+  font-size: 12px;
+}
+
+.circle {
+  width: 50px;
+  height: 50px;
+  background: #b30000;
+  border-radius: 50%;
+  margin: auto;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+  border-bottom: 1px solid #ccc;
+}
+
+.tabs span {
+  padding-bottom: 6px;
+  cursor: pointer;
+}
+
+.tabs .active {
+  color: #b30000;
+  border-bottom: 2px solid #b30000;
+}
+
+/* RECIPE */
+.recipe-card {
+  margin-top: 16px;
+  background: #b30000;
+  color: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.recipe-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  font-weight: bold;
+}
+
+.recipe-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.recipe-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  font-size: 12px;
+}

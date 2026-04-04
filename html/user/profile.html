@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- ============== Page Title ============== -->
-    <title>Profile</title>
+    <title>View All Profile</title>
 
     <!-- ============== Font&Icon ============== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,12 +18,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
     <!-- ============== Start  Stylesheet ============== -->
     <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="../../assets/css/profile-view.css">
     <link rel="stylesheet" href="../../assets/css/profile.css">
     <!-- ============== Start  Script ============== -->
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
-    <script src="../../assets/js/profile.js" defer></script>
+    <script src="../../assets/js/profile-view.js" defer></script>
 
 </head>
 <body>
@@ -52,7 +53,7 @@
             <ul class="mainIcon">
                 <li class="menu-button"><i width="26" height="26" class="fa-solid fa-bars"></i></a></li>     
             </ul>
-            <li class="logo"><a class="linkhref">CookQuest</a></li>
+            <li class="logo"><a class="linkhref thaipattaya">CookQuest</a></li>
             <ul class="titlebar">
                 <li class="hideOnMobile"><a class="linkhref" href="../../index.html">Home</a></li>
                 <li class="hideOnMobile"><a class="linkhref" href="q-all.html">quest</a></li>
@@ -100,7 +101,105 @@
         </ul>
     </nav>
   
-    <!-- ==============Profile page content ============== -->
+    <!-- ==============Profile view all page content ============== -->
+
+    <div class="profile-container">
+
+  <!-- PROFILE -->
+  <div class="profile-header">
+    <div class="avatar"></div>
+    <div class="user-info">
+      <h2>earttpy</h2>
+      <button class="edit-btn">Edit Profile</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="card level">
+      <p>Level 1</p>
+      <h3>IRON Chef</h3>
+      <span>100 / 500 XP</span>
+    </div>
+
+    <div class="card recipe">
+      <p><i class="fa-solid fa-star"></i> Recipe</p>
+      <h1>0</h1>
+      <span>Completed</span>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="badges">
+    <div class="row">
+      <h3>Badge Collection</h3>
+      <span>View All</span>
+    </div>
+
+    <div class="badge-list">
+      <div class="badge">
+        <div class="circle"></div>
+        <p>Grill Master</p>
+      </div>
+
+      <div class="badge">
+        <div class="circle"></div>
+        <p>Grill Master</p>
+      </div>
+
+      <div class="badge">
+        <div class="circle"></div>
+        <p>Grill Master</p>
+      </div>
+
+      <div class="badge">
+        <div class="circle"></div>
+        <p>Grill Master</p>
+      </div>
+      <div class="badge">
+        <div class="circle"></div>
+        <p>Grill Master</p>
+      </div>      
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <span class="active">Recipes</span>
+    <span>Favorites</span>
+  </div>
+
+  <!-- RECIPE CARD -->
+  <div class="recipe-card">
+    <div class="recipe-header">
+      <i class="fa-regular fa-star"></i>
+      <span>สเต็กหมู</span>
+      <span class="material-symbols-outlined">arrow_drop_down</span>
+    </div>
+
+    <img src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092">
+
+    <div class="recipe-footer">
+      <span><i class="fa-regular fa-clock"></i> 45 นาที</span>
+      <span><i class="fa-solid fa-star"></i> 200 XP</span>
+    </div>
+  </div>
+    <div class="recipe-card">
+    <div class="recipe-header">
+      <i class="fa-regular fa-star"></i>
+      <span>สเต็กหมู</span>
+      <span class="material-symbols-outlined">arrow_drop_down</span>
+    </div>
+
+    <img src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092">
+
+    <div class="recipe-footer">
+      <span><i class="fa-regular fa-clock"></i> 45 นาที</span>
+      <span><i class="fa-solid fa-star"></i> 200 XP</span>
+    </div>
+  </div>
+
+</div>
 
 </body>
 </html>
