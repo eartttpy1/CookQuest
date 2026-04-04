@@ -1,20 +1,18 @@
 :root{
   --base-color: #800002;
   --text-color: white;
-  --background-pc-theme: #FFF3C9;
+  --background-theme: #FFF3C9;
   --hover-color: rgb(162, 0, 3, 0.3);
   --box-shadow-color: rgb(0, 0, 0, 0.7);
-  --background-mobile-theme:#FFF3C9;
   --border-bottom-color: rgba(255,255,255,0.2);
   --option-color: #800002;
 }
 body.darkmode{
   --base-color: #3D4459;
   --text-color: white;
-  --background-pc-theme: #FFF3C9;
+  --background-theme: #FFF3C9;
   --hover-color: rgba(87, 96, 130, 0.7);
   --box-shadow-color: rgb(0, 0, 0, 0.7);
-  --background-mobile-theme:#FFF3C9;
   --border-bottom-color: rgba(255,255,255,0.2);
   --option-color: #2d3241;
 }
@@ -28,7 +26,7 @@ body{
     font-family: "Inria Serif", serif;
     font-weight: 700;
     font-style: normal;
-    background-color: var(--background-pc-theme);
+    background-color: var(--background-theme);
     background-size:cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -40,6 +38,7 @@ body{
     font-family: "IBM Plex Sans Thai Looped", sans-serif;
     font-weight: 600;
 }
+
 .thaipattaya{
     font-family: "Pattaya", sans-serif;
     font-weight: 600;
@@ -396,7 +395,6 @@ i, a{
 }
 @media(max-width: 500px){
   body{
-      background-color: var(--background-mobile-theme);
       height: 100dvh;
   }
   .NL .sidebar{
@@ -409,7 +407,6 @@ i, a{
 }
 @media(max-width: 320px){
   body{
-        background-color: var(--background-mobile-theme);
         height: 100dvh;
   }
   .NL .sidebar{
