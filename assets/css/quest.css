@@ -4,40 +4,17 @@
     --dark-grey: #333;
 }
 
-/* 1. Top Nav Styling */
-.top-nav {
-    display: flex;
-    justify-content: space-around;
-    gap: 5px;
-    margin-bottom: 20px;
-}
-
-.nav-link {
-    text-decoration: none;
-    color: black;
-    border: 1px solid var(--red-main);
-    padding: 5px 10px;
-    border-radius: 10px;
-    background: white;
-    font-size: 14px;
-}
-
-/* ถ้าอยู่หน้าไหน ให้ใส่ class "active" ที่ลิ้งค์นั้น */
-.nav-link.active {
-    background-color: black;
-    color: white;
-    border-color: black;
-}
-
 /* 2. Category Dropdown Styling */
 .category-header {
     border: 2px solid var(--red-main);
+    background-color: white;
     color: var(--red-main);
     display: inline-block;
     padding: 5px 15px;
     border-radius: 10px;
     font-weight: bold;
     margin-bottom: 15px;
+    font-size: 2rem;
 }
 
 .category-grid {
@@ -61,7 +38,12 @@
     display: flex;
     justify-content: space-between;
 }
-
+.dropdown summary i {
+    color: var(--red-main);
+}
+.dropdown summary span {
+    font-size: 1.2rem;
+}
 .dropdown-list {
     list-style: none;
     padding: 0;
@@ -139,4 +121,24 @@
     font-weight: bold;
     color: #FFD700;
     text-shadow: 2px 2px black;
+}
+@media(max-width: 1024px){
+    .dropdown summary span {
+        font-size: 1.2rem;
+    }
+}
+@media(max-width: 768px){
+
+}
+@media(max-width: 500px){
+    .category-header {
+        font-size: 1.2rem;
+    }
+    .dropdown summary span {
+        font-size: 0.9rem;
+    }
+
+}
+@media(max-width: 320px){
+
 }

@@ -26,7 +26,9 @@ body.darkmode{
   --brown-color: #2f387f;
   --red-coloer: #69c4cb;
 }
-
+.container-main{
+    margin: 0 2rem;
+}
 .search-container {
     display: flex;
     align-items: center;
@@ -79,6 +81,35 @@ body.darkmode{
     color: var(--grey-color) !important;
 }
 
+
+/* 1. Top Nav Styling */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: black;
+    border: 1px solid var(--red-main);
+    padding: 5px 8vw;
+    min-width: 80px; 
+    white-space: nowrap;
+    border-radius: 10px;
+    background: white;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* ถ้าอยู่หน้าไหน ให้ใส่ class "active" ที่ลิ้งค์นั้น */
+.nav-link.active {
+    background-color: black;
+    color: white;
+    border-color: black;
+}
+
 @media(max-width: 1024px){
   .search-label {
     font-size: 1.2rem;
@@ -89,14 +120,30 @@ body.darkmode{
   .search-button i {
     font-size: 1.2rem;
   }
+  .nav-link{
+    padding: 5px 7vw;
+  }
 }
 @media(max-width: 768px){
-
+  .nav-link{
+    padding: 5px 6vw;
+    font-size: 1.1rem;
+  }
 }
 @media(max-width: 500px){
   .search-container {
     width: 90%;
     max-width: none;
+  }
+  .nav-link{
+    padding: 5px 4vw;
+    font-size: 0.8rem;
+  }
+  .top-nav {
+    gap: 1px;
+  }
+  .container-main{
+    margin: 0 0.7rem;
   }
 }
 @media(max-width: 320px){
@@ -108,5 +155,15 @@ body.darkmode{
   }
   .search-button i {
     font-size: 1rem;
+  }
+  .nav-link{
+    padding: 5px 0;
+    font-size: 0.8rem;
+  }
+  .top-nav {
+    gap: 0px;
+  }
+  .container-main{
+    margin: 0;
   }
 } 

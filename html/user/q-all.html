@@ -102,68 +102,156 @@
     </nav>
 
     <!-- ==============search Quest page content ============== -->
-    <div class="search-container">
-        <span class="search-label thai">ค้นหา</span>
-        <input type="text" class="search-input thai" placeholder="ชื่อเมนู, ส่วนผสม">
-        <button class="search-button">
-            <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-    </div>
-
-    <nav class="top-nav">
-        <a href="index.html" class="nav-link active"><span class="thai">ทั้งหมด</span></a>
-        <a href="pending.html" class="nav-link"><span class="thai">รอทำการ</span></a>
-        <a href="success.html" class="nav-link"><span class="thai">เสร็จสิ้น</span></a>
-        <a href="save.html" class="nav-link"><span class="thai">บันทึกสูตรอาหาร</span></a>
-    </nav>
-
-    <div class="content-container">
-        <div class="category-header">Category</div>
-
-        <div class="category-grid">
-            <details class="dropdown">
-                <summary>วัตถุดิบ <i class="arrow"></i></summary>
-                <ul class="dropdown-list">
-                    <li><a href="category.html?type=egg">เมนูไข่</a></li>
-                    <li><a href="category.html?type=chicken">เมนูไก่</a></li>
-                    <li><a href="category.html?type=pork">เมนูหมู</a></li>
-                </ul>
-            </details>
-
-            <details class="dropdown">
-                <summary>ประเภทอาหาร <i class="arrow"></i></summary>
-                <ul class="dropdown-list">
-                    <li><a href="category.html?type=breakfast">เมนูอาหารเช้า</a></li>
-                    <li><a href="category.html?type=single">เมนูอาหารจานเดียว</a></li>
-                </ul>
-            </details>
-            </div>
-
-        <div class="quest-section">
-            <a href="quest-detail.html" class="quest-card">
-                <h2 class="quest-title">4 จตุรเทพสเต็ก</h2>
-                <div class="quest-image-grid">
-                    <img src="steak1.jpg" alt="steak">
-                    <img src="steak2.jpg" alt="steak">
-                    <img src="steak3.jpg" alt="steak">
-                    <img src="steak4.jpg" alt="steak">
-                </div>
-                <div class="quest-footer">
-                    <span class="exp"><i class="star">★</i> 2000 EXP</span>
-                </div>
-            </a>
-
-            <div class="quest-card locked">
-                <h2 class="quest-title">ขนมหวานขั้นสูง</h2>
-                <div class="lock-overlay">
-                    <span class="lock-icon">🔒</span>
-                    <span class="gold-text">GOLD</span>
-                </div>
-                <div class="quest-footer">
-                    <span class="exp"><i class="star">★</i> 5000 EXP</span>
-                </div>
-            </div>
+    <div class="container-main">
+        <div class="search-container">
+            <span class="search-label thai">ค้นหา</span>
+            <input type="text" class="search-input thai" placeholder="ชื่อเมนู, ส่วนผสม">
+            <button class="search-button">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
         </div>
+
+        <nav class="top-nav">
+            <a href="q-all.html" class="nav-link active"><span class="thai">ทั้งหมด</span></a>
+            <a href="q-pending.html" class="nav-link"><span class="thai">รอดำเนินการ</span></a>
+            <a href="q-complete.html" class="nav-link"><span class="thai">เสร็จสิ้น</span></a>
+            <a href="q-self.html" class="nav-link"><span class="thai">บันทึกสูตร</span></a>
+        </nav>
+
+        <main class="content-container">
+            <div class="category-header">Category</div>
+
+            <section class="category-grid">
+                <details class="dropdown">
+                    <summary class="thai"><span>วัตถุดิบ</span><i class="fa-solid fa-caret-down"></i></summary>
+                    <ul class="dropdown-list">
+                        <li><a href="category.html?type=egg">เมนูไข่</a></li>
+                        <li><a href="category.html?type=chicken">เมนูไก่</a></li>
+                        <li><a href="category.html?type=pork">เมนูหมู</a></li>
+                        <li><a href="category.html?type=duck">เมนูเป็ด</a></li>
+                        <li><a href="category.html?type=beef">เมนูเนื้อวัว</a></li>
+                        <li><a href="category.html?type=sausage">เมนูไส้กรอก</a></li>
+                        <li><a href="category.html?type=bacon">เมนูเบคอน</a></li>
+                        <li><a href="category.html?type=seafood">เมนูอาหารทะเล</a></li>
+                        <li><a href="category.html?type=noodle-material">เมนูเส้น</a></li>
+                        <li><a href="category.html?type=mushroom">เมนูเห็ด</a></li>
+                        <li><a href="category.html?type=tofu">เมนูเต้าหู้</a></li>
+                        <li><a href="category.html?type=rice">เมนูข้าว</a></li>
+                        <li><a href="category.html?type=vegetable">เมนูผัก</a></li>
+                        <li><a href="category.html?type=fruit">เมนูผลไม้</a></li>
+                    </ul>
+                </details>
+
+                <details class="dropdown">
+                    <summary class="thai"><span>ประเภทอาหาร</span><i class="fa-solid fa-caret-down"></i></summary>
+                    <ul class="dropdown-list">
+                        <li><a href="category.html?type=breakfast">เมนูอาหารเช้า</a></li>
+                        <li><a href="category.html?type=single-dish">เมนูอาหารจานเดียว</a></li>
+                        <li><a href="category.html?type=appetizer">เมนูกับแกล้ม/อาหารว่าง</a></li>
+                        <li><a href="category.html?type=vegetarian">เมนูมังสวิรัติ</a></li>
+                        <li><a href="category.html?type=thai">เมนูอาหารไทย</a></li>
+                        <li><a href="category.html?type=north-thai">เมนูอาหารเหนือ</a></li>
+                        <li><a href="category.html?type=isaan">เมนูอาหารอีสาน</a></li>
+                        <li><a href="category.html?type=south-thai">เมนูอาหารใต้</a></li>
+                        <li><a href="category.html?type=japanese">เมนูอาหารญี่ปุ่น</a></li>
+                        <li><a href="category.html?type=chinese">เมนูอาหารจีน</a></li>
+                        <li><a href="category.html?type=korean">เมนูอาหารเกาหลี</a></li>
+                        <li><a href="category.html?type=western">เมนูอาหารฝรั่ง</a></li>
+                        <li><a href="category.html?type=italian">เมนูอาหารอิตาเลียน</a></li>
+                        <li><a href="category.html?type=steak">เมนูสเต๊ก</a></li>
+                        <li><a href="category.html?type=curry">เมนูแกง</a></li>
+                        <li><a href="category.html?type=dipping-sauce">สูตรน้ำจิ้ม</a></li>
+                        <li><a href="category.html?type=fusion">เมนูอาหารฟิวชัน</a></li>
+                        <li><a href="category.html?type=soup">เมนูซุป</a></li>
+                        <li><a href="category.html?type=international">อาหารนานาชาติ</a></li>
+                        <li><a href="category.html?type=sandwich">เมนูแซนด์วิช</a></li>
+                        <li><a href="category.html?type=dinner">เมนูอาหารเย็น</a></li>
+                        <li><a href="category.html?type=chili-paste">เมนูน้ำพริก</a></li>
+                        <li><a href="category.html?type=side-dish">เมนูกับข้าว</a></li>
+                        <li><a href="category.html?type=noodle">เมนูก๋วยเตี๋ยว</a></li>
+                    </ul>
+                </details>
+                <details class="dropdown">
+                    <summary class="thai"><span>วิธีการ</span><i class="fa-solid fa-caret-down"></i></summary>
+                    <ul class="dropdown-list">
+                        <li><a href="category.html?type=microwave">เมนูไมโครเวฟ</a></li>
+                        <li><a href="category.html?type=boil">เมนูต้ม</a></li>
+                        <li><a href="category.html?type=stir-fry">เมนูผัด</a></li>
+                        <li><a href="category.html?type=fry">เมนูทอด</a></li>
+                        <li><a href="category.html?type=bake">เมนูอบ</a></li>
+                        <li><a href="category.html?type=steam">เมนูนึ่ง</a></li>
+                        <li><a href="category.html?type=spicy-salad">เมนูยำ</a></li>
+                        <li><a href="category.html?type=grill">เมนูย่าง</a></li>
+                        <li><a href="category.html?type=air-fryer">เมนูหม้ออบลมร้อน</a></li>
+                        <li><a href="category.html?type=rice-cooker">เมนูหม้อหุงข้าว</a></li>
+                    </ul>
+                </details>
+
+                <details class="dropdown">
+                    <summary class="thai"><span>ของหวาน/เบเกอรี่</span><i class="fa-solid fa-caret-down"></i></summary>
+                    <ul class="dropdown-list">
+                        <li><a href="category.html?type=ice-cream">เมนูไอศกรีม</a></li>
+                        <li><a href="category.html?type=thai-dessert">เมนูขนมไทย</a></li>
+                        <li><a href="category.html?type=bakery">เมนูเบเกอรี</a></li>
+                        <li><a href="category.html?type=cake">เมนูเค้ก</a></li>
+                        <li><a href="category.html?type=dessert">เมนูของหวาน</a></li>
+                        <li><a href="category.html?type=chocolate">เมนูช็อคโกแลต</a></li>
+                    </ul>
+                </details>
+                <details class="dropdown">
+                    <summary class="thai"><span>เมนูพิเศษ</span><i class="fa-solid fa-caret-down"></i></summary>
+                    <ul class="dropdown-list">
+                        <li><a href="category.html?type=quick-meal">เมนูทำง่ายไม่เกิน 15 นาที</a></li>
+                        <li><a href="category.html?type=budget">เมนูประหยัด</a></li>
+                        <li><a href="category.html?type=dorm-life">เมนูเด็กหอ</a></li>
+                        <li><a href="category.html?type=business">เมนูสร้างอาชีพ</a></li>
+                        <li><a href="category.html?type=lunch-box">เมนูข้าวกล่อง</a></li>
+                        <li><a href="category.html?type=valentine">เมนูวาเลนไทน์</a></li>
+                        <li><a href="category.html?type=halloween">เมนูฮาโลวีน</a></li>
+                        <li><a href="category.html?type=christmas">เมนูคริสต์มาส</a></li>
+                    </ul>
+                </details>
+
+                <details class="dropdown">
+                    <summary class="thai"><span>อาหารเพื่อสุขภาพ</span><i class="fa-solid fa-caret-down"></i></summary>
+                    <ul class="dropdown-list">
+                        <li><a href="category.html?type=salad-dressing">สูตรน้ำสลัด</a></li>
+                        <li><a href="category.html?type=clean-food">เมนูอาหารคลีน</a></li>
+                        <li><a href="category.html?type=salad">เมนูสลัด</a></li>
+                        <li><a href="category.html?type=weight-loss">เมนูอาหารลดน้ำหนัก</a></li>
+                        <li><a href="category.html?type=low-calorie">เมนูอาหารแคลอรี่ต่ำ</a></li>
+                        <li><a href="category.html?type=low-fat">เมนูอาหารไขมันต่ำ</a></li>
+                        <li><a href="category.html?type=high-fiber">เมนูอาหารไฟเบอร์สูง</a></li>
+                    </ul>
+                </details>
+            </section>
+
+            <section class="quest-section">
+                <a href="quest-detail.html" class="quest-card">
+                    <h2 class="quest-title">4 จตุรเทพสเต็ก</h2>
+                    <div class="quest-image-grid">
+                        <img src="../../assets/img/steak1.png" alt="steak">
+                        <img src="../../assets/img/steak2.png" alt="steak">
+                        <img src="../../assets/img/steak3.png" alt="steak">
+                        <img src="../../assets/img/steak4.png" alt="steak">
+                    </div>
+                    <div class="quest-footer">
+                        <span class="exp"><i class="fa-solid fa-star"></i> 2000 EXP</span>
+                    </div>
+                </a>
+
+                <div class="quest-card locked">
+                    <h2 class="quest-title">ขนมหวานขั้นสูง</h2>
+                    <div class="lock-overlay">
+                        <span class="lock-icon">🔒</span>
+                        <span class="gold-text">GOLD</span>
+                    </div>
+                    <div class="quest-footer">
+                        <span class="exp"><i class="fa-solid fa-star"></i> 5000 EXP</span>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
   
     <!-- ==============All Quest page content ============== -->
