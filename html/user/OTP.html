@@ -18,6 +18,7 @@
     <!-- ============== Start  Stylesheet ============== -->
     <link rel="stylesheet" href="../../style.css">
     <link rel="stylesheet" href="../../assets/css/OTP.css">
+    <link rel="stylesheet" href="../../assets/css/OTP.css">
     <!-- ============== Start  Script ============== -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="../../assets/js/sidebar.js" defer></script>
@@ -99,7 +100,35 @@
         </ul>
     </nav>
 
-    <!-- ==============OTP content ============== -->
+ <!-- ============== OTP content ============== -->
+<div class="otp-wrapper">
+
+  <h1>OTP Verification</h1>
+
+  <div class="card">
+    <p class="desc">
+      Your account is currently using a one-time password (OTP) for verification.
+    </p>
+
+    <div class="icon">🔒</div>
+
+    <div class="otp-input">
+      <input type="text" maxlength="1">
+      <input type="text" maxlength="1">
+      <input type="text" maxlength="1">
+      <input type="text" maxlength="1">
+      <input type="text" maxlength="1">
+      <input type="text" maxlength="1">
+    </div>
+
+    <p class="hint">Please enter the OTP sent to your phone/email.</p>
+
+    <button class="btn-send">SEND</button>
+
+    <p class="resend">Haven’t Got OTP Code?</p>
+  </div>
+
+</div>
   
 </body>
 </html>
