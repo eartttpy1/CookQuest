@@ -106,7 +106,104 @@
     </nav>
 
     <!-- ==============approve menu page content ============== -->
-   
+   <main class="approve-container">
+ 
+        <!-- Header Banner -->
+        <div class="page-header">
+            <h1 class="thaipattaya">Current requests</h1>
+            <span class="request-count" id="request-count">3</span>
+        </div>
+ 
+        <!-- List Panel -->
+        <div class="list-panel">
+ 
+            <!-- Search & Sort Bar -->
+            <div class="search-sort-bar">
+                <div class="search-box">
+                    <span class="thai search-label">ค้นหา</span>
+                    <input type="text" class="search-input thai" placeholder="ค้นหาเมนูอาหาร..." id="searchInput">
+                    <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <div class="sort-wrapper">
+                    <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
+                    <div class="sort-dropdown hidden" id="sortDropdown">
+                        <div class="sort-option" data-sort="asc">Ascending</div>
+                        <div class="sort-option active" data-sort="desc">Descending</div>
+                    </div>
+                </div>
+            </div>
+ 
+            <!-- Request List -->
+            <div class="request-list" id="requestList">
+                <!-- Placeholder: request items will be injected here from database using JS -->
+                <!-- TODO: Replace this static markup with dynamic rendering from a NoSQL collection -->
+
+                <!-- Item 1: normal -->
+                <div class="request-item" data-id="1">
+                    <div class="item-img">
+                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
+                    </div>
+                    <div class="item-info">
+                        <div class="item-top">
+                            <span class="item-menu thai">Menu: เสต็ก</span>
+                            <span class="item-date">xx/xx/xxxx xx:xx:xx</span>
+                        </div>
+                        <div class="item-meta">
+                            <span class="thai">ID &nbsp;&nbsp; XXXXXX</span>
+                            <span class="thai">User &nbsp; XXXXXXXXXXXXXXXX</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-approve" onclick="approveItem(this)">Approve</button>
+                        <button class="btn-reject" onclick="startReject(this)">Reject</button>
+                    </div>
+                </div>
+                
+                <!-- Item 2: normal -->
+                <div class="request-item" data-id="2">
+                    <div class="item-img">
+                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
+                    </div>
+                    <div class="item-info">
+                        <div class="item-top">
+                            <span class="item-menu thai">Menu: เสต็ก</span>
+                            <span class="item-date">xx/xx/xxxx xx:xx:xx</span>
+                        </div>
+                        <div class="item-meta">
+                            <span class="thai">ID &nbsp;&nbsp; XXXXXX</span>
+                            <span class="thai">User &nbsp; XXXXXXXXXXXXXXXX</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-approve" onclick="approveItem(this)">Approve</button>
+                        <button class="btn-reject" onclick="startReject(this)">Reject</button>
+                    </div>
+                </div>
+ 
+                <!-- Item 3: normal -->
+                <div class="request-item" data-id="3">
+                    <div class="item-img">
+                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
+                    </div>
+                    <div class="item-info">
+                        <div class="item-top">
+                            <span class="item-menu thai">Menu: เสต็ก</span>
+                            <span class="item-date">xx/xx/xxxx xx:xx:xx</span>
+                        </div>
+                        <div class="item-meta">
+                            <span class="thai">ID &nbsp;&nbsp; XXXXXX</span>
+                            <span class="thai">User &nbsp; XXXXXXXXXXXXXXXX</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-approve" onclick="approveItem(this)">Approve</button>
+                        <button class="btn-reject" onclick="startReject(this)">Reject</button>
+                    </div>
+                </div>
+ 
+            </div>
+        </div>
+    </main>
   
 </body>
 </html>
