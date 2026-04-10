@@ -102,6 +102,9 @@ body.darkmode{
     font-size: 1.2rem;
     text-align: center;
 }
+.nav-link.span{
+    text-align: center;
+}
 
 /* ถ้าอยู่หน้าไหน ให้ใส่ class "active" ที่ลิ้งค์นั้น */
 .nav-link.active {
