@@ -1,6 +1,25 @@
+:root{
+  --base-color: #800002;
+  --background-color: #800002;
+  --text-color: white;
+  --hover-color: rgba(255,255,255, 0.2);
+  --black-color: rgb(0, 0, 0);
+  --border-color-focus: #ff6a6c;
+}
+body.darkmode{
+  --base-color: #3D4459;
+  --background-color: #2a2f3e;;
+  --text-color: white;
+  --hover-color: rgba(255,255,255, 0.2);
+  --black-color: rgb(0, 0, 0);
+  --border-color-focus: #c0cfff;
+}
+
+
+
 /* 🔥 wrapper (สำคัญสุด) */
 .otp-wrapper {
-  max-width: 400px;
+  max-width: 350px;
   margin: 40px auto;
   padding: 20px;
   text-align: center;
@@ -13,7 +32,7 @@
   background: #eee;
   padding: 25px;
   border-radius: 20px;
-  border: 2px solid #b30000;
+  border: 2px solid var(--background-color);
   box-sizing: border-box;
 }
 
@@ -59,7 +78,7 @@
 .btn-send {
   width: 100%;
   padding: 12px;
-  background: #b30000;
+  background: var(--background-color);
   color: white;
   font-size: 18px;
   border: none;
