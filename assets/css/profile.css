@@ -38,7 +38,14 @@ body.darkmode{
   margin: 0;
   font-family: "Inria Serif";
 }
+a {
+    margin: 0;
+  font-family: "Inria Serif";
+  color: black;
+  font-size: 1.17em;
+    text-decoration: none;
 
+}
 .edit-btn {
   margin-top: 4px;
   border: 1px solid var(--background-color);;
