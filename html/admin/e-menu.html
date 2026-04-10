@@ -18,12 +18,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
     <!-- ============== Start  Stylesheet ============== -->
     <link rel="stylesheet" href="../../style.css">
-    <link rel="stylesheet" href="../../assets/a-css/edit.css">
+    <link rel="stylesheet" href="../../assets/a-css/e-menu.css">
     <!-- ============== Start  Script ============== -->
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
-    <script src="../../assets/a-js/edit.js" defer></script>
+    <script src="../../assets/a-js/e-menu.js" defer></script>
 
 </head>
 <body>
@@ -105,7 +105,250 @@
     </nav>
 
     <!-- ==============Edit menu page content ============== -->
-   
+   <main class="emenu-container">
+ 
+        <div class="list-panel">
+ 
+            <!-- Search / Sort / Add / Delete Bar -->
+            <div class="search-sort-bar">
+                <div class="search-box">
+                    <span class="thai search-label">ค้นหา</span>
+                    <input type="text" class="search-input thai" placeholder="ค้นหาเมนูอาหาร..." id="searchInput">
+                    <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <div class="bar-actions">
+                    <div class="sort-wrapper">
+                        <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
+                        <div class="sort-dropdown hidden" id="sortDropdown">
+                            <div class="sort-option" data-sort="az">↑ A-Z ก-ฮ</div>
+                            <div class="sort-option active" data-sort="za">↓ Z-A ฮ-ก</div>
+                        </div>
+                    </div>
+                    <button class="btn-add" id="addBtn" onclick="openAddForm()"><i class="fa-solid fa-plus"></i></button>
+                    <button class="btn-delete-mode" id="deleteModeBtn" onclick="toggleDeleteMode()"><i class="fa-solid fa-minus"></i></button>
+                </div>
+            </div>
+ 
+            <!-- Recipe List -->
+            <div class="recipe-list" id="recipeList">
+ 
+                <!-- Item 1 -->
+                <div class="recipe-item" data-id="1">
+                    <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
+                    <div class="item-img">
+                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
+                    </div>
+                    <div class="item-info">
+                        <span class="item-title thai">Menu: เสต็ก</span>
+                        <div class="tag-list">
+                            <span class="tag thai">เมนูหมู</span>
+                            <span class="tag thai">เมนูทอด</span>
+                            <span class="tag thai">เมนูย่าง</span>
+                            <span class="tag thai">เมนูเสต็ก</span>
+                            <span class="tag thai">เมนูเนื้อ</span>
+                            <span class="tag thai">เมนูอาหารจานเดียว</span>
+                            <span class="tag thai">...</span>
+                        </div>
+                    </div>
+                    <button class="btn-edit" onclick="openEditForm(this)">Edit</button>
+                </div>
+ 
+                <!-- Item 2 (highlighted) -->
+                <div class="recipe-item highlighted" data-id="2">
+                    <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
+                    <div class="item-img">
+                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
+                    </div>
+                    <div class="item-info">
+                        <span class="item-title thai">Menu: เสต็ก</span>
+                        <div class="tag-list">
+                            <span class="tag-2 thai">เมนูหมู</span>
+                            <span class="tag-2 thai">เมนูทอด</span>
+                            <span class="tag-2 thai">เมนูย่าง</span>
+                            <span class="tag-2 thai">เมนูเสต็ก</span>
+                            <span class="tag-2 thai">เมนูเนื้อ</span>
+                            <span class="tag-2 thai">เมนูอาหารจานเดียว</span>
+                            <span class="tag-2 thai">...</span>
+                        </div>
+                    </div>
+                    <button class="btn-edit" onclick="openEditForm(this)">Edit</button>
+                </div>
+ 
+                <!-- Item 3 -->
+                <div class="recipe-item" data-id="3">
+                    <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
+                    <div class="item-img">
+                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
+                    </div>
+                    <div class="item-info">
+                        <span class="item-title thai">Menu: เสต็ก</span>
+                        <div class="tag-list">
+                            <span class="tag thai">เมนูหมู</span>
+                            <span class="tag thai">เมนูทอด</span>
+                            <span class="tag thai">เมนูย่าง</span>
+                            <span class="tag thai">เมนูเสต็ก</span>
+                            <span class="tag thai">เมนูเนื้อ</span>
+                            <span class="tag thai">เมนูอาหารจานเดียว</span>
+                            <span class="tag thai">...</span>
+                        </div>
+                    </div>
+                    <button class="btn-edit" onclick="openEditForm(this)">Edit</button>
+                </div>
+ 
+            </div>
+        </div>
+    </main>
+ 
+    <!-- ============== Delete Confirmation Modal ============== -->
+    <div class="modal-overlay hidden" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-icon">&#9888;</div>
+            <h2 class="modal-title">Confirm deletion?</h2>
+            <div class="modal-actions">
+                <button class="btn-modal-confirm" id="confirmDeleteBtn">Confirm</button>
+                <button class="btn-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- ============== Add / Edit Form Panel ============== -->
+    <div class="form-overlay hidden" id="formOverlay">
+        <div class="form-panel">
+            <div class="form-header">
+                <h2 class="thaipattaya thai" id="formTitle">เพิ่มเมนูอาหาร</h2>
+            </div>
+            <div class="form-body">
+ 
+                <!-- Image Upload -->
+                <div class="form-img-upload" id="formImgPreview">
+                    <label class="img-upload-label thai">
+                        <i class="fa-solid fa-image"></i>
+                        <span>เพิ่มไฟล์รูปภาพ</span>
+                        <input type="file" accept="image/*" class="hidden" id="imgInput" onchange="previewImg(this)">
+                    </label>
+                </div>
+ 
+                <!-- Name -->
+                <div class="form-row">
+                    <label class="form-label thai">ชื่อเมนู</label>
+                    <input type="text" class="form-input thai" id="menuName" placeholder="ชื่อเมนูอาหาร">
+                </div>
+ 
+                <!-- Servings -->
+                <div class="form-row">
+                    <label class="form-label thai">จำนวน</label>
+                    <input type="number" class="form-input small thai" id="menuServings" value="1">
+                    <span class="thai unit-label">จาน</span>
+                </div>
+ 
+                <!-- Prep / Cook Time -->
+                <div class="form-row time-row">
+                    <label class="form-label thai">เวลาเตรียม</label>
+                    <input type="text" class="form-input small thai" id="prepTime" placeholder="30">
+                    <span class="thai unit-label">นาที</span>
+                    <label class="form-label thai" style="margin-left:20px;">เวลาปรุง</label>
+                    <input type="text" class="form-input small thai" id="cookTime" placeholder="15">
+                    <span class="thai unit-label">นาที</span>
+                </div>
+ 
+                <!-- Tags -->
+                <div class="form-section">
+                    <div class="form-section-header thaipattaya thai">Tags</div>
+                    <div class="tags-area" id="tagsArea">
+                        <span class="tag removable thai">เมนูทอด <button onclick="removeTag(this)">X</button></span>
+                        <span class="tag removable thai">เมนูไข่ <button onclick="removeTag(this)">X</button></span>
+                    </div>
+                    <div class="tag-new-row">
+                        <span class="thai">สร้างใหม่:</span>
+                        <span class="tag-create thai">เมนูอาหาร <button>+</button></span>
+                        <span class="tag-create thai">เมนูอาหารไทย <button>+</button></span>
+                        <span class="tag-create thai">เมนูอาหารเหนือ <button>+</button></span>
+                    </div>
+                    <div class="tag-search-row">
+                        <span class="thai">เพิ่ม tag:</span>
+                        <input type="text" class="tag-search-input thai" placeholder="เมนูอาหาร">
+                    </div>
+                </div>
+ 
+                <!-- Ingredients -->
+                <div class="form-section">
+                    <div class="form-section-header-row">
+                        <span class="form-section-header thaipattaya thai">วัตถุดิบ</span>
+                        <button class="btn-section-add" onclick="addIngredient()"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div id="ingredientsList">
+                        <div class="ingredient-row">
+                            <span class="thai ing-label">วัตถุดิบ</span>
+                            <input type="text" class="form-input ing-name thai" placeholder="สันคอหมู หรือ เนื้อ">
+                            <span class="thai ing-label">จำนวน</span>
+                            <input type="text" class="form-input ing-qty" value="1">
+                            <input type="text" class="form-input ing-unit thai" placeholder="ชิ้น">
+                            <button class="btn-ing-remove" onclick="removeIngredient(this)">−</button>
+                        </div>
+                        <div class="ingredient-row">
+                            <span class="thai ing-label">วัตถุดิบ</span>
+                            <input type="text" class="form-input ing-name thai" placeholder="โรสแมรี่สด">
+                            <span class="thai ing-label">จำนวน</span>
+                            <input type="text" class="form-input ing-qty" value="1">
+                            <input type="text" class="form-input ing-unit thai" placeholder="กาน">
+                            <button class="btn-ing-remove" onclick="removeIngredient(this)">−</button>
+                        </div>
+                    </div>
+                </div>
+ 
+                <!-- Steps -->
+                <div class="form-section">
+                    <div class="form-section-header-row">
+                        <span class="form-section-header thaipattaya thai">ขั้นตอนการทำ</span>
+                        <button class="btn-section-add" onclick="addStep()"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div id="stepsList">
+                        <div class="step-row">
+                            <span class="step-num">1.</span>
+                            <div class="step-content">
+                                <div class="step-img-upload">
+                                    <label>
+                                        <i class="fa-solid fa-image"></i>
+                                        <span class="thai">เพิ่มไฟล์รูปภาพ</span>
+                                        <input type="file" accept="image/*" class="hidden">
+                                    </label>
+                                </div>
+                                <div class="step-text-row">
+                                    <span class="thai step-lbl">วิธีทำ</span>
+                                    <textarea class="step-textarea thai" placeholder="วิธีทำ..."></textarea>
+                                </div>
+                            </div>
+                            <button class="btn-step-remove" onclick="removeStep(this)">−</button>
+                        </div>
+                        <div class="step-row">
+                            <span class="step-num">2.</span>
+                            <div class="step-content">
+                                <div class="step-img-upload">
+                                    <label>
+                                        <i class="fa-solid fa-image"></i>
+                                        <span class="thai">เพิ่มไฟล์รูปภาพ</span>
+                                        <input type="file" accept="image/*" class="hidden">
+                                    </label>
+                                </div>
+                                <div class="step-text-row">
+                                    <span class="thai step-lbl">วิธีทำ</span>
+                                    <textarea class="step-textarea thai" placeholder="วิธีทำ..."></textarea>
+                                </div>
+                            </div>
+                            <button class="btn-step-remove" onclick="removeStep(this)">−</button>
+                        </div>
+                    </div>
+                </div>
+ 
+            </div>
+ 
+            <!-- Form Footer -->
+            <div class="form-footer">
+                <button class="btn-save">Save</button>
+                <button class="btn-cancel" onclick="closeForm()">Cancel</button>
+            </div>
+        </div>
+    </div>
   
 </body>
 </html>

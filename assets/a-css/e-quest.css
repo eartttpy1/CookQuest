@@ -1,0 +1,632 @@
+:root{
+  --base-color: #800002;
+  --text-color: white;
+  --background-theme: #FFF3C9;
+  --hover-color: rgb(162, 0, 3, 0.3);
+  --box-shadow-color: rgb(0, 0, 0, 0.7);
+  --border-bottom-color: rgba(255,255,255,0.2);
+  --option-color: #800002;
+}
+body.darkmode{
+  --base-color: #3D4459;
+  --text-color: white;
+  --background-theme: #FFF3C9;
+  --hover-color: rgba(87, 96, 130, 0.7);
+  --box-shadow-color: rgb(0, 0, 0, 0.7);
+  --border-bottom-color: rgba(255,255,255,0.2);
+  --option-color: #2d3241;
+}
+
+/* ============== Edit Quests Page ============== */
+
+.equest-container {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ---- List Panel ---- */
+.list-panel {
+    background: white;
+    border-radius: 10px;
+    overflow: visible;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ---- Search / Sort / Add / Delete Bar ---- */
+.search-sort-bar {
+    background-color: var(--base-color);
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    gap: 10px;
+    border-radius: 10px 10px 0 0;
+}
+
+.search-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    padding: 0 10px;
+    gap: 8px;
+}
+
+.search-label {
+    color: var(--base-color);
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    padding: 8px 0;
+    background: transparent;
+    color: #333;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+}
+
+.search-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+.search-btn i {
+    color: var(--base-color);
+    font-size: 1.1rem;
+}
+
+.bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sort-wrapper { position: relative; }
+
+.sort-btn {
+    background: white;
+    border: none;
+    border-radius: 6px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.sort-btn i {
+    color: var(--base-color);
+    font-size: 1.2rem;
+}
+.sort-btn:hover { background: #f0f0f0; }
+
+.sort-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--base-color);
+    border-radius: 8px;
+    overflow: hidden;
+    min-width: 140px;
+    box-shadow: 0 4px 12px var(--box-shadow-color);
+    z-index: 200;
+}
+
+.sort-option {
+    padding: 10px 16px;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    transition: background 0.15s;
+}
+.sort-option:hover,
+.sort-option.active {
+    background: var(--hover-color);
+}
+
+.btn-add {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 42px;
+    height: 42px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+.btn-add:hover { opacity: 0.85; }
+.btn-add i { color: white; font-size: 1.2rem; }
+
+.btn-delete-mode {
+    background: #FFAAAA;
+    color: var(--base-color);
+    border: none;
+    border-radius: 6px;
+    width: 42px;
+    height: 42px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    font-weight: bold;
+}
+.btn-delete-mode:hover { opacity: 0.85; }
+.btn-delete-mode i { font-size: 1.2rem; }
+.btn-delete-mode.active {
+    background: var(--base-color);
+    color: var(--text-color);
+}
+.btn-delete-mode.active i { color: var(--text-color); }
+
+/* ---- Quest List ---- */
+.quest-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.quest-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 20px;
+    min-height: 130px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    transition: opacity 0.3s;
+}
+.quest-item:last-child { border-bottom: none; }
+
+/* Level background colours */
+.quest-item.bg-bronze { background: #FFF0F0; }
+.quest-item.bg-silver { background: #F0F0F0; }
+.quest-item.bg-gold   { background: #FFFFFF; }
+
+/* Delete button */
+.item-delete-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: var(--base-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 6px;
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition: opacity 0.2s;
+}
+.item-delete-btn:hover { opacity: 0.8; }
+.item-delete-btn i { color: var(--text-color); font-size: 1rem; }
+
+/* Quest icon area */
+.quest-icon-area {
+    flex-shrink: 0;
+    width: 190px;
+    height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quest-icon-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    height: 100%;
+}
+.quest-icon-placeholder i {
+    color: #444;
+    font-size: 2.5rem;
+}
+.quest-icon-placeholder.multi i {
+    font-size: 2rem;
+}
+.quest-icon-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+/* Quest info */
+.quest-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quest-title-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.quest-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #222;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+}
+
+.quest-exp {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #222;
+    font-family: "Inria Serif", serif;
+    font-style: italic;
+}
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    background: #FFD6D6;
+    color: #333;
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.9rem;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    white-space: nowrap;
+}
+
+.btn-edit {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: "Inria Serif", serif;
+    flex-shrink: 0;
+    transition: opacity 0.2s, transform 0.15s;
+}
+.btn-edit:hover { opacity: 0.85; transform: translateY(-1px); }
+
+/* ============== Delete Modal ============== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-box {
+    background: var(--base-color);
+    border-radius: 20px;
+    padding: 40px 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    min-width: 320px;
+    box-shadow: 0 8px 30px var(--box-shadow-color);
+}
+
+.modal-icon {
+    font-size: 3rem;
+    color: var(--text-color);
+}
+
+.modal-title {
+    font-size: 2rem;
+    color: var(--text-color);
+    font-family: "Inria Serif", serif;
+    text-align: center;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.btn-modal-confirm {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: "Inria Serif", serif;
+    transition: opacity 0.2s;
+}
+.btn-modal-confirm:hover { opacity: 0.85; }
+
+.btn-modal-cancel {
+    background: #FFAAAA;
+    color: #333;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: "Inria Serif", serif;
+    transition: opacity 0.2s;
+}
+.btn-modal-cancel:hover { opacity: 0.85; }
+
+/* ============== Add / Edit Quest Form ============== */
+.form-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 400;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 30px 16px;
+}
+
+.form-panel {
+    background: var(--background-theme);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 600px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px var(--box-shadow-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.form-header {
+    background: var(--base-color);
+    padding: 18px 24px;
+}
+.form-header h2 {
+    color: var(--text-color);
+    font-size: 1.6rem;
+}
+
+.form-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    max-height: 75vh;
+}
+
+.form-img-upload {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    background: white;
+    transition: border-color 0.2s;
+}
+.form-img-upload:hover { border-color: var(--base-color); }
+
+.img-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: #666;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+}
+.img-upload-label i { font-size: 2rem; color: #aaa; }
+
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.form-label {
+    font-size: 1rem;
+    color: #333;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    font-weight: 600;
+    white-space: nowrap;
+    min-width: 70px;
+}
+
+.form-input {
+    flex: 1;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    outline: none;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    background: white;
+    transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--base-color); }
+.form-input.small { flex: none; width: 100px; }
+
+/* Select (level dropdown) */
+.select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.form-select {
+    appearance: none;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    padding: 8px 36px 8px 12px;
+    font-size: 1rem;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    background: white;
+    outline: none;
+    cursor: pointer;
+    min-width: 130px;
+    transition: border-color 0.2s;
+}
+.form-select:focus { border-color: var(--base-color); }
+
+.select-arrow {
+    position: absolute;
+    right: 10px;
+    color: var(--base-color) !important;
+    font-size: 0.9rem !important;
+    pointer-events: none;
+}
+
+.form-section { border: none; }
+
+.form-section-header {
+    background: var(--base-color);
+    color: var(--text-color);
+    font-size: 1.2rem;
+    padding: 10px 16px;
+    border-radius: 8px 8px 0 0;
+    font-family: "Pattaya", sans-serif;
+    display: block;
+}
+
+.tags-area {
+    background: white;
+    border: 1px solid #eee;
+    padding: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 50px;
+}
+
+.tag.removable {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #FFD6D6;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+.tag.removable button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #555;
+    font-size: 0.85rem;
+    padding: 0;
+    line-height: 1;
+}
+
+.tag-search-row {
+    background: white;
+    border: 1px solid #eee;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.tag-search-input {
+    flex: 1;
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    outline: none;
+}
+.tag-search-input:focus { border-color: var(--base-color); }
+
+.form-footer {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    background: var(--background-theme);
+    border-top: 1px solid #ddd;
+}
+
+.btn-save {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: "Inria Serif", serif;
+    transition: opacity 0.2s;
+}
+.btn-save:hover { opacity: 0.85; }
+
+.btn-cancel {
+    background: #FFAAAA;
+    color: #333;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: "Inria Serif", serif;
+    transition: opacity 0.2s;
+}
+.btn-cancel:hover { opacity: 0.85; }
+
+/* ============== Responsive ============== */
+@media (max-width: 768px) {
+    .equest-container { padding: 20px; }
+    .quest-icon-area { width: 100px; }
+    .btn-edit { padding: 10px 20px; }
+}
+
+@media (max-width: 500px) {
+    .equest-container { padding: 12px; }
+    .quest-item { flex-wrap: wrap; }
+    .quest-icon-area { width: 100%; justify-content: flex-start; }
+    .btn-edit { width: 100%; }
+}
+
+@media (max-width: 320px) {
+    .equest-container { padding: 8px; }
+    .quest-title { font-size: 1.1rem; }
+    .quest-exp { font-size: 1rem; }
+}

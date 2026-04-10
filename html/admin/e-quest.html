@@ -18,12 +18,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
     <!-- ============== Start  Stylesheet ============== -->
     <link rel="stylesheet" href="../../style.css">
-    <link rel="stylesheet" href="../../assets/a-css/edit.css">
+    <link rel="stylesheet" href="../../assets/a-css/e-quest.css">
     <!-- ============== Start  Script ============== -->
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
-    <script src="../../assets/a-js/edit.js" defer></script>
+    <script src="../../assets/a-js/e-quest.js" defer></script>
 
 </head>
 <body>
@@ -105,7 +105,171 @@
     </nav>
 
     <!-- ==============Edit Quest page content ============== -->
-   
+   <main class="equest-container">
+ 
+        <div class="list-panel">
+ 
+            <!-- Search / Sort / Add / Delete Bar -->
+            <div class="search-sort-bar">
+                <div class="search-box">
+                    <span class="thai search-label">ค้นหา</span>
+                    <input type="text" class="search-input thai" placeholder="ค้นหาเควส..." id="searchInput">
+                    <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <div class="bar-actions">
+                    <div class="sort-wrapper">
+                        <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
+                        <div class="sort-dropdown hidden" id="sortDropdown">
+                            <div class="sort-option" data-sort="az">↑ A-Z ก-ฮ</div>
+                            <div class="sort-option active" data-sort="level">↑ ระดับ</div>
+                        </div>
+                    </div>
+                    <button class="btn-add" id="addBtn" onclick="openAddForm()"><i class="fa-solid fa-plus"></i></button>
+                    <button class="btn-delete-mode" id="deleteModeBtn" onclick="toggleDeleteMode()"><i class="fa-solid fa-minus"></i></button>
+                </div>
+            </div>
+ 
+            <!-- Quest List -->
+            <div class="quest-list" id="questList">
+ 
+                <!-- Quest 1: Bronze (pink bg) -->
+                <div class="quest-item bg-bronze" data-id="1">
+                    <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
+                    <div class="quest-icon-area">
+                        <div class="quest-icon-placeholder">
+                            <img src="../../assets/a-img/placeholder-quest.png" alt="quest">
+                        </div>
+                    </div>
+                    <div class="quest-info">
+                        <div class="quest-title-row">
+                            <span class="quest-title thai">ผู้กล้าเสต็ก</span>
+                            <span class="quest-exp">200 EXP</span>
+                        </div>
+                        <div class="tag-list">
+                            <span class="tag thai">เสต็ก</span>
+                        </div>
+                    </div>
+                    <button class="btn-edit" onclick="openEditForm(this)">Edit</button>
+                </div>
+ 
+                <!-- Quest 2: Silver (grey bg) -->
+                <div class="quest-item bg-silver" data-id="2">
+                    <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
+                    <div class="quest-icon-area">
+                        <div class="quest-icon-placeholder">
+                            <img src="../../assets/a-img/placeholder-quest.png" alt="quest">
+                        </div>
+                    </div>
+                    <div class="quest-info">
+                        <div class="quest-title-row">
+                            <span class="quest-title thai">รวมพลขนมหวาน</span>
+                            <span class="quest-exp">600 EXP</span>
+                        </div>
+                        <div class="tag-list">
+                            <span class="tag thai">ไอศกรีม</span>
+                            <span class="tag thai">คุกกี้</span>
+                            <span class="tag thai">มัฟฟิน</span>
+                        </div>
+                    </div>
+                    <button class="btn-edit" onclick="openEditForm(this)">Edit</button>
+                </div>
+ 
+                <!-- Quest 3: Gold (white bg) -->
+                <div class="quest-item bg-gold" data-id="3">
+                    <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
+                    <div class="quest-icon-area">
+                        <div class="quest-icon-placeholder">
+                            <img src="../../assets/a-img/placeholder-quest.png" alt="quest">
+                        </div>
+                    </div>
+                    <div class="quest-info">
+                        <div class="quest-title-row">
+                            <span class="quest-title thai">รวมพลขนมหวาน ++</span>
+                            <span class="quest-exp">1000 EXP</span>
+                        </div>
+                        <div class="tag-list">
+                            <span class="tag thai">ครัวซองต์</span>
+                            <span class="tag thai">มาการอง</span>
+                            <span class="tag thai">ซูเฟล่</span>
+                        </div>
+                    </div>
+                    <button class="btn-edit" onclick="openEditForm(this)">Edit</button>
+                </div>
+ 
+            </div>
+        </div>
+    </main>
+ 
+    <!-- ============== Delete Confirmation Modal ============== -->
+    <div class="modal-overlay hidden" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-icon">&#9888;</div>
+            <h2 class="modal-title">Confirm deletion?</h2>
+            <div class="modal-actions">
+                <button class="btn-modal-confirm" id="confirmDeleteBtn">Confirm</button>
+                <button class="btn-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- ============== Add / Edit Quest Form ============== -->
+    <div class="form-overlay hidden" id="formOverlay">
+        <div class="form-panel">
+            <div class="form-header">
+                <h2 class="thaipattaya thai" id="formTitle">เพิ่มเควส</h2>
+            </div>
+            <div class="form-body">
+ 
+                <!-- Image Upload -->
+                <div class="form-img-upload" id="formImgPreview">
+                    <label class="img-upload-label thai">
+                        <i class="fa-solid fa-image"></i>
+                        <span>เพิ่มไฟล์รูปภาพ</span>
+                        <input type="file" accept="image/*" class="hidden" id="imgInput" onchange="previewImg(this)">
+                    </label>
+                </div>
+ 
+                <!-- Quest Name -->
+                <div class="form-row">
+                    <label class="form-label thai">ชื่อเควส</label>
+                    <input type="text" class="form-input thai" id="questName" placeholder="ชื่อเควส">
+                </div>
+ 
+                <!-- Level + EXP -->
+                <div class="form-row">
+                    <label class="form-label thai">ระดับ</label>
+                    <div class="select-wrapper">
+                        <select class="form-select thai" id="questLevel">
+                            <option value="bronze">Bronze</option>
+                            <option value="silver">Silver</option>
+                            <option value="gold">Gold</option>
+                        </select>
+                        <i class="fa-solid fa-caret-down select-arrow"></i>
+                    </div>
+                    <label class="form-label thai" style="margin-left:16px;">EXP ที่ได้</label>
+                    <input type="number" class="form-input small thai" id="questExp" placeholder="200">
+                </div>
+ 
+                <!-- Menus used -->
+                <div class="form-section">
+                    <div class="form-section-header thaipattaya thai">เมนูที่ใช้</div>
+                    <div class="tags-area" id="menuTagsArea">
+                        <span class="tag removable thai">เสต็ก <button onclick="removeTag(this)">X</button></span>
+                    </div>
+                    <div class="tag-search-row">
+                        <span class="thai">ค้นหา:</span>
+                        <input type="text" class="tag-search-input thai" id="menuSearchInput" placeholder="ค้นหาเมนู...">
+                    </div>
+                </div>
+ 
+            </div>
+ 
+            <div class="form-footer">
+                <button class="btn-save">Save</button>
+                <button class="btn-cancel" onclick="closeForm()">Cancel</button>
+            </div>
+        </div>
+    </div>
   
 </body>
 </html>
