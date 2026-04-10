@@ -1,3 +1,20 @@
+:root{
+  --base-color: #800002;
+  --background-color: #800002;
+  --text-color: white;
+  --hover-color: rgba(255,255,255, 0.2);
+  --black-color: rgb(0, 0, 0);
+  --border-color-focus: #ff6a6c;
+}
+body.darkmode{
+  --base-color: #3D4459;
+  --background-color: #2a2f3e;;
+  --text-color: white;
+  --hover-color: rgba(255,255,255, 0.2);
+  --black-color: rgb(0, 0, 0);
+  --border-color-focus: #c0cfff;
+}
+
 /* CONTAINER */
 .profile-container {
   padding: 16px;
@@ -24,9 +41,9 @@
 
 .edit-btn {
   margin-top: 4px;
-  border: 1px solid #b30000;
+  border: 1px solid var(--background-color);;
   background: none;
-  color: #b30000;
+  color: var(--background-color);;
   padding: 4px 10px;
   border-radius: 8px;
   font-size: 12px;
@@ -41,7 +58,7 @@
 
 .card {
   flex: 1;
-  background: #b30000;
+  background: var(--background-color);
   color: white;
   padding: 12px;
   border-radius: 12px;
@@ -75,7 +92,7 @@
 .circle {
   width: 50px;
   height: 50px;
-  background: #b30000;
+  background: var(--background-color);;
   border-radius: 50%;
   margin: auto;
 }
@@ -94,14 +111,14 @@
 }
 
 .tabs .active {
-  color: #b30000;
-  border-bottom: 2px solid #b30000;
+  color: var(--background-color);;
+  border-bottom: 2px solid var(--background-color);;
 }
 
 /* RECIPE */
 .recipe-card {
   margin-top: 16px;
-  background: #b30000;
+  background: var(--background-color);;
   color: white;
   border-radius: 12px;
   overflow: hidden;
