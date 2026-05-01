@@ -122,52 +122,50 @@
 
         <main class="content-container" id="detail-main">
             <span class ="category-title thai">บันทึกสูตรอาหารของคุณ</span>
-            <!-- ปุ่ม trigger (ใช้ในหน้าจริงให้แทนด้วยปุ่มของคุณ) -->
-            <div class="demo-trigger-wrap">
-                <button class="btn-open-popup" onclick="openAddMenu()">+</button>
+            <!-- PAGE -->
+            <div class="page-wrap">
+                <div class="menu-grid" id="menuGrid"></div>
+                <button class="btn-add-menu" onclick="openAddMenu()">+</button>
             </div>
             
-            <!-- ════════ OVERLAY ════════ -->
+            <!-- ADD POPUP -->
             <div class="am-overlay hidden" id="amOverlay">
-                <div class="am-popup" id="amPopup">
+                <div class="am-popup">
             
-                <!-- ชื่อเมนู -->
+                <div class="am-popup-header">
+                    <span class="am-popup-title thai">เพิ่มเมนูใหม่</span>
+                    <button class="am-close-btn" onclick="closeAddMenu()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            
                 <div class="am-field">
                     <input type="text" class="am-input" placeholder="ชื่อเมนู" id="amName">
                 </div>
             
-                <!-- รูปภาพหลัก -->
                 <div class="am-upload-main" id="amMainBox" onclick="document.getElementById('amMainFile').click()">
                     <i class="fa-regular fa-image am-upload-icon" id="amMainIcon"></i>
-                    <span class="am-upload-label" id="amMainLabel">เพิ่มไฟล์รูปภาพ</span>
+                    <span class="am-upload-label thai" id="amMainLabel">เพิ่มไฟล์รูปภาพ</span>
                     <img class="am-upload-preview hidden" id="amMainPreview" alt="preview">
                     <input type="file" id="amMainFile" accept="image/*" style="display:none" onchange="previewMainImg(event)">
                 </div>
                 <div class="am-upload-actions hidden" id="amMainActions">
-                    <label class="am-btn-change" for="amMainFile"><i class="fa-solid fa-pen"></i> เปลี่ยนรูป</label>
-                    <button class="am-btn-delete" onclick="removeMainImg()"><i class="fa-solid fa-trash"></i> ลบรูป</button>
+                    <label class="am-btn-change thai" for="amMainFile"><i class="fa-solid fa-pen"></i> เปลี่ยนรูป</label>
+                    <button class="am-btn-delete thai" onclick="removeMainImg()"><i class="fa-solid fa-trash"></i> ลบรูป</button>
                 </div>
             
-                <!-- จำนวน / เวลา -->
-                <div class="am-row-two">
-                    <div class="am-field am-field-sm">
-                    <input type="text" class="am-input" placeholder="จำนวน xxxx จาน" id="amQty">
-                    </div>
-                    <div class="am-row-time">
+                <div class="am-row-three">
                     <div class="am-field">
-                        <input type="text" class="am-input" placeholder="เวลาเตรียม xxxxxxxx นาที" id="amPrepTime">
+                    <input type="number" class="am-input" placeholder="จำนวน (จาน)" id="amQty" min="1">
                     </div>
                     <div class="am-field">
-                        <input type="text" class="am-input" placeholder="เวลาปรุง xxxxxxxx นาที" id="amCookTime">
+                    <input type="number" class="am-input" placeholder="เวลาเตรียม (นาที)" id="amPrepTime" min="0">
                     </div>
+                    <div class="am-field">
+                    <input type="number" class="am-input" placeholder="เวลาปรุง (นาที)" id="amCookTime" min="0">
                     </div>
                 </div>
             
-                <!-- Tags -->
                 <div class="am-section">
-                    <div class="am-sec-header">
-                    <span class="thai">Tags</span>
-                    </div>
+                    <div class="am-sec-header"><span class="thai">Tags</span></div>
                     <div class="am-sec-body">
                     <div class="am-tags-wrap" id="amTagsWrap"></div>
                     <div class="am-tag-input-row">
@@ -177,7 +175,6 @@
                     </div>
                 </div>
             
-                <!-- วัตถุดิบ -->
                 <div class="am-section">
                     <div class="am-sec-header">
                     <span class="thai">วัตถุดิบ</span>
@@ -186,18 +183,14 @@
                     <div class="am-sec-body" id="amIngList"></div>
                 </div>
             
-                <!-- ขั้นตอน -->
                 <div class="am-section">
                     <div class="am-sec-header">
                     <span class="thai">ขั้นตอนการทำ</span>
                     <button class="am-sec-plus" onclick="amAddStep()">+</button>
                     </div>
-                    <div class="am-sec-body">
-                    <div id="amStepList"></div>
-                    </div>
+                    <div class="am-sec-body"><div id="amStepList"></div></div>
                 </div>
             
-                <!-- Taste stars -->
                 <div class="am-taste-row">
                     <span class="am-taste-label">Taste :</span>
                     <div class="am-taste-stars" id="amTasteStars">
@@ -209,7 +202,6 @@
                     </div>
                 </div>
             
-                <!-- Taste tags -->
                 <div class="am-taste-tags" id="amTasteTags">
                     <button class="am-ttag thai">หวาน</button>
                     <button class="am-ttag thai">เค็ม</button>
@@ -219,15 +211,67 @@
                     <button class="am-ttag thai">เผ็ด</button>
                 </div>
             
-                <!-- รีวิว -->
                 <div class="am-field">
                     <textarea class="am-input am-textarea thai" placeholder="รสชาติอาหารของคุณเป็นอย่างไรบ้าง" id="amReview" rows="2"></textarea>
                 </div>
             
-                <!-- Buttons -->
                 <div class="am-bottom-row">
                     <button class="am-btn-submit thai" onclick="amSubmit()">Add</button>
                     <button class="am-btn-cancel thai" onclick="closeAddMenu()">Cancel</button>
+                </div>
+            
+                </div>
+            </div>
+            
+            <!-- VIEW POPUP -->
+            <div class="am-overlay hidden" id="viewOverlay">
+                <div class="am-popup">
+            
+                <div class="am-popup-header">
+                    <span class="am-popup-title thai" id="viewTitle"></span>
+                    <button class="am-close-btn" onclick="closeViewMenu()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            
+                <div id="viewImgWrap" class="hidden">
+                    <img class="view-main-img" id="viewImg" alt="menu">
+                </div>
+            
+                <div class="view-info-row" id="viewInfoRow">
+                    <span class="view-info-item thai" id="viewQtyInfo"></span>
+                    <span class="view-info-item thai" id="viewTimeInfo"></span>
+                </div>
+            
+                <div id="viewTagsSection" class="hidden">
+                    <div class="am-section">
+                    <div class="am-sec-header"><span class="thai">Tags</span></div>
+                    <div class="am-sec-body"><div class="am-tags-wrap" id="viewTagsWrap"></div></div>
+                    </div>
+                </div>
+            
+                <div id="viewIngSection" class="hidden">
+                    <div class="am-section">
+                    <div class="am-sec-header"><span class="thai">วัตถุดิบ</span></div>
+                    <div class="am-sec-body" id="viewIngList"></div>
+                    </div>
+                </div>
+            
+                <div id="viewStepSection" class="hidden">
+                    <div class="am-section">
+                    <div class="am-sec-header"><span class="thai">ขั้นตอนการทำ</span></div>
+                    <div class="am-sec-body" id="viewStepList"></div>
+                    </div>
+                </div>
+            
+                <div id="viewTasteSection" class="hidden">
+                    <div class="am-taste-row">
+                    <span class="am-taste-label">Taste :</span>
+                    <div class="am-taste-stars" id="viewTasteStars"></div>
+                    </div>
+                    <div class="am-taste-tags" id="viewTasteTags"></div>
+                </div>
+            
+                <div id="viewReviewSection" class="hidden">
+                    <div class="view-review-box thai" id="viewReviewText"></div>
                 </div>
             
                 </div>
