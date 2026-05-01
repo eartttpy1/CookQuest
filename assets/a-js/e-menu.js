@@ -3,62 +3,11 @@
 // Global variables
 let deleteMode = false;
 let currentEditItem = null;
-
-// Sample recipe data (replace with database calls later)
-let recipes = [
-    {
-        id: 1,
-        name: 'Menu: เสต็ก',
-        servings: 1,
-        prepTime: '30',
-        cookTime: '15',
-        tags: ['เมนูหมู', 'เมนูทอด', 'เมนูย่าง', 'เมนูเสต็ก', 'เมนูเนื้อ', 'เมนูอาหารจานเดียว'],
-        ingredients: [
-            { name: 'สันคอหมู หรือ เนื้อ', qty: '1', unit: 'ชิ้น' },
-            { name: 'โรสแมรี่สด', qty: '1', unit: 'กาน' }
-        ],
-        steps: [
-            { text: 'วิธีทำ...' },
-            { text: 'วิธีทำ...' }
-        ]
-    },
-    {
-        id: 2,
-        name: 'Menu: เสต็ก',
-        servings: 1,
-        prepTime: '30',
-        cookTime: '15',
-        tags: ['เมนูหมู', 'เมนูทอด', 'เมนูย่าง', 'เมนูเสต็ก', 'เมนูเนื้อ', 'เมนูอาหารจานเดียว'],
-        ingredients: [
-            { name: 'สันคอหมู หรือ เนื้อ', qty: '1', unit: 'ชิ้น' },
-            { name: 'โรสแมรี่สด', qty: '1', unit: 'กาน' }
-        ],
-        steps: [
-            { text: 'วิธีทำ...' },
-            { text: 'วิธีทำ...' }
-        ]
-    },
-    {
-        id: 3,
-        name: 'Menu: เสต็ก',
-        servings: 1,
-        prepTime: '30',
-        cookTime: '15',
-        tags: ['เมนูหมู', 'เมนูทอด', 'เมนูย่าง', 'เมนูเสต็ก', 'เมนูเนื้อ', 'เมนูอาหารจานเดียว'],
-        ingredients: [
-            { name: 'สันคอหมู หรือ เนื้อ', qty: '1', unit: 'ชิ้น' },
-            { name: 'โรสแมรี่สด', qty: '1', unit: 'กาน' }
-        ],
-        steps: [
-            { text: 'วิธีทำ...' },
-            { text: 'วิธีทำ...' }
-        ]
-    }
-];
+let recipes = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    renderRecipes();
+    loadRecipes();
     setupMenuEventListeners();
 
     // Form submission
@@ -69,6 +18,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Menu functions
+async function loadRecipes() {
+    try {
+        const response = await fetch('/api/menus');
+        recipes = await response.json();
+        renderRecipes();
+    } catch (error) {
+        console.error('Error loading recipes:', error);
+    }
+}
+
 function renderRecipes() {
     const recipeList = document.getElementById('recipeList');
     recipeList.innerHTML = '';
@@ -76,15 +35,15 @@ function renderRecipes() {
     recipes.forEach(recipe => {
         const recipeItem = document.createElement('div');
         recipeItem.className = 'recipe-item';
-        recipeItem.setAttribute('data-id', recipe.id);
+        recipeItem.setAttribute('data-id', recipe._id);
 
         recipeItem.innerHTML = `
             <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
             <div class="item-img">
-                <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
+                <img src="${recipe.imageURL || '../../assets/a-img/placeholder-dish.png'}" alt="dish">
             </div>
             <div class="item-info">
-                <span class="item-title thai">${recipe.name}</span>
+                <span class="item-title thai">${recipe.menuName}</span>
                 <div class="tag-list">
                     ${recipe.tags.map(tag => `<span class="tag thai">${tag}</span>`).join('')}
                 </div>
@@ -157,7 +116,7 @@ function openAddForm() {
             <input type="text" class="form-input ing-name thai" placeholder="สันคอหมู หรือ เนื้อ">
             <span class="thai ing-label">จำนวน</span>
             <input type="text" class="form-input ing-qty" value="1">
-            <input type="text" class="form-input ing-unit thai" placeholder="ชิ้น">
+            <input type="text" class="form-input ing-unit thai" placeholder="กรัม">
             <button class="btn-ing-remove" onclick="removeIngredient(this)">−</button>
         </div>
         <div class="ingredient-row">
@@ -182,7 +141,7 @@ function openAddForm() {
                 </div>
                 <div class="step-text-row">
                     <span class="thai step-lbl">วิธีทำ</span>
-                    <textarea class="step-textarea thai" placeholder="วิธีทำ..."></textarea>
+                    <textarea class="step-textarea thai" placeholder="ตั้งน้ำให้เดือด"></textarea>
                 </div>
             </div>
             <button class="btn-step-remove" onclick="removeStep(this)">−</button>
@@ -198,7 +157,7 @@ function openAddForm() {
             </div>
             <div class="step-text-row">
                 <span class="thai step-lbl">วิธีทำ</span>
-                <textarea class="step-textarea thai" placeholder="วิธีทำ..."></textarea>
+                <textarea class="step-textarea thai" placeholder="ใส่เครื่องสมุนไพรลงไป"></textarea>
             </div>
             <button class="btn-step-remove" onclick="removeStep(this)">−</button>
         </div>
@@ -208,11 +167,11 @@ function openAddForm() {
 
 function openEditForm(button) {
     const item = button.closest('.recipe-item');
-    const id = parseInt(item.getAttribute('data-id'));
-    currentEditItem = recipes.find(r => r.id === id);
+    const id = item.getAttribute('data-id');
+    currentEditItem = recipes.find(r => r._id === id);
 
     document.getElementById('formTitle').textContent = 'แก้ไขเมนูอาหาร';
-    document.getElementById('menuName').value = currentEditItem.name;
+    document.getElementById('menuName').value = currentEditItem.menuName;
     document.getElementById('menuServings').value = currentEditItem.servings || 1;
     document.getElementById('prepTime').value = currentEditItem.prepTime || '';
     document.getElementById('cookTime').value = currentEditItem.cookTime || '';
@@ -222,14 +181,14 @@ function openEditForm(button) {
             <span class="thai ing-label">วัตถุดิบ</span>
             <input type="text" class="form-input ing-name thai" value="${ing.name}">
             <span class="thai ing-label">จำนวน</span>
-            <input type="text" class="form-input ing-qty" value="${ing.qty}">
+            <input type="text" class="form-input ing-qty" value="${ing.amount}">
             <input type="text" class="form-input ing-unit thai" value="${ing.unit}">
             <button class="btn-ing-remove" onclick="removeIngredient(this)">−</button>
         </div>
     `).join('');
-    document.getElementById('stepsList').innerHTML = (currentEditItem.steps || []).map((step, index) => `
+    document.getElementById('stepsList').innerHTML = (currentEditItem.instructions || []).map((instr, index) => `
         <div class="step-row">
-            <span class="step-num">${index + 1}.</span>
+            <span class="step-num">${instr.stepNumber}.</span>
             <div class="step-content">
                 <div class="step-img-upload">
                     <label>
@@ -240,7 +199,7 @@ function openEditForm(button) {
                 </div>
                 <div class="step-text-row">
                     <span class="thai step-lbl">วิธีทำ</span>
-                    <textarea class="step-textarea thai">${step.text}</textarea>
+                    <textarea class="step-textarea thai">${instr.description}</textarea>
                 </div>
             </div>
             <button class="btn-step-remove" onclick="removeStep(this)">−</button>
@@ -266,13 +225,24 @@ function toggleDeleteMode() {
     deleteModeBtn.classList.toggle('active', deleteMode);
 }
 
-function deleteItem(button) {
+async function deleteItem(button) {
     const item = button.closest('.recipe-item');
-    const id = parseInt(item.getAttribute('data-id'));
+    const id = item.getAttribute('data-id');
 
     if (confirm('Are you sure you want to delete this recipe?')) {
-        recipes = recipes.filter(r => r.id !== id);
-        renderRecipes();
+        try {
+            const response = await fetch(`/api/menus/${id}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                await loadRecipes();
+            } else {
+                alert('Failed to delete recipe');
+            }
+        } catch (error) {
+            console.error('Error deleting recipe:', error);
+            alert('Error deleting recipe');
+        }
     }
 }
 
@@ -280,43 +250,74 @@ function removeTag(button) {
     button.parentElement.remove();
 }
 
-function saveRecipe() {
-    const name = document.getElementById('menuName').value;
+async function saveRecipe() {
+    const menuName = document.getElementById('menuName').value;
     const servings = parseInt(document.getElementById('menuServings').value);
     const prepTime = document.getElementById('prepTime').value;
     const cookTime = document.getElementById('cookTime').value;
     const tags = Array.from(document.querySelectorAll('#tagsArea .tag')).map(tag => tag.textContent.replace(' X', ''));
-    const ingredients = Array.from(document.querySelectorAll('.ingredient-row')).map(row => ({
+    const ingredients = Array.from(document.querySelectorAll('.ingredient-row')).map((row, index) => ({
         name: row.querySelector('.ing-name').value,
-        qty: row.querySelector('.ing-qty').value,
+        amount: parseFloat(row.querySelector('.ing-qty').value) || 0,
         unit: row.querySelector('.ing-unit').value
     }));
-    const steps = Array.from(document.querySelectorAll('.step-row')).map(row => ({
-        text: row.querySelector('.step-textarea').value
+    const instructions = Array.from(document.querySelectorAll('.step-row')).map((row, index) => ({
+        stepNumber: index + 1,
+        description: row.querySelector('.step-textarea').value
     }));
 
-    if (!name) {
+    if (!menuName) {
         alert('Please fill in the menu name');
         return;
     }
 
-    if (currentEditItem) {
-        // Edit
-        currentEditItem.name = name;
-        currentEditItem.servings = servings;
-        currentEditItem.prepTime = prepTime;
-        currentEditItem.cookTime = cookTime;
-        currentEditItem.tags = tags;
-        currentEditItem.ingredients = ingredients;
-        currentEditItem.steps = steps;
-    } else {
-        // Add
-        const newId = Math.max(...recipes.map(r => r.id)) + 1;
-        recipes.push({ id: newId, name, servings, prepTime, cookTime, tags, ingredients, steps });
-    }
+    const recipeData = {
+        menuName,
+        servings,
+        prepTime,
+        cookTime,
+        EXP: 0, // Default values
+        prepareTime: 0,
+        cookingTime: 0,
+        createdBy: 'admin', // Default
+        imageURL: '',
+        ingredients,
+        instructions,
+        tags,
+        questIds: [],
+        steps: []
+    };
 
-    renderRecipes();
-    closeForm();
+    try {
+        if (currentEditItem) {
+            // Edit existing menu
+            const response = await fetch(`/api/menus/${currentEditItem._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(recipeData)
+            });
+            if (!response.ok) {
+                throw new Error('Failed to update menu');
+            }
+        } else {
+            // Add new menu
+            await fetch('/api/menus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(recipeData)
+            });
+        }
+
+        await loadRecipes();
+        closeForm();
+    } catch (error) {
+        console.error('Error saving recipe:', error);
+        alert('Error saving recipe');
+    }
 }
 
 function addIngredient() {
