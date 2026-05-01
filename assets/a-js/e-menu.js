@@ -4,11 +4,19 @@
 let deleteMode = false;
 let currentEditItem = null;
 let recipes = [];
+let selectedImageData = '';
+let availableTags = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     loadRecipes();
+    loadTags();
     setupMenuEventListeners();
+
+    const tagSearchInput = document.getElementById('tagSearchInput');
+    if (tagSearchInput) {
+        tagSearchInput.addEventListener('input', handleTagSearchInput);
+    }
 
     // Form submission
     const saveBtn = document.querySelector('.btn-save');
@@ -45,7 +53,7 @@ function renderRecipes() {
             <div class="item-info">
                 <span class="item-title thai">${recipe.menuName}</span>
                 <div class="tag-list">
-                    ${recipe.tags.map(tag => `<span class="tag thai">${tag}</span>`).join('')}
+                    ${(recipe.tags || []).map(tag => `<span class="tag thai">${tag}</span>`).join('')}
                 </div>
             </div>
             <button class="btn-edit" onclick="openEditForm(this)">Edit</button>
@@ -93,9 +101,9 @@ function toggleSortDropdown() {
 
 function sortRecipes(sortType) {
     if (sortType === 'az') {
-        recipes.sort((a, b) => a.name.localeCompare(b.name));
+        recipes.sort((a, b) => a.menuName.localeCompare(b.menuName));
     } else if (sortType === 'za') {
-        recipes.sort((a, b) => b.name.localeCompare(a.name));
+        recipes.sort((a, b) => b.menuName.localeCompare(a.menuName));
     }
 
     renderRecipes();
@@ -104,12 +112,19 @@ function sortRecipes(sortType) {
 
 function openAddForm() {
     currentEditItem = null;
+    selectedImageData = '';
+    clearImagePreview();
     document.getElementById('formTitle').textContent = 'เพิ่มเมนูอาหาร';
     document.getElementById('menuName').value = '';
     document.getElementById('menuServings').value = 1;
     document.getElementById('prepTime').value = '';
     document.getElementById('cookTime').value = '';
-    document.getElementById('tagsArea').innerHTML = '<span class="tag removable thai">เมนูทอด <button onclick="removeTag(this)">X</button></span><span class="tag removable thai">เมนูไข่ <button onclick="removeTag(this)">X</button></span>';
+    document.getElementById('tagsArea').innerHTML = '';
+    const tagSearchInput = document.getElementById('tagSearchInput');
+    if (tagSearchInput) {
+        tagSearchInput.value = '';
+    }
+    renderTagSuggestions('');
     document.getElementById('ingredientsList').innerHTML = `
         <div class="ingredient-row">
             <span class="thai ing-label">วัตถุดิบ</span>
@@ -146,21 +161,6 @@ function openAddForm() {
             </div>
             <button class="btn-step-remove" onclick="removeStep(this)">−</button>
         </div>
-        <div class="step-row">
-            <span class="step-num">2.</span>
-            <div class="step-content">
-                <label>
-                    <i class="fa-solid fa-image"></i>
-                    <span class="thai">เพิ่มไฟล์รูปภาพ</span>
-                    <input type="file" accept="image/*" class="hidden">
-                </label>
-            </div>
-            <div class="step-text-row">
-                <span class="thai step-lbl">วิธีทำ</span>
-                <textarea class="step-textarea thai" placeholder="ใส่เครื่องสมุนไพรลงไป"></textarea>
-            </div>
-            <button class="btn-step-remove" onclick="removeStep(this)">−</button>
-        </div>
     `;
     document.getElementById('formOverlay').classList.remove('hidden');
 }
@@ -169,13 +169,17 @@ function openEditForm(button) {
     const item = button.closest('.recipe-item');
     const id = item.getAttribute('data-id');
     currentEditItem = recipes.find(r => r._id === id);
+    selectedImageData = currentEditItem.imageURL || '';
+    setImagePreview(selectedImageData);
 
     document.getElementById('formTitle').textContent = 'แก้ไขเมนูอาหาร';
     document.getElementById('menuName').value = currentEditItem.menuName;
     document.getElementById('menuServings').value = currentEditItem.servings || 1;
     document.getElementById('prepTime').value = currentEditItem.prepTime || '';
     document.getElementById('cookTime').value = currentEditItem.cookTime || '';
-    document.getElementById('tagsArea').innerHTML = currentEditItem.tags.map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
+    document.getElementById('tagsArea').innerHTML = (currentEditItem.tags || []).map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
+    document.getElementById('tagSearchInput').value = '';
+    renderTagSuggestions('');
     document.getElementById('ingredientsList').innerHTML = (currentEditItem.ingredients || []).map(ing => `
         <div class="ingredient-row">
             <span class="thai ing-label">วัตถุดิบ</span>
@@ -194,7 +198,7 @@ function openEditForm(button) {
                     <label>
                         <i class="fa-solid fa-image"></i>
                         <span class="thai">เพิ่มไฟล์รูปภาพ</span>
-                        <input type="file" accept="image/*" class="hidden">
+                        <input type="file" accept="image/*" class="hidden" onchange="previewImg(this)">
                     </label>
                 </div>
                 <div class="step-text-row">
@@ -255,7 +259,7 @@ async function saveRecipe() {
     const servings = parseInt(document.getElementById('menuServings').value);
     const prepTime = document.getElementById('prepTime').value;
     const cookTime = document.getElementById('cookTime').value;
-    const tags = Array.from(document.querySelectorAll('#tagsArea .tag')).map(tag => tag.textContent.replace(' X', ''));
+    const tags = Array.from(document.querySelectorAll('#tagsArea .tag')).map(tag => tag.textContent.replace(/\s*X$/, '').trim());
     const ingredients = Array.from(document.querySelectorAll('.ingredient-row')).map((row, index) => ({
         name: row.querySelector('.ing-name').value,
         amount: parseFloat(row.querySelector('.ing-qty').value) || 0,
@@ -280,7 +284,7 @@ async function saveRecipe() {
         prepareTime: 0,
         cookingTime: 0,
         createdBy: 'admin', // Default
-        imageURL: '',
+        imageURL: selectedImageData || (currentEditItem ? currentEditItem.imageURL : ''),
         ingredients,
         instructions,
         tags,
@@ -378,6 +382,159 @@ function removeStep(button) {
 }
 
 function previewImg(input) {
-    // Implement image preview
-    console.log('Preview image');
+    const file = input.files && input.files[0];
+    if (!file) {
+        clearImagePreview();
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        selectedImageData = event.target.result;
+        setImagePreview(selectedImageData);
+    };
+    reader.readAsDataURL(file);
+}
+
+function setImagePreview(imageUrl) {
+    const previewContainer = document.getElementById('formImgPreview');
+    if (!previewContainer) return;
+
+    const src = imageUrl || '../../assets/a-img/placeholder-dish.png';
+    previewContainer.innerHTML = `
+        <div class="image-preview-wrapper">
+            <img id="imgPreview" src="${src}" alt="Preview" class="image-preview">
+            <button type="button" class="btn-clear-image" onclick="clearImagePreview()">Remove</button>
+        </div>
+        <label class="img-upload-label thai">
+            <i class="fa-solid fa-image"></i>
+            <span>แก้ไขรูปภาพ</span>
+            <input type="file" accept="image/*" class="hidden" id="imgInput" onchange="previewImg(this)">
+        </label>
+    `;
+}
+
+function clearImagePreview() {
+    selectedImageData = '';
+    const previewContainer = document.getElementById('formImgPreview');
+    if (!previewContainer) return;
+
+    previewContainer.innerHTML = `
+        <div class="image-preview-wrapper">
+            <img id="imgPreview" src="../../assets/a-img/placeholder-dish.png" alt="Preview" class="image-preview">
+        </div>
+        <label class="img-upload-label thai">
+            <i class="fa-solid fa-image"></i>
+            <span>เพิ่มไฟล์รูปภาพ</span>
+            <input type="file" accept="image/*" class="hidden" id="imgInput" onchange="previewImg(this)">
+        </label>
+    `;
+}
+
+async function loadTags(search = '') {
+    try {
+        const query = search ? `?search=${encodeURIComponent(search)}` : '';
+        const response = await fetch(`/api/tags${query}`);
+        if (!response.ok) {
+            throw new Error('Failed to load tags');
+        }
+        availableTags = await response.json();
+        renderTagSuggestions(search);
+    } catch (error) {
+        console.error('Error loading tags:', error);
+    }
+}
+
+function handleTagSearchInput(event) {
+    const query = event.target.value.trim();
+    loadTags(query);
+}
+
+function renderTagSuggestions(query) {
+    const resultsContainer = document.getElementById('tagSearchResults');
+    const tagNewRow = document.getElementById('tagNewRow');
+    if (!resultsContainer || !tagNewRow) return;
+
+    const normalizedQuery = query.toLowerCase();
+    const matchingTags = availableTags
+        .filter(tag => tag.name.toLowerCase().includes(normalizedQuery))
+        .slice(0, 10);
+
+    resultsContainer.innerHTML = '';
+    matchingTags.forEach(tag => {
+        const item = document.createElement('div');
+        item.className = 'tag-search-result';
+        item.textContent = tag.name;
+        item.addEventListener('click', () => addTag(tag.name));
+        resultsContainer.appendChild(item);
+    });
+
+    if (query && matchingTags.length === 0) {
+        tagNewRow.innerHTML = '';
+        const label = document.createElement('span');
+        label.className = 'thai';
+        label.textContent = 'สร้างใหม่:';
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn-add-tag';
+        button.textContent = query;
+        button.addEventListener('click', () => createAndAddTag(query));
+
+        tagNewRow.appendChild(label);
+        tagNewRow.appendChild(button);
+    } else {
+        tagNewRow.innerHTML = '<span class="thai">สร้างใหม่:</span>';
+    }
+}
+
+function addTag(tagName) {
+    const tagsArea = document.getElementById('tagsArea');
+    if (!tagsArea) return;
+
+    const existing = Array.from(tagsArea.querySelectorAll('.tag')).some(tag => {
+        const labelText = tag.firstChild && tag.firstChild.textContent
+            ? tag.firstChild.textContent.trim()
+            : tag.textContent.replace(/\s*X$/, '').trim();
+        return labelText === tagName;
+    });
+
+    if (existing) {
+        return;
+    }
+
+    const tagElement = document.createElement('span');
+    tagElement.className = 'tag removable thai';
+    tagElement.textContent = tagName + ' ';
+
+    const removeButton = document.createElement('button');
+    removeButton.textContent = 'X';
+    removeButton.addEventListener('click', () => removeTag(removeButton));
+
+    tagElement.appendChild(removeButton);
+    tagsArea.appendChild(tagElement);
+}
+
+async function createAndAddTag(tagName) {
+    try {
+        const response = await fetch('/api/tags', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: tagName })
+        });
+        if (!response.ok) {
+            throw new Error('Failed to create tag');
+        }
+        const createdTag = await response.json();
+        availableTags.push(createdTag);
+        addTag(createdTag.name);
+        document.getElementById('tagSearchInput').value = '';
+        await loadTags('');
+        renderTagSuggestions('');
+    } catch (error) {
+        console.error('Error creating tag:', error);
+        alert('ไม่สามารถสร้าง tag ใหม่ได้');
+    }
 }

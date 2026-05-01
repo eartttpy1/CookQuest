@@ -4,11 +4,19 @@
 let deleteMode = false;
 let currentEditItem = null;
 let quests = [];
+let selectedImageData = '';
+let availableTags = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     loadQuests();
+    loadMenus();
     setupQuestEventListeners();
+
+    const menuTagSearchInput = document.getElementById('menuTagSearchInput');
+    if (menuTagSearchInput) {
+        menuTagSearchInput.addEventListener('input', handleMenuTagSearchInput);
+    }
 
     // Form submission
     const saveBtn = document.querySelector('.btn-save');
@@ -109,11 +117,18 @@ function sortQuests(sortType) {
 
 function openAddForm() {
     currentEditItem = null;
+    selectedImageData = '';
+    clearImagePreview();
     document.getElementById('formTitle').textContent = 'เพิ่มเควส';
     document.getElementById('questName').value = '';
     document.getElementById('questLevel').value = 'bronze';
     document.getElementById('questExp').value = '';
     document.getElementById('menuTagsArea').innerHTML = '<span class="tag removable thai">เสต็ก <button onclick="removeTag(this)">X</button></span>';
+    const tagSearchInput = document.getElementById('menuTagSearchInput');
+    if (tagSearchInput) {
+        tagSearchInput.value = '';
+    }
+    renderMenuTagSuggestions('');
     document.getElementById('formOverlay').classList.remove('hidden');
 }
 
@@ -121,12 +136,19 @@ function openEditForm(button) {
     const item = button.closest('.quest-item');
     const id = item.getAttribute('data-id');
     currentEditItem = quests.find(q => q._id === id);
+    selectedImageData = '';
+    setImagePreview('');
 
     document.getElementById('formTitle').textContent = 'แก้ไขเควส';
     document.getElementById('questName').value = currentEditItem.name;
     document.getElementById('questLevel').value = currentEditItem.level;
     document.getElementById('questExp').value = currentEditItem.exp;
-    document.getElementById('menuTagsArea').innerHTML = currentEditItem.tags.map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
+    document.getElementById('menuTagsArea').innerHTML = (currentEditItem.tags || []).map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
+    const tagSearchInput = document.getElementById('menuTagSearchInput');
+    if (tagSearchInput) {
+        tagSearchInput.value = '';
+    }
+    renderMenuTagSuggestions('');
     document.getElementById('formOverlay').classList.remove('hidden');
 }
 
@@ -170,6 +192,80 @@ async function deleteItem(button) {
 
 function removeTag(button) {
     button.parentElement.remove();
+}
+
+async function loadMenus(search = '') {
+    try {
+        const response = await fetch('/api/menus');
+        if (!response.ok) {
+            throw new Error('Failed to load menus');
+        }
+        const menus = await response.json();
+        availableTags = menus.map(menu => ({ name: menu.menuName }));
+        renderMenuTagSuggestions(search);
+    } catch (error) {
+        console.error('Error loading menus:', error);
+    }
+}
+
+function handleMenuTagSearchInput(event) {
+    const query = event.target.value.trim();
+    renderMenuTagSuggestions(query);
+}
+
+function renderMenuTagSuggestions(query) {
+    const resultsContainer = document.getElementById('menuTagSearchResults');
+    if (!resultsContainer) return;
+
+    const normalizedQuery = query.toLowerCase();
+    const matchingMenus = availableTags
+        .filter(menu => menu.name.toLowerCase().includes(normalizedQuery))
+        .slice(0, 10);
+
+    resultsContainer.innerHTML = '';
+    matchingMenus.forEach(menu => {
+        const item = document.createElement('div');
+        item.className = 'tag-search-result';
+        item.textContent = menu.name;
+        item.addEventListener('click', () => addMenuTag(menu.name));
+        resultsContainer.appendChild(item);
+    });
+}
+
+function addMenuTag(tagName) {
+    const tagsArea = document.getElementById('menuTagsArea');
+    if (!tagsArea) return;
+
+    const existing = Array.from(tagsArea.querySelectorAll('.tag')).some(tag => {
+        const labelText = tag.firstChild && tag.firstChild.textContent
+            ? tag.firstChild.textContent.trim()
+            : tag.textContent.replace(/\s*X$/, '').trim();
+        return labelText === tagName;
+    });
+
+    if (existing) {
+        return;
+    }
+
+    const tagElement = document.createElement('span');
+    tagElement.className = 'tag removable thai';
+    tagElement.textContent = tagName + ' ';
+
+    const removeButton = document.createElement('button');
+    removeButton.textContent = 'X';
+    removeButton.addEventListener('click', () => removeTag(removeButton));
+
+    tagElement.appendChild(removeButton);
+    tagsArea.appendChild(tagElement);
+}
+
+function createAndAddMenuTag(tagName) {
+    addMenuTag(tagName);
+    const tagInput = document.getElementById('menuTagSearchInput');
+    if (tagInput) {
+        tagInput.value = '';
+    }
+    renderMenuTagSuggestions('');
 }
 
 async function saveQuest() {
@@ -218,6 +314,51 @@ async function saveQuest() {
 }
 
 function previewImg(input) {
-    // Implement image preview
-    console.log('Preview image');
+    const file = input.files && input.files[0];
+    if (!file) {
+        clearImagePreview();
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        selectedImageData = event.target.result;
+        setImagePreview(selectedImageData);
+    };
+    reader.readAsDataURL(file);
+}
+
+function setImagePreview(imageUrl) {
+    const previewContainer = document.getElementById('formImgPreview');
+    if (!previewContainer) return;
+
+    const src = imageUrl || '../../assets/a-img/placeholder-quest.png';
+    previewContainer.innerHTML = `
+        <div class="image-preview-wrapper">
+            <img id="imgPreview" src="${src}" alt="Preview" class="image-preview">
+            <button type="button" class="btn-clear-image" onclick="clearImagePreview()">Remove</button>
+        </div>
+        <label class="img-upload-label thai">
+            <i class="fa-solid fa-image"></i>
+            <span>แก้ไขรูปภาพ</span>
+            <input type="file" accept="image/*" class="hidden" id="imgInput" onchange="previewImg(this)">
+        </label>
+    `;
+}
+
+function clearImagePreview() {
+    selectedImageData = '';
+    const previewContainer = document.getElementById('formImgPreview');
+    if (!previewContainer) return;
+
+    previewContainer.innerHTML = `
+        <div class="image-preview-wrapper">
+            <img id="imgPreview" src="../../assets/a-img/placeholder-quest.png" alt="Preview" class="image-preview">
+        </div>
+        <label class="img-upload-label thai">
+            <i class="fa-solid fa-image"></i>
+            <span>เพิ่มไฟล์รูปภาพ</span>
+            <input type="file" accept="image/*" class="hidden" id="imgInput" onchange="previewImg(this)">
+        </label>
+    `;
 }
