@@ -20,11 +20,13 @@
     <link rel="stylesheet" href="../../style.css">
     <link rel="stylesheet" href="../../quest-style.css">
     <link rel="stylesheet" href="../../assets/css/quest.css">
+    <link rel="stylesheet" href="../../assets/css/q-self.css">
     <!-- ============== Start  Script ============== -->
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
     <script src="../../assets/js/quest.js" defer></script>
+    <script src="../../assets/js/addmenu.js" defer></script>
 
 </head>
 <body>
@@ -102,6 +104,135 @@
     </nav>
   
     <!-- ==============Self Recipe page content ============== -->
+     <div class="container-main">
+        <div class="search-container">
+            <span class="search-label thai">ค้นหา</span>
+            <input type="text" class="search-input thai" placeholder="ชื่อเมนู, ส่วนผสม">
+            <button class="search-button">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </div>
+
+        <nav class="top-nav">
+            <a href="q-all.html" class="nav-link active"><span class="thai">ทั้งหมด</span></a>
+            <a href="q-pending.html" class="nav-link"><span class="thai">รอดำเนินการ</span></a>
+            <a href="q-complete.html" class="nav-link"><span class="thai">เสร็จสิ้น</span></a>
+            <a href="q-self.html" class="nav-link"><span class="thai">บันทึกสูตร</span></a>
+        </nav>
+
+        <main class="content-container" id="detail-main">
+            <span class ="category-title thai">บันทึกสูตรอาหารของคุณ</span>
+            <!-- ปุ่ม trigger (ใช้ในหน้าจริงให้แทนด้วยปุ่มของคุณ) -->
+            <div class="demo-trigger-wrap">
+                <button class="btn-open-popup" onclick="openAddMenu()">+</button>
+            </div>
+            
+            <!-- ════════ OVERLAY ════════ -->
+            <div class="am-overlay hidden" id="amOverlay">
+                <div class="am-popup" id="amPopup">
+            
+                <!-- ชื่อเมนู -->
+                <div class="am-field">
+                    <input type="text" class="am-input" placeholder="ชื่อเมนู" id="amName">
+                </div>
+            
+                <!-- รูปภาพหลัก -->
+                <div class="am-upload-main" id="amMainBox" onclick="document.getElementById('amMainFile').click()">
+                    <i class="fa-regular fa-image am-upload-icon" id="amMainIcon"></i>
+                    <span class="am-upload-label" id="amMainLabel">เพิ่มไฟล์รูปภาพ</span>
+                    <img class="am-upload-preview hidden" id="amMainPreview" alt="preview">
+                    <input type="file" id="amMainFile" accept="image/*" style="display:none" onchange="previewMainImg(event)">
+                </div>
+                <div class="am-upload-actions hidden" id="amMainActions">
+                    <label class="am-btn-change" for="amMainFile"><i class="fa-solid fa-pen"></i> เปลี่ยนรูป</label>
+                    <button class="am-btn-delete" onclick="removeMainImg()"><i class="fa-solid fa-trash"></i> ลบรูป</button>
+                </div>
+            
+                <!-- จำนวน / เวลา -->
+                <div class="am-row-two">
+                    <div class="am-field am-field-sm">
+                    <input type="text" class="am-input" placeholder="จำนวน xxxx จาน" id="amQty">
+                    </div>
+                    <div class="am-row-time">
+                    <div class="am-field">
+                        <input type="text" class="am-input" placeholder="เวลาเตรียม xxxxxxxx นาที" id="amPrepTime">
+                    </div>
+                    <div class="am-field">
+                        <input type="text" class="am-input" placeholder="เวลาปรุง xxxxxxxx นาที" id="amCookTime">
+                    </div>
+                    </div>
+                </div>
+            
+                <!-- Tags -->
+                <div class="am-section">
+                    <div class="am-sec-header">
+                    <span class="thai">Tags</span>
+                    </div>
+                    <div class="am-sec-body">
+                    <div class="am-tags-wrap" id="amTagsWrap"></div>
+                    <div class="am-tag-input-row">
+                        <input type="text" class="am-input" placeholder="เพิ่ม tag: เมนูอาหาร" id="amTagInput" onkeydown="amTagKeydown(event)">
+                        <button class="am-btn-add-tag" onclick="amAddTag()">+</button>
+                    </div>
+                    </div>
+                </div>
+            
+                <!-- วัตถุดิบ -->
+                <div class="am-section">
+                    <div class="am-sec-header">
+                    <span class="thai">วัตถุดิบ</span>
+                    <button class="am-sec-plus" onclick="amAddIngredient()">+</button>
+                    </div>
+                    <div class="am-sec-body" id="amIngList"></div>
+                </div>
+            
+                <!-- ขั้นตอน -->
+                <div class="am-section">
+                    <div class="am-sec-header">
+                    <span class="thai">ขั้นตอนการทำ</span>
+                    <button class="am-sec-plus" onclick="amAddStep()">+</button>
+                    </div>
+                    <div class="am-sec-body">
+                    <div id="amStepList"></div>
+                    </div>
+                </div>
+            
+                <!-- Taste stars -->
+                <div class="am-taste-row">
+                    <span class="am-taste-label">Taste :</span>
+                    <div class="am-taste-stars" id="amTasteStars">
+                    <i class="fa-regular fa-star am-star" data-val="1"></i>
+                    <i class="fa-regular fa-star am-star" data-val="2"></i>
+                    <i class="fa-regular fa-star am-star" data-val="3"></i>
+                    <i class="fa-regular fa-star am-star" data-val="4"></i>
+                    <i class="fa-regular fa-star am-star" data-val="5"></i>
+                    </div>
+                </div>
+            
+                <!-- Taste tags -->
+                <div class="am-taste-tags" id="amTasteTags">
+                    <button class="am-ttag thai">หวาน</button>
+                    <button class="am-ttag thai">เค็ม</button>
+                    <button class="am-ttag thai">เปรี้ยว</button>
+                    <button class="am-ttag thai">ขม</button>
+                    <button class="am-ttag thai">อูมามิ</button>
+                    <button class="am-ttag thai">เผ็ด</button>
+                </div>
+            
+                <!-- รีวิว -->
+                <div class="am-field">
+                    <textarea class="am-input am-textarea thai" placeholder="รสชาติอาหารของคุณเป็นอย่างไรบ้าง" id="amReview" rows="2"></textarea>
+                </div>
+            
+                <!-- Buttons -->
+                <div class="am-bottom-row">
+                    <button class="am-btn-submit thai" onclick="amSubmit()">Add</button>
+                    <button class="am-btn-cancel thai" onclick="closeAddMenu()">Cancel</button>
+                </div>
+            
+                </div>
+            </div>
+        </main>
 
 </body>
 </html>

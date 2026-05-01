@@ -176,7 +176,7 @@
     position: relative;
     width: 100%;
 }
-.category-container .category-title{
+.category-title{
     padding: 10px 15px;
     font-size: 1.7rem;
     font-weight: bolder;
@@ -346,9 +346,373 @@
     color: #ffffff;
 }
 
-/* สีของดาวทึบ (Favorite แล้ว) */
 .fa-solid.fa-star {
     color: #ffffff;
+}
+
+/* ─── Overlay backdrop ─── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 1000;
+    padding: 20px 12px;
+    overflow-y: auto;
+}
+ 
+/* ─── Modal card ─── */
+.modal-content {
+    background: var(--red-main);
+    width: 100%;
+    max-width: 400px;
+    border-radius: 20px;
+    padding: 20px 18px 24px;
+    position: relative;
+    color: white;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    margin: auto;
+}
+ 
+/* ─── Close button ─── */
+.close-modal {
+    position: absolute;
+    top: 12px;
+    right: 10px;
+    font-size: 28px;
+    line-height: 1;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    opacity: 0.85;
+    padding: 0;
+}
+.close-modal:hover { opacity: 1; }
+ 
+/* ─── Header row: title + star ─── */
+.modal-header {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    padding-right: 28px; /* avoid overlap with × */
+}
+.modal-header .modal-star{
+    position: absolute;
+    right: 0;
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 1.8rem;
+    color: white;
+}
+.modal-star {
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: white;
+    transition: transform 0.2s;
+}
+.modal-star:hover { transform: scale(1.2); }
+ 
+/* ─── Main image ─── */
+.modal-main-img {
+    width: 100%;
+    border-radius: 12px;
+    display: block;
+    margin-bottom: 12px;
+    object-fit: cover;
+    max-height: 220px;
+}
+ 
+/* ─── Tags row ─── */
+.modal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.modal-tag {
+    background: white;
+    color: var(--red-main);
+    border: 2px solid white;
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.modal-tag-more {
+    cursor: pointer;
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+    letter-spacing: 1px;
+}
+ 
+/* ─── Info lines ─── */
+.modal-info {
+    margin: 2px 0 4px;
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.9);
+}
+ 
+/* ─── Accordion / details dropdowns ─── */
+.modal-dropdown {
+    background: white;
+    color: #222;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+.modal-dropdown summary {
+    padding: 12px 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #222;
+    user-select: none;
+}
+.modal-dropdown summary::-webkit-details-marker { display: none; }
+.modal-chevron {
+    color: var(--red-main);
+    font-size: 0.85rem;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+.modal-dropdown[open] .modal-chevron { transform: rotate(180deg); }
+ 
+/* ─── Ingredients list ─── */
+.ingredient-list {
+    padding: 0 14px 10px;
+    border-top: 1px solid #f0e0e0;
+}
+.ing-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 0.88rem;
+    border-bottom: 1px solid #f5eded;
+    color: #333;
+}
+.ing-item:last-child { border-bottom: none; }
+ 
+/* ─── Steps list ─── */
+.step-list {
+    padding: 0 14px 12px;
+    border-top: 1px solid #f0e0e0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.step-item {
+    display: flex;
+    gap: 10px;
+    padding-top: 12px;
+}
+.step-num-badge {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--red-main);
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.step-body {
+    flex: 1;
+}
+.step-body p {
+    margin: 0 0 4px;
+    font-size: 0.85rem;
+    color: #333;
+    line-height: 1.5;
+}
+.step-tip {
+    background: #fff3f3;
+    border-left: 3px solid var(--red-main);
+    padding: 4px 8px;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.8rem !important;
+    color: #800000 !important;
+}
+ 
+/* ─── Quest zone ─── */
+.modal-quest-zone {
+    margin-top: 14px;
+}
+.modal-quest-title {
+    font-size: 1.6rem;
+    margin: 0 0 2px;
+    color: white;
+}
+.modal-quest-desc {
+    font-size: 0.88rem;
+    margin: 0 0 10px;
+    color: rgba(255,255,255,0.9);
+}
+ 
+/* ─── Upload box ─── */
+.upload-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.15);
+    border: 2px dashed rgba(255,255,255,0.6);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    color: rgba(255,255,255,0.85);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    transition: background 0.2s;
+}
+.upload-box:hover { background: rgba(255,255,255,0.22); }
+.upload-icon { font-size: 1.4rem; margin-bottom: 2px; }
+.upload-preview {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    object-fit: cover;
+    max-height: 180px;
+    display: block;
+}
+ 
+/* ─── Taste rating stars ─── */
+.taste-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.taste-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+}
+.taste-stars { display: flex; gap: 4px; }
+.taste-star {
+    font-size: 1.3rem;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.15s, color 0.15s;
+}
+.taste-star:hover,
+.taste-star.active { color: #FFD700; transform: scale(1.15); }
+ 
+/* ─── Taste tag buttons ─── */
+.taste-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.taste-tag {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.7);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-family: inherit;
+}
+.taste-tag:hover,
+.taste-tag.selected {
+    background: white;
+    color: var(--red-main);
+    border-color: white;
+    font-weight: 600;
+}
+ 
+/* ─── Review textarea ─── */
+.modal-review {
+    width: 100%;
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: 10px;
+    color: white;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    margin-bottom: 14px;
+    box-sizing: border-box;
+}
+.modal-review::placeholder { color: rgba(255,255,255,0.55); }
+.modal-review:focus { border-color: rgba(255,255,255,0.85); }
+ 
+/* ─── Submit row ─── */
+.modal-submit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.btn-history {
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    border-radius: 24px;
+    padding: 8px 18px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+.btn-history:hover { background: rgba(255,255,255,0.15); }
+ 
+.btn-submit {
+    background: #1aab5a;
+    border: none;
+    color: white;
+    border-radius: 24px;
+    padding: 8px 28px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+.btn-submit:hover { background: #148f4a; }
+ 
+/* ─── EXP bar ─── */
+.modal-xp-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 30px;
+    padding: 8px 20px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+}
+.xp-star {
+    color: #FFD700;
+    font-size: 1.1rem;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.4));
 }
 @media(max-width: 1024px){
     .dropdown summary span {
@@ -378,4 +742,209 @@
         height: 80px;
     }
 
+}
+/* ─── Upload in-box preview ─── */
+.upload-box {
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 110px;
+    overflow: hidden;
+}
+.upload-box .upload-preview {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    pointer-events: none;
+}
+.upload-actions {
+    display: flex;
+    gap: 10px;
+    margin: 8px 0;
+}
+.upload-actions i{
+    font-size: 0.75rem;
+}
+.btn-change-img,
+.btn-delete-img {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+}
+.btn-change-img {
+    background: #800000;
+    color: #fff;
+}
+.btn-delete-img {
+    background: #555;
+    color: #fff;
+}
+.btn-change-img:hover,
+.btn-delete-img:hover {
+    opacity: 0.82;
+}
+
+/* ─── Step images ─── */
+.step-img {
+    width: 100%;
+    max-width: 280px;
+    border-radius: 10px;
+    margin-top: 8px;
+    object-fit: cover;
+    display: block;
+}
+
+
+/* ─── History Modal ─── */
+.history-modal-content {
+  padding: 0;
+  overflow: hidden;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  background: var(--red-main);
+}
+
+.history-title {
+  font-size: 1.4rem;
+  color: white;
+}
+
+.history-item {
+  background: white;
+  margin: 0;
+  border-bottom: 1px solid #f0e0e0;
+}
+
+.history-summary {
+  list-style: none;
+  padding: 14px 18px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border-radius: 0;
+}
+.history-summary::-webkit-details-marker { display: none; }
+
+.history-summary-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.history-quest-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.history-badge {
+  background: #d4a017;
+  color: white;
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.history-badge.pending { background: #d4a017; }
+.history-badge.done { background: #1aab5a; }
+
+.history-chevron {
+  color: var(--red-main);
+  transition: transform 0.2s ease;
+}
+.history-item[open] .history-chevron { transform: rotate(180deg); }
+
+.history-body {
+  padding: 12px 18px 18px;
+  background: var(--red-main);
+  color: white;
+}
+
+.history-desc {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.9);
+  margin: 0 0 10px;
+}
+
+.history-photo-wrap {
+  border: 2px dashed rgba(255,255,255,0.6);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.history-photo {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.history-review-wrap { margin-bottom: 12px; }
+
+.history-review-text {
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  color: white;
+  margin: 0;
+  min-height: 44px;
+}
+
+.history-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.btn-edit-history {
+  background: #2196f3;
+  border: none;
+  color: white;
+  border-radius: 24px;
+  padding: 8px 28px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-edit-history:hover { background: #1976d2; }
+
+.btn-cancel-history {
+  background: #c0392b;
+  border: none;
+  color: white;
+  border-radius: 24px;
+  padding: 8px 22px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-cancel-history:hover { background: #a93226; }
+
+.history-edit-actions {
+  display: flex;
+  gap: 10px;
 }
