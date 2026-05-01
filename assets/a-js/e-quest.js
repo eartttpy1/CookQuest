@@ -3,17 +3,11 @@
 // Global variables
 let deleteMode = false;
 let currentEditItem = null;
-
-// Sample quest data (replace with database calls later)
-let quests = [
-    { id: 1, name: 'ผู้กล้าเสต็ก', level: 'bronze', exp: 200, tags: ['เสต็ก'] },
-    { id: 2, name: 'รวมพลขนมหวาน', level: 'silver', exp: 600, tags: ['ไอศกรีม', 'คุกกี้', 'มัฟฟิน'] },
-    { id: 3, name: 'รวมพลขนมหวาน ++', level: 'gold', exp: 1000, tags: ['ครัวซองต์', 'มาการอง', 'ซูเฟล่'] }
-];
+let quests = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    renderQuests();
+    loadQuests();
     setupQuestEventListeners();
 
     // Form submission
@@ -24,6 +18,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Quest functions
+async function loadQuests() {
+    try {
+        const response = await fetch('/api/quests');
+        quests = await response.json();
+        renderQuests();
+    } catch (error) {
+        console.error('Error loading quests:', error);
+    }
+}
+
 function renderQuests() {
     const questList = document.getElementById('questList');
     questList.innerHTML = '';
@@ -31,7 +35,7 @@ function renderQuests() {
     quests.forEach(quest => {
         const questItem = document.createElement('div');
         questItem.className = `quest-item bg-${quest.level}`;
-        questItem.setAttribute('data-id', quest.id);
+        questItem.setAttribute('data-id', quest._id);
 
         questItem.innerHTML = `
             <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
@@ -115,8 +119,8 @@ function openAddForm() {
 
 function openEditForm(button) {
     const item = button.closest('.quest-item');
-    const id = parseInt(item.getAttribute('data-id'));
-    currentEditItem = quests.find(q => q.id === id);
+    const id = item.getAttribute('data-id');
+    currentEditItem = quests.find(q => q._id === id);
 
     document.getElementById('formTitle').textContent = 'แก้ไขเควส';
     document.getElementById('questName').value = currentEditItem.name;
@@ -143,13 +147,24 @@ function toggleDeleteMode() {
     deleteModeBtn.classList.toggle('active', deleteMode);
 }
 
-function deleteItem(button) {
+async function deleteItem(button) {
     const item = button.closest('.quest-item');
-    const id = parseInt(item.getAttribute('data-id'));
+    const id = item.getAttribute('data-id');
 
     if (confirm('Are you sure you want to delete this quest?')) {
-        quests = quests.filter(q => q.id !== id);
-        renderQuests();
+        try {
+            const response = await fetch(`/api/quests/${id}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                await loadQuests();
+            } else {
+                alert('Failed to delete quest');
+            }
+        } catch (error) {
+            console.error('Error deleting quest:', error);
+            alert('Error deleting quest');
+        }
     }
 }
 
@@ -157,7 +172,7 @@ function removeTag(button) {
     button.parentElement.remove();
 }
 
-function saveQuest() {
+async function saveQuest() {
     const name = document.getElementById('questName').value;
     const level = document.getElementById('questLevel').value;
     const exp = parseInt(document.getElementById('questExp').value);
@@ -168,20 +183,38 @@ function saveQuest() {
         return;
     }
 
-    if (currentEditItem) {
-        // Edit
-        currentEditItem.name = name;
-        currentEditItem.level = level;
-        currentEditItem.exp = exp;
-        currentEditItem.tags = tags;
-    } else {
-        // Add
-        const newId = Math.max(...quests.map(q => q.id)) + 1;
-        quests.push({ id: newId, name, level, exp, tags });
-    }
+    const questData = { name, level, exp, tags };
 
-    renderQuests();
-    closeForm();
+    try {
+        if (currentEditItem) {
+            // Edit existing quest
+            const response = await fetch(`/api/quests/${currentEditItem._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(questData)
+            });
+            if (!response.ok) {
+                throw new Error('Failed to update quest');
+            }
+        } else {
+            // Add new quest
+            await fetch('/api/quests', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(questData)
+            });
+        }
+
+        await loadQuests();
+        closeForm();
+    } catch (error) {
+        console.error('Error saving quest:', error);
+        alert('Error saving quest');
+    }
 }
 
 function previewImg(input) {
