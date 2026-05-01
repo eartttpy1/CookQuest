@@ -574,6 +574,58 @@ body.darkmode{
 }
 .tag-search-input:focus { border-color: var(--base-color); }
 
+.tag-new-row,
+.tag-search-results {
+    background: white;
+    border: 1px solid #eee;
+    border-top: none;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.tag-search-results {
+    flex-direction: column;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.tag-search-result {
+    background: #FFF3C9;
+    border-radius: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    color: #333;
+    width: 100%;
+}
+
+.tag-search-result:hover {
+    background: #ffeb9f;
+}
+
+.btn-add-tag {
+    background: var(--base-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.btn-add-tag:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
 .form-footer {
     padding: 16px 24px;
     display: flex;
