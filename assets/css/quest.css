@@ -10,11 +10,59 @@
     background-color: white;
     color: var(--red-main);
     display: inline-block;
-    padding: 5px 15px;
+    padding: 5px 10px;
     border-radius: 10px;
     font-weight: bold;
     margin-bottom: 15px;
     font-size: 2rem;
+    font-style: italic;
+}
+.sort-container {
+    position: relative;
+    display: inline-block;
+}
+.sort-container .sort-btn{
+    border-radius: 5px;
+    padding: 3px;
+    border-style: none;
+    background-color: var(--red-main);
+}
+.hidden {
+    display: none !important;
+}
+
+.sort-dropdown {
+    position: absolute;
+    right: 0;
+    top: 40px; /* ปรับระยะห่างจากปุ่มตามความเหมาะสม */
+    background: white;
+    border: 2px solid #a00;
+    border-radius: 15px;
+    padding: 15px;
+    width: 250px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 100; /* ให้อยู่เหนือรูปภาพอาหาร */
+}
+
+.sort-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+}
+
+.sort-label {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+.sort-select {
+    border: 2px solid #a00;
+    border-radius: 8px;
+    padding: 5px;
+    font-family: 'ThaiPattaya', sans-serif;
+    width: 100px;
 }
 
 .category-grid {
@@ -50,7 +98,7 @@
     margin: 0;
     background: white;
     border-top: 1px solid #eee;
-
+    border-radius: 8px;
     position: absolute; 
     top: 100%; /* ให้เริ่มแสดงต่อจากขอบล่างของ summary */
     left: 0;
@@ -66,13 +114,47 @@
     color: #666;
     font-size: 13px;
 }
+.dropdown[open] .dropdown-list {
+    display: block;
+}
 
+/* ตกแต่งเพิ่มเติม: เมื่อเอาเมาส์วางที่เมนูย่อยให้มีไฮไลท์ */
+.dropdown-list li a:hover {
+    background-color: #f9f9f9;
+    color: var(--red-main);
+}
+
+.dropdown[open] summary i {
+    transform: rotate(180deg);
+    transition: transform 0.2s ease;
+}
+
+.dropdown summary i {
+    transition: transform 0.2s ease;
+}
 /* 3. Quest Styling */
+.category-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    position: relative;
+    width: 100%;
+}
+.category-container .category-title{
+    padding: 10px 15px;
+    font-size: 1.7rem;
+    font-weight: bolder;
+}
+.category-container .sort-wrapper{
+    position: absolute;
+    top: 15px;
+    right: 0;
+
+}
 .quest-section{
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
-
 }
 .quest-card {
     background-color: var(--red-main);
@@ -84,6 +166,27 @@
     color: white;
     text-align: center;
 }
+.quest-title-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
+}
+.quest-title-wrapper i {
+    text-align: end;
+    margin-right: 0;
+}
+.quest-title {
+    margin: 0;
+}
+
+.quest-title-wrapper i {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
 
 .quest-title {
     margin-top: 0;
@@ -91,19 +194,33 @@
     font-size: 24px;
 }
 
+.quest-image {
+    border-radius: 10px;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    position: relative;
+}
+.quest-image img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
 .quest-image-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr ;
+    grid-template-rows: 1fr 1fr;
     gap: 2px;
     border-radius: 10px;
-    /* aspect-ratio: 16 / 9; */
+    aspect-ratio: 16 / 9;
     overflow: hidden;
 }
 
 .quest-image-grid img {
     width: 100%;
-    height: 100px;
+    height: 100%;
     object-fit: cover;
+    object-position: center;
     display: block;
 }
 
@@ -113,6 +230,25 @@
     margin-top: 10px;
     font-size: 20px;
     font-weight: bold;
+}
+.quest-footer span{
+    font-size: 0.9rem;
+}
+.quest-footer i{
+    font-size: 0.9rem;
+}
+.menu-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+.menu-footer span{
+    font-size: 0.9rem;
+}
+.menu-footer i{
+    font-size: 0.9rem;
 }
 
 /* เควสที่ล็อคไว้ */
@@ -155,7 +291,22 @@
     font-weight: 1000;
     color: #FFD700;
     text-shadow: 2px 1px var(--dark-grey);
+}
 
+.quest-title-wrapper i.fa-star {
+    cursor: pointer;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+/* เอฟเฟกต์ตอนเอาเมาส์ไปวาง */
+.quest-title-wrapper i.fa-star:hover {
+    transform: scale(1.2);
+    color: #ffffff;
+}
+
+/* สีของดาวทึบ (Favorite แล้ว) */
+.fa-solid.fa-star {
+    color: #ffffff;
 }
 @media(max-width: 1024px){
     .dropdown summary span {

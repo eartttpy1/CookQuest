@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- ============== Page Title ============== -->
-    <title>Main Quest</title>
+    <title>All Quest</title>
 
     <!-- ============== Font&Icon ============== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,6 +25,7 @@
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
     <script src="../../assets/js/quest.js" defer></script>
+    <script src="../../assets/js/sort.js" defer></script>
 
 </head>
 <body>
@@ -119,12 +120,35 @@
         </nav>
 
         <main class="content-container">
-            <div class="category-header">Category</div>
+            <section class ="category-container">
+                    <span class="category-header">Category</span>
+                <div class="sort-container">
+                    <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
+                    <div class="sort-dropdown hidden" id="sortDropdown">
+                        <div class="sort-row">
+                            <span class="sort-label">Name</span>
+                            <select id="sortName" class="sort-select">
+                                <option value="none">เลือก</option>
+                                <option value="asc">ก → ฮ</option>
+                                <option value="desc">ฮ → ก</option>
+                            </select>
+                        </div>
+                        <div class="sort-row">
+                            <span class="sort-label">Exp</span>
+                            <select id="sortExp" class="sort-select">
+                                <option value="none">เลือก</option>
+                                <option value="low">น้อย → มาก</option>
+                                <option value="high">มาก → น้อย</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <section class="category-grid">
                 <details class="dropdown">
                     <summary class="thai"><span>วัตถุดิบ</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list">
+                    <ul class="dropdown-list" name="category">
                         <li><a href="category.html?type=egg">เมนูไข่</a></li>
                         <li><a href="category.html?type=chicken">เมนูไก่</a></li>
                         <li><a href="category.html?type=pork">เมนูหมู</a></li>
@@ -144,7 +168,7 @@
 
                 <details class="dropdown">
                     <summary class="thai"><span>ประเภทอาหาร</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list">
+                    <ul class="dropdown-list" name="category">
                         <li><a href="category.html?type=breakfast">เมนูอาหารเช้า</a></li>
                         <li><a href="category.html?type=single-dish">เมนูอาหารจานเดียว</a></li>
                         <li><a href="category.html?type=appetizer">เมนูกับแกล้ม/อาหารว่าง</a></li>
@@ -173,7 +197,7 @@
                 </details>
                 <details class="dropdown">
                     <summary class="thai"><span>วิธีการ</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list">
+                    <ul class="dropdown-list" name="category">
                         <li><a href="category.html?type=microwave">เมนูไมโครเวฟ</a></li>
                         <li><a href="category.html?type=boil">เมนูต้ม</a></li>
                         <li><a href="category.html?type=stir-fry">เมนูผัด</a></li>
@@ -189,7 +213,7 @@
 
                 <details class="dropdown">
                     <summary class="thai"><span>ของหวาน/เบเกอรี่</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list">
+                    <ul class="dropdown-list" name="category">
                         <li><a href="category.html?type=ice-cream">เมนูไอศกรีม</a></li>
                         <li><a href="category.html?type=thai-dessert">เมนูขนมไทย</a></li>
                         <li><a href="category.html?type=bakery">เมนูเบเกอรี</a></li>
@@ -200,7 +224,7 @@
                 </details>
                 <details class="dropdown">
                     <summary class="thai"><span>เมนูพิเศษ</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list">
+                    <ul class="dropdown-list" name="category">
                         <li><a href="category.html?type=quick-meal">เมนูทำง่ายไม่เกิน 15 นาที</a></li>
                         <li><a href="category.html?type=budget">เมนูประหยัด</a></li>
                         <li><a href="category.html?type=dorm-life">เมนูเด็กหอ</a></li>
@@ -214,7 +238,7 @@
 
                 <details class="dropdown">
                     <summary class="thai"><span>อาหารเพื่อสุขภาพ</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list">
+                    <ul class="dropdown-list" name="category" >
                         <li><a href="category.html?type=salad-dressing">สูตรน้ำสลัด</a></li>
                         <li><a href="category.html?type=clean-food">เมนูอาหารคลีน</a></li>
                         <li><a href="category.html?type=salad">เมนูสลัด</a></li>
@@ -226,23 +250,22 @@
                 </details>
             </section>
 
-            <section class="quest-section">
-                <a href="quest-detail.html" class="quest-card">
+            <section id="questList" class="quest-section">
+                <a href="q-detail.html" class="quest-card" data-name="4 จตุรเทพสเต็ก" data-exp="2000">
                     <h2 class="quest-title thaipattaya">4 จตุรเทพสเต็ก</h2>
-                    <div class="quest-image-grid">
+                    <figure class="quest-image-grid">
                         <img src="../../assets/img/steak1.png" alt="steak">
                         <img src="../../assets/img/steak2.png" alt="steak">
                         <img src="../../assets/img/steak3.png" alt="steak">
                         <img src="../../assets/img/steak4.png" alt="steak">
-                    </div>
+                    </figure>
                     <div class="quest-footer">
                         <span class="exp"><i class="fa-solid fa-star"></i> 2000 EXP</span>
                     </div>
                 </a>
-
-                <div class="quest-card locked">
+                <div class="quest-card locked" data-name="ขนมหวานขั้นสูง" data-exp="5000">
                     <h2 class="quest-title thaipattaya">ขนมหวานขั้นสูง</h2>
-                    <div class="quest-image-grid">
+                    <figure class="quest-image-grid">
                         <img src="../../assets/img/steak1.png" alt="steak">
                         <img src="../../assets/img/steak2.png" alt="steak">
                         <img src="../../assets/img/steak3.png" alt="steak">
@@ -250,9 +273,25 @@
                         <div class="lock-overlay">
                             <i class="fa-solid fa-lock"></i><span class="gold-text">GOLD</span>
                         </div>
-                    </div>
+                    </figure>
                     <div class="quest-footer">
                         <span class="exp"><i class="fa-solid fa-star"></i> 5000 EXP</span>
+                    </div>
+                </div>
+
+                <div class="quest-card locked" data-name="อาหารไทย" data-exp="4000">
+                    <h2 class="quest-title thaipattaya">อาหารไทย</h2>
+                    <figure class="quest-image-grid">
+                        <img src="../../assets/img/steak1.png" alt="steak">
+                        <img src="../../assets/img/steak2.png" alt="steak">
+                        <img src="../../assets/img/steak3.png" alt="steak">
+                        <img src="../../assets/img/steak4.png" alt="steak">
+                        <div class="lock-overlay">
+                            <i class="fa-solid fa-lock"></i><span class="gold-text">GOLD</span>
+                        </div>
+                    </figure>
+                    <div class="quest-footer">
+                        <span class="exp"><i class="fa-solid fa-star"></i> 4000 EXP</span>
                     </div>
                 </div>
             </section>
