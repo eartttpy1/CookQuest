@@ -1,62 +1,100 @@
-const questList = document.getElementById('questList');
-const sortName = document.getElementById('sortName');
-const sortExp = document.getElementById('sortExp');
-const sortBtn = document.getElementById('sortBtn');
-const sortDropdown = document.getElementById('sortDropdown');
+// 1. กำหนดตัวแปรสำหรับเก็บสถานะการเลือกปัจจุบัน
+let currentSortName = 'none';
+let currentSortExp = 'none';
 
-// 1. กดปุ่มเพื่อ เปิด/ปิด Dropdown
-sortBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // กันไม่ให้ event ไหลไปที่ window
-    sortDropdown.classList.toggle('hidden');
-});
+// 2. ฟังก์ชันจัดการ Custom Dropdown (อัปเดตให้เรียกใช้ sortQuests ได้ถูกต้อง)
+function setupCustomSelect(triggerId, optionsId, textId, type) {
+    const trigger = document.getElementById(triggerId);
+    const optionsContainer = document.getElementById(optionsId);
+    const textSpan = document.getElementById(textId);
 
-// 2. ถ้ากดที่อื่นในหน้าจอ ให้ปิด Dropdown อัตโนมัติ
-window.addEventListener('click', (e) => {
-    if (!sortDropdown.contains(e.target) && e.target !== sortBtn) {
-        sortDropdown.classList.add('hidden');
-    }
-});
+    if (!trigger || !optionsContainer) return;
 
-// ป้องกันไม่ให้การกดเลือกข้างใน Dropdown (เช่น เลือก Name/Exp) แล้วเมนูปิดตัวลง
-sortDropdown.addEventListener('click', (e) => {
-    e.stopPropagation();
-});
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // ปิดอันอื่นก่อนเปิดอันนี้
+        document.querySelectorAll('.custom-options').forEach(opt => {
+            if (opt !== optionsContainer) opt.classList.add('hidden');
+        });
+        optionsContainer.classList.toggle('hidden');
+    });
 
+    optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            const text = option.innerText;
+            
+            textSpan.innerText = text;
+            optionsContainer.classList.add('hidden');
+            
+            // อัปเดตสถานะตามประเภทที่เลือก
+            if (type === 'name') {
+                currentSortName = value;
+                currentSortExp = 'none'; // ล้างค่าอีกฝั่งเพื่อให้เรียงแค่อย่างเดียว
+                document.getElementById('current-exp-text').innerText = "เลือก";
+            } else if (type === 'exp') {
+                currentSortExp = value;
+                currentSortName = 'none'; // ล้างค่าอีกฝั่ง
+                document.getElementById('current-name-text').innerText = "เลือก";
+            }
+            
+            sortQuests(); // เรียกฟังก์ชันเรียงลำดับ
+        });
+    });
+}
+
+// 3. ฟังก์ชันหลักในการเรียงลำดับการ์ดเควส
 function sortQuests() {
+    const questList = document.getElementById('questList');
+    if (!questList) return;
+
     // แปลง NodeList เป็น Array เพื่อใช้ฟังก์ชัน sort()
     const cards = Array.from(questList.querySelectorAll('.quest-card'));
 
     cards.sort((a, b) => {
-        // 1. เรียงตาม Name (ก-ฮ)
-        if (sortName.value !== 'none') {
-            const nameA = a.getAttribute('data-name');
-            const nameB = b.getAttribute('data-name');
-            if (sortName.value === 'asc') return nameA.localeCompare(nameB, 'th');
-            if (sortName.value === 'desc') return nameB.localeCompare(nameA, 'th');
+        // เรียงตาม Name (ก-ฮ)[cite: 2]
+        if (currentSortName !== 'none') {
+            const nameA = a.getAttribute('data-name') || "";
+            const nameB = b.getAttribute('data-name') || "";
+            if (currentSortName === 'asc') return nameA.localeCompare(nameB, 'th');
+            if (currentSortName === 'desc') return nameB.localeCompare(nameA, 'th');
         }
 
-        // 2. เรียงตาม Exp
-        if (sortExp.value !== 'none') {
-            const expA = parseInt(a.getAttribute('data-exp'));
-            const expB = parseInt(b.getAttribute('data-exp'));
-            if (sortExp.value === 'low') return expA - expB;
-            if (sortExp.value === 'high') return expB - expA;
+        // เรียงตาม Exp[cite: 2]
+        if (currentSortExp !== 'none') {
+            const expA = parseInt(a.getAttribute('data-exp')) || 0;
+            const expB = parseInt(b.getAttribute('data-exp')) || 0;
+            if (currentSortExp === 'low') return expA - expB;
+            if (currentSortExp === 'high') return expB - expA;
         }
         
         return 0;
     });
 
-    // นำการ์ดที่เรียงแล้วกลับไปใส่ใน Container
+    // นำการ์ดที่เรียงแล้วกลับไปใส่ใน Container[cite: 2]
     cards.forEach(card => questList.appendChild(card));
 }
 
-// ใส่ Event Listener เมื่อมีการเปลี่ยนค่าใน Select
-sortName.addEventListener('change', () => {
-    sortExp.value = 'none'; // ล้างค่าอีกฝั่งเพื่อไม่ให้ตีกัน
-    sortQuests();
-});
+// 4. เริ่มต้นการทำงานเมื่อโหลดหน้าเว็บ
+document.addEventListener('DOMContentLoaded', () => {
+    // ตั้งค่าปุ่มเปิด-ปิดเมนูหลัก[cite: 2]
+    const sortBtn = document.getElementById('sortBtn');
+    const sortDropdown = document.getElementById('sortDropdown');
 
-sortExp.addEventListener('change', () => {
-    sortName.value = 'none'; // ล้างค่าอีกฝั่งเพื่อไม่ให้ตีกัน
-    sortQuests();
+    if (sortBtn && sortDropdown) {
+        sortBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sortDropdown.classList.toggle('hidden');
+        });
+    }
+
+    // ตั้งค่า Custom Dropdown สำหรับ Name และ Exp[cite: 2, 3]
+    setupCustomSelect('nameTrigger', 'nameOptions', 'current-name-text', 'name');
+    setupCustomSelect('expTrigger', 'expOptions', 'current-exp-text', 'exp');
+
+    // ปิด dropdown เมื่อคลิกข้างนอกพื้นที่[cite: 2]
+    window.addEventListener('click', () => {
+        if (sortDropdown) sortDropdown.classList.add('hidden');
+        document.querySelectorAll('.custom-options').forEach(opt => opt.classList.add('hidden'));
+    });
 });

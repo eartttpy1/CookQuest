@@ -131,26 +131,45 @@
                 <div class="sort-container">
                     <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
                     <div class="sort-dropdown hidden" id="sortDropdown">
+                        
+                        <!-- Sort Name -->
                         <div class="sort-row">
                             <span class="sort-label">Name</span>
-                            <select id="sortName" class="sort-select">
-                                <option value="none">เลือก</option>
-                                <option value="asc">ก → ฮ</option>
-                                <option value="desc">ฮ → ก</option>
-                            </select>
+                            <div class="custom-select-wrapper">
+                                <button class="custom-select-trigger" id="nameTrigger">
+                                    <span id="current-name-text">เลือก</span>
+                                    <i class="fa-solid fa-caret-down"></i>
+                                </button>
+                                <div class="custom-options hidden" id="nameOptions">
+                                    <div class="custom-option" data-value="none">เลือก</div>
+                                    <div class="custom-option" data-value="asc">ก → ฮ</div>
+                                    <div class="custom-option" data-value="desc">ฮ → ก</div>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Sort Exp -->
                         <div class="sort-row">
                             <span class="sort-label">Exp</span>
-                            <select id="sortExp" class="sort-select">
-                                <option value="none">เลือก</option>
-                                <option value="low">น้อย → มาก</option>
-                                <option value="high">มาก → น้อย</option>
-                            </select>
+                            <div class="custom-select-wrapper">
+                                <button class="custom-select-trigger" id="expTrigger">
+                                    <span id="current-exp-text">เลือก</span>
+                                    <i class="fa-solid fa-caret-down"></i>
+                                </button>
+                                <div class="custom-options hidden" id="expOptions">
+                                    <div class="custom-option" data-value="none">เลือก</div>
+                                    <div class="custom-option" data-value="low">น้อย → มาก</div>
+                                    <div class="custom-option" data-value="high">มาก → น้อย</div>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </section>
 
+
+            <!-- Question detail content here -->
             <section id="questList" class="quest-section">
                 <div class="quest-card" data-name="สเต็ก4" data-exp="1000">
                     <span class="quest-title-wrapper">

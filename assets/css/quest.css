@@ -26,9 +26,7 @@
     padding: 3px;
     border-style: none;
     background-color: var(--red-main);
-}
-.hidden {
-    display: none !important;
+    cursor: pointer;
 }
 
 .sort-dropdown {
@@ -50,19 +48,57 @@
     align-items: center;
     padding: 5px 0;
 }
-
-.sort-label {
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
+.custom-select-wrapper {
+    position: relative;
+    width: 120px;
 }
 
-.sort-select {
+.custom-select-trigger {
+    width: 100%;
+    padding: 8px 12px;
+    background: #fff;
     border: 2px solid #a00;
-    border-radius: 8px;
-    padding: 5px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
     font-family: 'ThaiPattaya', sans-serif;
-    width: 100px;
+}
+.custom-select-trigger:hover {
+    background-color: #ffebeb;
+    color: #a00;
+}
+.custom-select-trigger i {
+    color: #a00;
+}
+
+.custom-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 2px solid #a00;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.custom-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.custom-option:hover {
+    background-color: #ffebeb;
+    color: #a00;
+}
+
+.hidden {
+    display: none;
 }
 
 .category-grid {
@@ -165,6 +201,8 @@
     margin-bottom: 20px;
     color: white;
     text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
 }
 .quest-title-wrapper {
     display: flex;
@@ -255,6 +293,10 @@
 .quest-card.locked {
     background-color: var(--dark-grey);
     position: relative;
+    cursor: default;
+}
+.quest-card:not(.locked):hover {
+    transform: translateY(-2px);
 }
 .quest-image-grid{
     position: relative;
