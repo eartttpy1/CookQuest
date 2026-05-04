@@ -15,6 +15,7 @@ app.use(express.static('.'));
 const Menu = require('./serializer/menu');
 const Quest = require('./serializer/quest');
 const Tag = require('./serializer/tag');
+const Request = require('./serializer/request');
 
 // MongoDB connection
 const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
@@ -25,7 +26,6 @@ mongoose.connect(mongoURI, {
 })
 .then(async () => {
   console.log('✓ MongoDB connected successfully');
-  await seedTags();
 })
 .catch(err => {
   console.error('✗ MongoDB connection error:', err.message);
@@ -37,30 +37,6 @@ mongoose.connect(mongoURI, {
 mongoose.connection.on('disconnected', () => {
   console.log('⚠ MongoDB disconnected');
 });
-
-async function seedTags() {
-  try {
-    const existingCount = await Tag.countDocuments();
-    if (existingCount === 0) {
-      const defaultTags = [
-        'เมนูทอด',
-        'เมนูไข่',
-        'เมนูย่าง',
-        'เมนูเสต็ก',
-        'เมนูเนื้อ',
-        'เมนูอาหารจานเดียว',
-        'เมนูเครื่องดื่ม',
-        'เมนูหวาน',
-        'เมนูซุป',
-        'เมนูสลัด'
-      ];
-      await Tag.insertMany(defaultTags.map(name => ({ name })));
-      console.log(`Seeded ${defaultTags.length} default tags.`);
-    }
-  } catch (error) {
-    console.error('Error seeding default tags:', error.message);
-  }
-}
 
 mongoose.connection.on('error', (err) => {
   console.error('✗ MongoDB error:', err.message);
@@ -107,7 +83,38 @@ app.delete('/api/menus/:id', async (req, res) => {
     if (!menu) {
       return res.status(404).json({ error: 'Menu not found' });
     }
-    res.json({ message: 'Menu deleted successfully' });
+
+    const menuName = (menu.menuName || '').trim();
+    const escapedName = menuName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const questQuery = {
+      tags: { $elemMatch: { $regex: `^${escapedName}$`, $options: 'i' } }
+    };
+
+    const affectedQuests = await Quest.find(questQuery);
+    const updatedQuestNames = [];
+    const deletedQuestNames = [];
+
+    for (const quest of affectedQuests) {
+      const filteredTags = (quest.tags || [])
+        .map(tag => (typeof tag === 'string' ? tag.trim() : tag))
+        .filter(tag => tag && tag.toLowerCase() !== menuName.toLowerCase());
+
+      if (filteredTags.length === 0) {
+        await Quest.findByIdAndDelete(quest._id);
+        deletedQuestNames.push(quest.name);
+      } else {
+        quest.tags = filteredTags;
+        await quest.save();
+        updatedQuestNames.push(quest.name);
+      }
+    }
+
+    res.json({
+      message: 'Menu deleted successfully',
+      menuName,
+      affectedQuests: updatedQuestNames,
+      deletedQuests: deletedQuestNames
+    });
   } catch (error) {
     console.error('Error deleting menu:', error.message);
     res.status(500).json({ error: error.message });
@@ -147,6 +154,24 @@ app.post('/api/tags', async (req, res) => {
   } catch (error) {
     console.error('Error creating tag:', error.message);
     res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/api/requests', async (req, res) => {
+  try {
+    const status = (req.query.status || 'all').toLowerCase();
+    const allowedStatuses = ['all', 'pending', 'approved', 'rejected'];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status filter' });
+    }
+
+    const query = status === 'all' ? {} : { status };
+    const requests = await Request.find(query).sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (error) {
+    console.error('Error fetching requests:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -199,4 +224,5 @@ app.delete('/api/quests/:id', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Check server at http://localhost:${PORT}`);
 });

@@ -34,8 +34,8 @@
             <li class="head"><a class="linkhref" href="#"><i width="26" height="26" class="fa-solid fa-xmark"></i></a></li>
             <ul class="link">
                 <li><a class="linkhref admin" href="admin-main.html"><i class="fa-solid fa-house icon"></i><span>Home</span></a></li>
-                <li><a class="linkhref admin" href="approve-menu.html"><i class="fa-solid fa-flag icon"></i><span>Approve dishes</span></a></li>
-                <li><a class="linkhref admin" href="e-menu.html"><i class="fa-solid fa-flag icon"></i><span>Edit recipes</span></a></li>
+                <li><a class="linkhref admin" href="approve-menu.html"><i class="fa-solid fa-circle-check icon"></i><span>Approve dishes</span></a></li>
+                <li><a class="linkhref admin" href="e-menu.html"><i class="fa-solid fa-book icon"></i><span>Edit recipes</span></a></li>
                 <li><a class="linkhref admin" href="e-quest.html"><i class="fa-solid fa-flag icon"></i><span>Edit quests</span></a></li>
             </ul>
             <ul class="about">
@@ -54,7 +54,7 @@
             <ul class="mainIcon">
                 <li class="menu-button"><i width="26" height="26" class="fa-solid fa-bars"></i></a></li>     
             </ul>
-            <li class="logo"><a class="linkhref">CookQuest</a></li>
+            <li class="logo"><a class="linkhref thaipattaya">CookQuest</a></li>
             <ul class="titlebar">
                 <li class="hideOnMobile"><a class="linkhref admin" href="admin-main.html"><span>Home</span></a></li>
                 <li class="hideOnMobile"><a class="linkhref admin" href="approve-menu.html"><span>Approve dishes</span></a></li>
@@ -131,71 +131,7 @@
  
             <!-- Quest List -->
             <div class="quest-list" id="questList">
- 
-                <!-- Quest 1: Bronze (pink bg) -->
-                <div class="quest-item bg-bronze" data-id="1">
-                    <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
-                    <div class="quest-icon-area">
-                        <div class="quest-icon-placeholder">
-                            <img src="../../assets/a-img/placeholder-quest.png" alt="quest">
-                        </div>
-                    </div>
-                    <div class="quest-info">
-                        <div class="quest-title-row">
-                            <span class="quest-title thai">ผู้กล้าเสต็ก</span>
-                            <span class="quest-exp">200 EXP</span>
-                        </div>
-                        <div class="tag-list">
-                            <span class="tag thai">เสต็ก</span>
-                        </div>
-                    </div>
-                    <button class="btn-edit" onclick="openEditForm(this)">Edit</button>
-                </div>
- 
-                <!-- Quest 2: Silver (grey bg) -->
-                <div class="quest-item bg-silver" data-id="2">
-                    <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
-                    <div class="quest-icon-area">
-                        <div class="quest-icon-placeholder">
-                            <img src="../../assets/a-img/placeholder-quest.png" alt="quest">
-                        </div>
-                    </div>
-                    <div class="quest-info">
-                        <div class="quest-title-row">
-                            <span class="quest-title thai">รวมพลขนมหวาน</span>
-                            <span class="quest-exp">600 EXP</span>
-                        </div>
-                        <div class="tag-list">
-                            <span class="tag thai">ไอศกรีม</span>
-                            <span class="tag thai">คุกกี้</span>
-                            <span class="tag thai">มัฟฟิน</span>
-                        </div>
-                    </div>
-                    <button class="btn-edit" onclick="openEditForm(this)">Edit</button>
-                </div>
- 
-                <!-- Quest 3: Gold (white bg) -->
-                <div class="quest-item bg-gold" data-id="3">
-                    <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
-                    <div class="quest-icon-area">
-                        <div class="quest-icon-placeholder">
-                            <img src="../../assets/a-img/placeholder-quest.png" alt="quest">
-                        </div>
-                    </div>
-                    <div class="quest-info">
-                        <div class="quest-title-row">
-                            <span class="quest-title thai">รวมพลขนมหวาน ++</span>
-                            <span class="quest-exp">1000 EXP</span>
-                        </div>
-                        <div class="tag-list">
-                            <span class="tag thai">ครัวซองต์</span>
-                            <span class="tag thai">มาการอง</span>
-                            <span class="tag thai">ซูเฟล่</span>
-                        </div>
-                    </div>
-                    <button class="btn-edit" onclick="openEditForm(this)">Edit</button>
-                </div>
- 
+                <!-- Quest items rendered by JS -->
             </div>
         </div>
     </main>

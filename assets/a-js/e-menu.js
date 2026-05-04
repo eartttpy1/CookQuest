@@ -46,7 +46,7 @@ function renderRecipes() {
         recipeItem.setAttribute('data-id', recipe._id);
 
         recipeItem.innerHTML = `
-            <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
+            <button class="item-delete-btn${deleteMode ? '' : ' hidden'}"><i class="fa-solid fa-minus"></i></button>
             <div class="item-img">
                 <img src="${recipe.imageURL || '../../assets/a-img/placeholder-dish.png'}" alt="dish">
             </div>
@@ -79,6 +79,18 @@ function setupMenuEventListeners() {
             document.getElementById('sortDropdown').classList.add('hidden');
         }
     });
+
+    // Delete buttons inside recipe list
+    const recipeList = document.getElementById('recipeList');
+    if (recipeList) {
+        recipeList.addEventListener('click', (event) => {
+            const deleteButton = event.target.closest('.item-delete-btn');
+            if (deleteButton) {
+                event.preventDefault();
+                deleteItem(deleteButton);
+            }
+        });
+    }
 }
 
 function filterRecipes() {
@@ -128,18 +140,18 @@ function openAddForm() {
     document.getElementById('ingredientsList').innerHTML = `
         <div class="ingredient-row">
             <span class="thai ing-label">วัตถุดิบ</span>
-            <input type="text" class="form-input ing-name thai" placeholder="สันคอหมู หรือ เนื้อ">
+            <input type="text" class="form-input ing-name thai" placeholder="เช่น สันคอหมู หรือ เนื้อ">
             <span class="thai ing-label">จำนวน</span>
-            <input type="text" class="form-input ing-qty" value="1">
-            <input type="text" class="form-input ing-unit thai" placeholder="กรัม">
+            <input type="number" class="form-input ing-qty" value="1" min="0">
+            <input type="text" class="form-input ing-unit thai" placeholder="เช่น กรัม">
             <button class="btn-ing-remove" onclick="removeIngredient(this)">−</button>
         </div>
         <div class="ingredient-row">
             <span class="thai ing-label">วัตถุดิบ</span>
-            <input type="text" class="form-input ing-name thai" placeholder="โรสแมรี่สด">
+            <input type="text" class="form-input ing-name thai" placeholder="เช่น โรสแมรี่สด">
             <span class="thai ing-label">จำนวน</span>
-            <input type="text" class="form-input ing-qty" value="1">
-            <input type="text" class="form-input ing-unit thai" placeholder="กาน">
+            <input type="number" class="form-input ing-qty" value="1" min="0">
+            <input type="text" class="form-input ing-unit thai" placeholder="เช่น ก้าน">
             <button class="btn-ing-remove" onclick="removeIngredient(this)">−</button>
         </div>
     `;
@@ -156,7 +168,7 @@ function openAddForm() {
                 </div>
                 <div class="step-text-row">
                     <span class="thai step-lbl">วิธีทำ</span>
-                    <textarea class="step-textarea thai" placeholder="ตั้งน้ำให้เดือด"></textarea>
+                    <textarea class="step-textarea thai" placeholder="เช่น ตั้งน้ำให้เดือด"></textarea>
                 </div>
             </div>
             <button class="btn-step-remove" onclick="removeStep(this)">−</button>
@@ -185,7 +197,7 @@ function openEditForm(button) {
             <span class="thai ing-label">วัตถุดิบ</span>
             <input type="text" class="form-input ing-name thai" value="${ing.name}">
             <span class="thai ing-label">จำนวน</span>
-            <input type="text" class="form-input ing-qty" value="${ing.amount}">
+            <input type="number" class="form-input ing-qty" value="${ing.amount}" min="0">
             <input type="text" class="form-input ing-unit thai" value="${ing.unit}">
             <button class="btn-ing-remove" onclick="removeIngredient(this)">−</button>
         </div>
@@ -229,25 +241,100 @@ function toggleDeleteMode() {
     deleteModeBtn.classList.toggle('active', deleteMode);
 }
 
-async function deleteItem(button) {
-    const item = button.closest('.recipe-item');
-    const id = item.getAttribute('data-id');
+let deleteModalCallback = null;
 
-    if (confirm('Are you sure you want to delete this recipe?')) {
+function openDeleteModal(message, onConfirm) {
+    const deleteModal = document.getElementById('deleteModal');
+    const modalTitle = deleteModal.querySelector('.modal-title');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+
+    modalTitle.textContent = message;
+    deleteModal.classList.remove('hidden');
+    deleteModalCallback = onConfirm;
+
+    confirmBtn.onclick = async () => {
+        console.log('Confirm button clicked, calling callback');
+        const callback = deleteModalCallback;
+        closeDeleteModal();
+        if (typeof callback === 'function') {
+            await callback();
+        }
+    };
+}
+
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.classList.add('hidden');
+    deleteModalCallback = null;
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+
+    const containerId = 'toastContainer';
+    let container = document.getElementById(containerId);
+    if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        document.body.appendChild(container);
+    }
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('visible');
+    }, 10);
+
+    setTimeout(() => {
+        toast.classList.remove('visible');
+        setTimeout(() => toast.remove(), 300);
+    }, 4500);
+}
+
+async function deleteItem(button) {
+    console.log('deleteItem called with button:', button);
+    const item = button.closest('.recipe-item');
+    console.log('Closest item:', item);
+    const id = item.getAttribute('data-id');
+    console.log('Item id:', id);
+    const recipeName = item.querySelector('.item-title')?.textContent.trim() || 'this recipe';
+    const deleteMessage = `Delete recipe "${recipeName}"? It will remove this menu from any related quests and may delete quests with no remaining requirements.`;
+
+    openDeleteModal(deleteMessage, async () => {
+        console.log('Attempting to delete menu with id:', id);
         try {
             const response = await fetch(`/api/menus/${id}`, {
                 method: 'DELETE'
             });
+            console.log('Fetch response status:', response.status);
+            const data = await response.json();
+            console.log('Response data:', data);
+
             if (response.ok) {
+                let message = `Deleted recipe "${recipeName}" successfully.`;
+
+                if (data.affectedQuests && data.affectedQuests.length > 0) {
+                    message += ` Updated quests: ${data.affectedQuests.join(', ')}.`;
+                }
+                if (data.deletedQuests && data.deletedQuests.length > 0) {
+                    message += ` Deleted quests: ${data.deletedQuests.join(', ')}.`;
+                }
+                if ((!data.affectedQuests || data.affectedQuests.length === 0) && (!data.deletedQuests || data.deletedQuests.length === 0)) {
+                    message += ' No quests were affected.';
+                }
+
+                showToast(message, 'success');
                 await loadRecipes();
             } else {
-                alert('Failed to delete recipe');
+                showToast(data.error || 'Failed to delete recipe', 'error');
             }
         } catch (error) {
             console.error('Error deleting recipe:', error);
-            alert('Error deleting recipe');
+            showToast('Error deleting recipe', 'error');
         }
-    }
+    });
 }
 
 function removeTag(button) {
@@ -330,10 +417,10 @@ function addIngredient() {
     newRow.className = 'ingredient-row';
     newRow.innerHTML = `
         <span class="thai ing-label">วัตถุดิบ</span>
-        <input type="text" class="form-input ing-name thai" placeholder="วัตถุดิบ">
+        <input type="text" class="form-input ing-name thai" placeholder="เช่น วัตถุดิบ">
         <span class="thai ing-label">จำนวน</span>
-        <input type="text" class="form-input ing-qty" value="1">
-        <input type="text" class="form-input ing-unit thai" placeholder="หน่วย">
+        <input type="number" class="form-input ing-qty" value="1" min="0">
+        <input type="text" class="form-input ing-unit thai" placeholder="เช่น หน่วย">
         <button class="btn-ing-remove" onclick="removeIngredient(this)">−</button>
     `;
     ingredientsList.appendChild(newRow);

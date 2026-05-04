@@ -35,8 +35,8 @@
             <li class="head"><a class="linkhref" href="#"><i width="26" height="26" class="fa-solid fa-xmark"></i></a></li>
             <ul class="link">
                 <li><a class="linkhref admin" href="admin-main.html"><i class="fa-solid fa-house icon"></i><span>Home</span></a></li>
-                <li><a class="linkhref admin" href="approve-menu.html"><i class="fa-solid fa-flag icon"></i><span>Approve dishes</span></a></li>
-                <li><a class="linkhref admin" href="e-menu.html"><i class="fa-solid fa-flag icon"></i><span>Edit recipes</span></a></li>
+                <li><a class="linkhref admin" href="approve-menu.html"><i class="fa-solid fa-circle-check icon"></i><span>Approve dishes</span></a></li>
+                <li><a class="linkhref admin" href="e-menu.html"><i class="fa-solid fa-book icon"></i><span>Edit recipes</span></a></li>
                 <li><a class="linkhref admin" href="e-quest.html"><i class="fa-solid fa-flag icon"></i><span>Edit quests</span></a></li>
             </ul>
             <ul class="about">
@@ -55,7 +55,7 @@
             <ul class="mainIcon">
                 <li class="menu-button"><i width="26" height="26" class="fa-solid fa-bars"></i></a></li>     
             </ul>
-            <li class="logo"><a class="linkhref">CookQuest</a></li>
+            <li class="logo"><a class="linkhref thaipattaya">CookQuest</a></li>
             <ul class="titlebar">
                 <li class="hideOnMobile"><a class="linkhref admin" href="admin-main.html"><span>Home</span></a></li>
                 <li class="hideOnMobile"><a class="linkhref admin" href="approve-menu.html"><span>Approve dishes</span></a></li>
@@ -111,7 +111,7 @@
         <!-- Header Banner -->
         <div class="page-header">
             <h1 class="thaipattaya">Current requests</h1>
-            <span class="request-count" id="request-count">3</span>
+            <span class="request-count" id="request-count">0</span>
         </div>
  
         <!-- List Panel -->
@@ -124,6 +124,12 @@
                     <input type="text" class="search-input thai" placeholder="ค้นหาเมนูอาหาร..." id="searchInput">
                     <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
+                <div class="status-filter" id="statusFilter">
+                    <button class="status-btn active" type="button" data-status="all">All</button>
+                    <button class="status-btn" type="button" data-status="pending">Pending</button>
+                    <button class="status-btn" type="button" data-status="approved">Approved</button>
+                    <button class="status-btn" type="button" data-status="rejected">Rejected</button>
+                </div>
                 <div class="sort-wrapper">
                     <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
                     <div class="sort-dropdown hidden" id="sortDropdown">
@@ -135,72 +141,7 @@
  
             <!-- Request List -->
             <div class="request-list" id="requestList">
-                <!-- Placeholder: request items will be injected here from database using JS -->
-                <!-- TODO: Replace this static markup with dynamic rendering from a NoSQL collection -->
-
-                <!-- Item 1: normal -->
-                <div class="request-item" data-id="1">
-                    <div class="item-img">
-                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
-                    </div>
-                    <div class="item-info">
-                        <div class="item-top">
-                            <span class="item-menu thai">Menu: เสต็ก</span>
-                            <span class="item-date">xx/xx/xxxx xx:xx:xx</span>
-                        </div>
-                        <div class="item-meta">
-                            <span class="thai">ID &nbsp;&nbsp; XXXXXX</span>
-                            <span class="thai">User &nbsp; XXXXXXXXXXXXXXXX</span>
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-approve" onclick="approveItem(this)">Approve</button>
-                        <button class="btn-reject" onclick="startReject(this)">Reject</button>
-                    </div>
-                </div>
-                
-                <!-- Item 2: normal -->
-                <div class="request-item" data-id="2">
-                    <div class="item-img">
-                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
-                    </div>
-                    <div class="item-info">
-                        <div class="item-top">
-                            <span class="item-menu thai">Menu: เสต็ก</span>
-                            <span class="item-date">xx/xx/xxxx xx:xx:xx</span>
-                        </div>
-                        <div class="item-meta">
-                            <span class="thai">ID &nbsp;&nbsp; XXXXXX</span>
-                            <span class="thai">User &nbsp; XXXXXXXXXXXXXXXX</span>
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-approve" onclick="approveItem(this)">Approve</button>
-                        <button class="btn-reject" onclick="startReject(this)">Reject</button>
-                    </div>
-                </div>
- 
-                <!-- Item 3: normal -->
-                <div class="request-item" data-id="3">
-                    <div class="item-img">
-                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
-                    </div>
-                    <div class="item-info">
-                        <div class="item-top">
-                            <span class="item-menu thai">Menu: เสต็ก</span>
-                            <span class="item-date">xx/xx/xxxx xx:xx:xx</span>
-                        </div>
-                        <div class="item-meta">
-                            <span class="thai">ID &nbsp;&nbsp; XXXXXX</span>
-                            <span class="thai">User &nbsp; XXXXXXXXXXXXXXXX</span>
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-approve" onclick="approveItem(this)">Approve</button>
-                        <button class="btn-reject" onclick="startReject(this)">Reject</button>
-                    </div>
-                </div>
- 
+                <!-- Request items rendered from MongoDB -->
             </div>
         </div>
     </main>

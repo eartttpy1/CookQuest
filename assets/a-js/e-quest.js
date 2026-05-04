@@ -46,7 +46,7 @@ function renderQuests() {
         questItem.setAttribute('data-id', quest._id);
 
         questItem.innerHTML = `
-            <button class="item-delete-btn hidden" onclick="deleteItem(this)"><i class="fa-solid fa-minus"></i></button>
+            <button class="item-delete-btn${deleteMode ? '' : ' hidden'}"><i class="fa-solid fa-minus"></i></button>
             <div class="quest-icon-area">
                 <div class="quest-icon-placeholder">
                     <img src="../../assets/a-img/placeholder-quest.png" alt="quest">
@@ -66,6 +66,8 @@ function renderQuests() {
 
         questList.appendChild(questItem);
     });
+
+    updateDeleteButtons();
 }
 
 function setupQuestEventListeners() {
@@ -78,12 +80,45 @@ function setupQuestEventListeners() {
         option.addEventListener('click', () => sortQuests(option.getAttribute('data-sort')));
     });
 
+    // Delete buttons inside quest list
+    const questList = document.getElementById('questList');
+    if (questList) {
+        questList.addEventListener('click', (event) => {
+            const deleteButton = event.target.closest('.item-delete-btn');
+            if (deleteButton) {
+                event.preventDefault();
+                deleteItem(deleteButton);
+            }
+        });
+    }
+
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.sort-wrapper')) {
             document.getElementById('sortDropdown').classList.add('hidden');
         }
     });
+}
+
+function updateDeleteButtons() {
+    const deleteBtns = document.querySelectorAll('.item-delete-btn');
+    deleteBtns.forEach(btn => {
+        if (deleteMode) {
+            btn.classList.remove('hidden');
+            btn.style.display = 'flex';
+        } else {
+            btn.classList.add('hidden');
+            btn.style.display = '';
+        }
+    });
+}
+
+function toggleDeleteMode() {
+    deleteMode = !deleteMode;
+    const deleteModeBtn = document.getElementById('deleteModeBtn');
+
+    updateDeleteButtons();
+    deleteModeBtn.classList.toggle('active', deleteMode);
 }
 
 function filterQuests() {
@@ -123,7 +158,7 @@ function openAddForm() {
     document.getElementById('questName').value = '';
     document.getElementById('questLevel').value = 'bronze';
     document.getElementById('questExp').value = '';
-    document.getElementById('menuTagsArea').innerHTML = '<span class="tag removable thai">เสต็ก <button onclick="removeTag(this)">X</button></span>';
+    document.getElementById('menuTagsArea').innerHTML = '';
     const tagSearchInput = document.getElementById('menuTagSearchInput');
     if (tagSearchInput) {
         tagSearchInput.value = '';
@@ -157,37 +192,88 @@ function closeForm() {
     currentEditItem = null;
 }
 
-function toggleDeleteMode() {
-    deleteMode = !deleteMode;
-    const deleteBtns = document.querySelectorAll('.item-delete-btn');
-    const deleteModeBtn = document.getElementById('deleteModeBtn');
+let deleteModalCallback = null;
 
-    deleteBtns.forEach(btn => {
-        btn.classList.toggle('hidden', !deleteMode);
-    });
+function openDeleteModal(message, onConfirm) {
+    console.log('openDeleteModal called with message:', message);
+    const deleteModal = document.getElementById('deleteModal');
+    const modalTitle = deleteModal.querySelector('.modal-title');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
 
-    deleteModeBtn.classList.toggle('active', deleteMode);
+    modalTitle.textContent = message;
+    deleteModal.classList.remove('hidden');
+    deleteModalCallback = onConfirm;
+    console.log('deleteModalCallback set');
+
+    confirmBtn.onclick = async () => {
+        console.log('Confirm button clicked in modal');
+        const callback = deleteModalCallback;
+        closeDeleteModal();
+        if (typeof callback === 'function') {
+            console.log('Calling deleteModalCallback');
+            await callback();
+        }
+    };
+}
+
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.classList.add('hidden');
+    deleteModalCallback = null;
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+
+    const containerId = 'toastContainer';
+    let container = document.getElementById(containerId);
+    if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        document.body.appendChild(container);
+    }
+
+    container.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('visible'), 10);
+    setTimeout(() => {
+        toast.classList.remove('visible');
+        setTimeout(() => toast.remove(), 300);
+    }, 4500);
 }
 
 async function deleteItem(button) {
+    console.log('deleteItem called with button:', button);
     const item = button.closest('.quest-item');
+    console.log('Closest item:', item);
     const id = item.getAttribute('data-id');
+    console.log('Item id:', id);
+    const questName = item.querySelector('.quest-title')?.textContent.trim() || 'this quest';
+    const deleteMessage = `Delete quest "${questName}"?`;
 
-    if (confirm('Are you sure you want to delete this quest?')) {
+    openDeleteModal(deleteMessage, async () => {
+        console.log('Modal callback executed');
         try {
+            console.log('Fetching delete for id:', id);
             const response = await fetch(`/api/quests/${id}`, {
                 method: 'DELETE'
             });
+            console.log('Response status:', response.status);
             if (response.ok) {
+                showToast(`Quest "${questName}" deleted successfully.`, 'success');
                 await loadQuests();
             } else {
-                alert('Failed to delete quest');
+                const data = await response.json();
+                console.log('Response data:', data);
+                showToast(data.error || 'Failed to delete quest', 'error');
             }
         } catch (error) {
             console.error('Error deleting quest:', error);
-            alert('Error deleting quest');
+            showToast('Error deleting quest', 'error');
         }
-    }
+    });
 }
 
 function removeTag(button) {
@@ -272,7 +358,7 @@ async function saveQuest() {
     const name = document.getElementById('questName').value;
     const level = document.getElementById('questLevel').value;
     const exp = parseInt(document.getElementById('questExp').value);
-    const tags = Array.from(document.querySelectorAll('#menuTagsArea .tag')).map(tag => tag.textContent.replace(' X', ''));
+    const tags = Array.from(document.querySelectorAll('#menuTagsArea .tag')).map(tag => tag.textContent.replace(/\s*X$/, '').trim());
 
     if (!name || !exp) {
         alert('Please fill in all required fields');
