@@ -878,6 +878,10 @@
   background: var(--red-main);
   color: white;
 }
+.history-body .taste-tag.disabled {
+    opacity: 0.75;
+    cursor: default;
+}
 
 .history-desc {
   font-size: 0.88rem;

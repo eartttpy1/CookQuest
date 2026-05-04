@@ -127,8 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
  
     // ─── Modal: Taste tag toggle ───
-    document.querySelectorAll('.taste-tag').forEach(btn => {
-        btn.addEventListener('click', () => btn.classList.toggle('selected'));
+    document.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('taste-tag')) return;
+        if (e.target.classList.contains('disabled')) return; // block ถ้า disabled
+        e.target.classList.toggle('selected');
     });
 });
  // ─── Modal tags: show partial / show all ───
@@ -203,27 +205,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // taste tags ใน history
-  document.querySelectorAll('#historyModal .taste-tag').forEach(btn => {
-    btn.addEventListener('click', () => btn.classList.toggle('selected'));
-  });
 });
 
 function enterEditMode(idx) {
-  document.getElementById(`historyReviewText${idx}`).classList.add('hidden');
-  document.getElementById(`historyReviewInput${idx}`).classList.remove('hidden');
-  document.getElementById(`historyViewActions${idx}`).classList.add('hidden');
-  document.getElementById(`historyEditActions${idx}`).classList.remove('hidden');
+    // unlock tags
+    document.querySelectorAll(`#historyTasteTags${idx} .taste-tag`)
+        .forEach(t => t.classList.remove('disabled'));
+    // unlock stars
+    document.querySelectorAll(`#historyTasteStars${idx} .taste-star`)
+        .forEach(s => s.style.pointerEvents = 'auto');
+
+    document.getElementById(`historyReviewText${idx}`).classList.add('hidden');
+    document.getElementById(`historyReviewInput${idx}`).classList.remove('hidden');
+    document.getElementById(`historyViewActions${idx}`).classList.add('hidden');
+    document.getElementById(`historyEditActions${idx}`).classList.remove('hidden');
+    document.getElementById(`historyPhotoActions${idx}`).classList.remove('hidden');
 }
 
 function cancelEditMode(idx) {
-  const input = document.getElementById(`historyReviewInput${idx}`);
-  const text = document.getElementById(`historyReviewText${idx}`);
-  input.value = text.textContent; // reset
-  input.classList.add('hidden');
-  text.classList.remove('hidden');
-  document.getElementById(`historyViewActions${idx}`).classList.remove('hidden');
-  document.getElementById(`historyEditActions${idx}`).classList.add('hidden');
+    // lock tags back
+    document.querySelectorAll(`#historyTasteTags${idx} .taste-tag`)
+        .forEach(t => t.classList.add('disabled'));
+    // lock stars back
+    document.querySelectorAll(`#historyTasteStars${idx} .taste-star`)
+        .forEach(s => s.style.pointerEvents = 'none');
+    const input = document.getElementById(`historyReviewInput${idx}`);
+    const text = document.getElementById(`historyReviewText${idx}`);
+    input.value = text.textContent; // reset
+    input.classList.add('hidden');
+    text.classList.remove('hidden');
+    document.getElementById(`historyViewActions${idx}`).classList.remove('hidden');
+    document.getElementById(`historyEditActions${idx}`).classList.add('hidden');
+    document.getElementById(`historyPhotoActions${idx}`).classList.add('hidden');
 }
 
 function saveHistoryEdit(idx) {
@@ -232,6 +245,16 @@ function saveHistoryEdit(idx) {
   text.textContent = input.value; // บันทึก (ตอนเชื่อม API ส่งค่าตรงนี้)
   cancelEditMode(idx);
   // TODO: API call → PATCH /history/{idx} { review: input.value, ... }
+}
+
+function changeHistoryPhoto(event, idx) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById(`historyPhoto${idx}`).src = e.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 // ─── Upload preview ───
 function previewUpload(event) {
