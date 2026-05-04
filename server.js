@@ -107,7 +107,38 @@ app.delete('/api/menus/:id', async (req, res) => {
     if (!menu) {
       return res.status(404).json({ error: 'Menu not found' });
     }
-    res.json({ message: 'Menu deleted successfully' });
+
+    const menuName = (menu.menuName || '').trim();
+    const escapedName = menuName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const questQuery = {
+      tags: { $elemMatch: { $regex: `^${escapedName}$`, $options: 'i' } }
+    };
+
+    const affectedQuests = await Quest.find(questQuery);
+    const updatedQuestNames = [];
+    const deletedQuestNames = [];
+
+    for (const quest of affectedQuests) {
+      const filteredTags = (quest.tags || [])
+        .map(tag => (typeof tag === 'string' ? tag.trim() : tag))
+        .filter(tag => tag && tag.toLowerCase() !== menuName.toLowerCase());
+
+      if (filteredTags.length === 0) {
+        await Quest.findByIdAndDelete(quest._id);
+        deletedQuestNames.push(quest.name);
+      } else {
+        quest.tags = filteredTags;
+        await quest.save();
+        updatedQuestNames.push(quest.name);
+      }
+    }
+
+    res.json({
+      message: 'Menu deleted successfully',
+      menuName,
+      affectedQuests: updatedQuestNames,
+      deletedQuests: deletedQuestNames
+    });
   } catch (error) {
     console.error('Error deleting menu:', error.message);
     res.status(500).json({ error: error.message });
@@ -199,4 +230,5 @@ app.delete('/api/quests/:id', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Check server at http://localhost:${PORT}`);
 });

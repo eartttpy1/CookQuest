@@ -608,6 +608,81 @@ body.darkmode{
     width: 100%;
 }
 
+.image-preview-wrapper {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.image-preview {
+    width: 100%;
+    max-width: 260px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+}
+
+.btn-clear-image {
+    background: #FF7F7F;
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.btn-clear-image:hover {
+    background: #e05d5d;
+    transform: translateY(-1px);
+}
+
+#toastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+}
+
+.toast {
+    display: inline-flex;
+    max-width: 360px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    color: #fff;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    font-size: 0.95rem;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.info { background: rgba(56, 133, 255, 0.95); }
+.toast.success { background: rgba(46, 204, 113, 0.95); }
+.toast.error { background: rgba(231, 76, 60, 0.95); }
+
+#toastContainer {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .tag-search-result:hover {
     background: #ffeb9f;
 }
