@@ -26,7 +26,7 @@ const requestSchema = new mongoose.Schema(
   {
     timestamps: true,
     strict: false,
-    collection: 'request'
+    collection: 'requests'
   }
 );
 
