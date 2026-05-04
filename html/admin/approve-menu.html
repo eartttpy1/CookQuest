@@ -111,7 +111,7 @@
         <!-- Header Banner -->
         <div class="page-header">
             <h1 class="thaipattaya">Current requests</h1>
-            <span class="request-count" id="request-count">3</span>
+            <span class="request-count" id="request-count">0</span>
         </div>
  
         <!-- List Panel -->
@@ -135,72 +135,7 @@
  
             <!-- Request List -->
             <div class="request-list" id="requestList">
-                <!-- Placeholder: request items will be injected here from database using JS -->
-                <!-- TODO: Replace this static markup with dynamic rendering from a NoSQL collection -->
-
-                <!-- Item 1: normal -->
-                <div class="request-item" data-id="1">
-                    <div class="item-img">
-                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
-                    </div>
-                    <div class="item-info">
-                        <div class="item-top">
-                            <span class="item-menu thai">Menu: เสต็ก</span>
-                            <span class="item-date">xx/xx/xxxx xx:xx:xx</span>
-                        </div>
-                        <div class="item-meta">
-                            <span class="thai">ID &nbsp;&nbsp; XXXXXX</span>
-                            <span class="thai">User &nbsp; XXXXXXXXXXXXXXXX</span>
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-approve" onclick="approveItem(this)">Approve</button>
-                        <button class="btn-reject" onclick="startReject(this)">Reject</button>
-                    </div>
-                </div>
-                
-                <!-- Item 2: normal -->
-                <div class="request-item" data-id="2">
-                    <div class="item-img">
-                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
-                    </div>
-                    <div class="item-info">
-                        <div class="item-top">
-                            <span class="item-menu thai">Menu: เสต็ก</span>
-                            <span class="item-date">xx/xx/xxxx xx:xx:xx</span>
-                        </div>
-                        <div class="item-meta">
-                            <span class="thai">ID &nbsp;&nbsp; XXXXXX</span>
-                            <span class="thai">User &nbsp; XXXXXXXXXXXXXXXX</span>
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-approve" onclick="approveItem(this)">Approve</button>
-                        <button class="btn-reject" onclick="startReject(this)">Reject</button>
-                    </div>
-                </div>
- 
-                <!-- Item 3: normal -->
-                <div class="request-item" data-id="3">
-                    <div class="item-img">
-                        <img src="../../assets/a-img/placeholder-dish.png" alt="dish">
-                    </div>
-                    <div class="item-info">
-                        <div class="item-top">
-                            <span class="item-menu thai">Menu: เสต็ก</span>
-                            <span class="item-date">xx/xx/xxxx xx:xx:xx</span>
-                        </div>
-                        <div class="item-meta">
-                            <span class="thai">ID &nbsp;&nbsp; XXXXXX</span>
-                            <span class="thai">User &nbsp; XXXXXXXXXXXXXXXX</span>
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-approve" onclick="approveItem(this)">Approve</button>
-                        <button class="btn-reject" onclick="startReject(this)">Reject</button>
-                    </div>
-                </div>
- 
+                <!-- Request items rendered from MongoDB -->
             </div>
         </div>
     </main>

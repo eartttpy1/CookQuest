@@ -15,6 +15,7 @@ app.use(express.static('.'));
 const Menu = require('./serializer/menu');
 const Quest = require('./serializer/quest');
 const Tag = require('./serializer/tag');
+const Request = require('./serializer/request');
 
 // MongoDB connection
 const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
@@ -178,6 +179,16 @@ app.post('/api/tags', async (req, res) => {
   } catch (error) {
     console.error('Error creating tag:', error.message);
     res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/api/requests', async (req, res) => {
+  try {
+    const requests = await Request.find({ status: { $ne: 'approved' } }).sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (error) {
+    console.error('Error fetching requests:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
