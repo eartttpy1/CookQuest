@@ -109,6 +109,32 @@ body.darkmode{
     font-size: 1.1rem;
 }
 
+/* Status filter */
+.status-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.status-btn {
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: transparent;
+    color: var(--text-color);
+    border-radius: 999px;
+    padding: 7px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: "Inria Serif", serif;
+    transition: background 0.15s, color 0.15s;
+}
+
+.status-btn:hover,
+.status-btn.active {
+    background: white;
+    color: var(--base-color);
+}
+
 /* Sort */
 .sort-wrapper {
     position: relative;
@@ -325,6 +351,12 @@ body.darkmode{
 
 /* ============== Responsive ============== */
 @media (max-width: 768px) {
+    .search-sort-bar {
+        flex-wrap: wrap;
+    }
+    .search-box {
+        min-width: 100%;
+    }
     .approve-container {
         padding: 20px;
     }

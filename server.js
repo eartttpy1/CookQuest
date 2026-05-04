@@ -26,7 +26,6 @@ mongoose.connect(mongoURI, {
 })
 .then(async () => {
   console.log('✓ MongoDB connected successfully');
-  await seedTags();
 })
 .catch(err => {
   console.error('✗ MongoDB connection error:', err.message);
@@ -38,30 +37,6 @@ mongoose.connect(mongoURI, {
 mongoose.connection.on('disconnected', () => {
   console.log('⚠ MongoDB disconnected');
 });
-
-async function seedTags() {
-  try {
-    const existingCount = await Tag.countDocuments();
-    if (existingCount === 0) {
-      const defaultTags = [
-        'เมนูทอด',
-        'เมนูไข่',
-        'เมนูย่าง',
-        'เมนูเสต็ก',
-        'เมนูเนื้อ',
-        'เมนูอาหารจานเดียว',
-        'เมนูเครื่องดื่ม',
-        'เมนูหวาน',
-        'เมนูซุป',
-        'เมนูสลัด'
-      ];
-      await Tag.insertMany(defaultTags.map(name => ({ name })));
-      console.log(`Seeded ${defaultTags.length} default tags.`);
-    }
-  } catch (error) {
-    console.error('Error seeding default tags:', error.message);
-  }
-}
 
 mongoose.connection.on('error', (err) => {
   console.error('✗ MongoDB error:', err.message);
@@ -184,7 +159,15 @@ app.post('/api/tags', async (req, res) => {
 
 app.get('/api/requests', async (req, res) => {
   try {
-    const requests = await Request.find({ status: { $ne: 'approved' } }).sort({ createdAt: -1 });
+    const status = (req.query.status || 'all').toLowerCase();
+    const allowedStatuses = ['all', 'pending', 'approved', 'rejected'];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status filter' });
+    }
+
+    const query = status === 'all' ? {} : { status };
+    const requests = await Request.find(query).sort({ createdAt: -1 });
     res.json(requests);
   } catch (error) {
     console.error('Error fetching requests:', error.message);

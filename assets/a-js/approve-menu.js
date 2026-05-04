@@ -1,5 +1,6 @@
 let requests = [];
 let currentSort = 'desc';
+let currentStatus = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
@@ -8,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadRequests() {
     try {
-        const response = await fetch('/api/requests');
+        const response = await fetch('/api/requests?status=all');
         if (!response.ok) {
             throw new Error('Failed to fetch requests');
         }
@@ -26,6 +27,7 @@ function setupEventListeners() {
     const sortBtn = document.getElementById('sortBtn');
     const sortDropdown = document.getElementById('sortDropdown');
     const requestList = document.getElementById('requestList');
+    const statusFilter = document.getElementById('statusFilter');
 
     if (searchInput) {
         searchInput.addEventListener('input', renderRequests);
@@ -47,6 +49,18 @@ function setupEventListeners() {
         });
     });
 
+    if (statusFilter) {
+        statusFilter.addEventListener('click', async (event) => {
+            const button = event.target.closest('.status-btn');
+            if (!button) return;
+
+            currentStatus = button.dataset.status || 'all';
+            document.querySelectorAll('.status-btn').forEach((item) => item.classList.remove('active'));
+            button.classList.add('active');
+            await loadRequests();
+        });
+    }
+
     document.addEventListener('click', (event) => {
         if (!event.target.closest('.sort-wrapper')) {
             sortDropdown.classList.add('hidden');
@@ -62,11 +76,15 @@ function setupEventListeners() {
             if (!item) return;
 
             if (button.classList.contains('btn-approve')) {
+                const target = requests.find((request) => String(request._id) === String(item.dataset.id));
+                if (target) target.status = 'approved';
                 item.remove();
                 updateRequestCount();
             }
 
             if (button.classList.contains('btn-reject')) {
+                const target = requests.find((request) => String(request._id) === String(item.dataset.id));
+                if (target) target.status = 'rejected';
                 item.remove();
                 updateRequestCount();
             }
@@ -82,6 +100,11 @@ function renderRequests() {
 
     const searchTerm = (searchInput?.value || '').trim().toLowerCase();
     const filtered = requests.filter((request) => {
+        const requestStatus = getRequestStatus(request);
+        if (currentStatus !== 'all' && requestStatus !== currentStatus) {
+            return false;
+        }
+
         const menuName = getMenuName(request).toLowerCase();
         const userName = getUserName(request).toLowerCase();
         const requestId = String(request._id || '').toLowerCase();
@@ -170,6 +193,14 @@ function getDateValue(request) {
     const raw = request.createdAt || request.submittedAt || request.updatedAt;
     const time = raw ? new Date(raw).getTime() : 0;
     return Number.isNaN(time) ? 0 : time;
+}
+
+function getRequestStatus(request) {
+    const normalized = String(request.status || 'pending').trim().toLowerCase();
+    if (normalized === 'approved' || normalized === 'rejected' || normalized === 'pending') {
+        return normalized;
+    }
+    return 'pending';
 }
 
 function formatDate(request) {
