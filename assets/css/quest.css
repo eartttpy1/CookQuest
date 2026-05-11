@@ -328,10 +328,9 @@
     text-shadow: 2px 2px var(--dark-grey);
 }
 
-.gold-text {
+.rank-text {
     font-size: 50px;
     font-weight: 1000;
-    color: #FFD700;
     text-shadow: 2px 1px var(--dark-grey);
 }
 

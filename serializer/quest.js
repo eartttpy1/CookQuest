@@ -7,7 +7,7 @@ const questSchema = new mongoose.Schema({
   },
   level: {
     type: String,
-    enum: ['bronze', 'silver', 'gold'],
+    enum: ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND', 'MASTER'],
     required: true
   },
   exp: {

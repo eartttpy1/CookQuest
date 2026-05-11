@@ -1,16 +1,3 @@
-// dropdown Category
-const details = document.querySelectorAll(".dropdown");
-
-details.forEach((targetDetail) => {
-    targetDetail.addEventListener("click", () => {
-        // เมื่อคลิกอันใดอันหนึ่ง ให้วนลูปปิดอันอื่นที่เหลือ
-        details.forEach((detail) => {
-            if (detail !== targetDetail) {
-                detail.removeAttribute("open");
-            }
-        });
-    });
-});
 // ─── Favorite star state (keyed by card index) ───
 const favState = {};
 
