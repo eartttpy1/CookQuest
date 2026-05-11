@@ -204,6 +204,15 @@
     cursor: pointer;
     transition: transform 0.3s ease-in-out;
 }
+.quest-card.status-pending {
+    background-color: #f1c40f !important;
+}
+.quest-card.status-approved {
+    background-color: #2ecc71 !important;
+}
+.quest-card.status-rejected {
+    background-color: #333333 !important;
+}
 .quest-title-wrapper {
     display: flex;
     flex-direction: row;

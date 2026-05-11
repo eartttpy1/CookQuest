@@ -18,6 +18,7 @@ const Quest = require('./serializer/quest');
 const Tag = require('./serializer/tag');
 const Request = require('./serializer/request');
 const Submission = require('./serializer/submission');
+const Favorite = require('./serializer/favorite');
 
 // MongoDB connection
 const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
@@ -300,6 +301,42 @@ app.get('/api/history', async (req, res) => {
     res.json(filteredHistory);
   } catch (error) {
     console.error('Error fetching history:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/favorites/toggle', async (req, res) => {
+  try {
+    const { userId, menuId } = req.body;
+    if (!userId || !menuId) {
+      return res.status(400).json({ error: 'Missing userId or menuId' });
+    }
+
+    const existing = await Favorite.findOne({ userId, menuId });
+    if (existing) {
+      await Favorite.findByIdAndDelete(existing._id);
+      return res.json({ status: 'unfavorited', menuId });
+    } else {
+      const fav = new Favorite({ userId, menuId });
+      await fav.save();
+      return res.status(201).json({ status: 'favorited', menuId });
+    }
+  } catch (error) {
+    console.error('Error toggling favorite:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/favorites', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId' });
+    }
+    const favorites = await Favorite.find({ userId });
+    res.json(favorites);
+  } catch (error) {
+    console.error('Error fetching favorites:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

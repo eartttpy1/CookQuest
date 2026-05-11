@@ -26,29 +26,55 @@ function syncModalStar() {
     }
 }
 
+const CURRENT_USER_ID = 'user123'; // Mock user
+
 // Card star toggle
-document.querySelector('.quest-section').addEventListener('click', function (e) {
+document.querySelector('.quest-section').addEventListener('click', async function (e) {
     if (!e.target.classList.contains('fa-star')) return;
     const card = e.target.closest('.quest-card');
     if (!card) return;
     const idx = card.dataset.id;
-    favState[idx] = !favState[idx];
-    syncCardStar(idx);
-    // ถ้า modal เปิดอยู่และเป็น card เดียวกัน ให้ sync ด้วย
-    const modal = document.getElementById('questModal');
-    if (!modal.classList.contains('hidden') && modal.dataset.currentCard === idx) {
-        syncModalStar();
+    
+    try {
+        const res = await fetch('/api/favorites/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: CURRENT_USER_ID, menuId: idx })
+        });
+        if (res.ok) {
+            favState[idx] = !favState[idx];
+            syncCardStar(idx);
+            // ถ้า modal เปิดอยู่และเป็น card เดียวกัน ให้ sync ด้วย
+            const modal = document.getElementById('questModal');
+            if (!modal.classList.contains('hidden') && modal.dataset.currentCard === idx) {
+                syncModalStar();
+            }
+        }
+    } catch (err) {
+        console.error('Error toggling favorite:', err);
     }
 });
 
 // Modal star toggle
-document.querySelector('.modal-star').addEventListener('click', function () {
+document.querySelector('.modal-star').addEventListener('click', async function () {
     const modal = document.getElementById('questModal');
     const idx = modal.dataset.currentCard;
     if (idx === undefined) return;
-    favState[idx] = !favState[idx];
-    syncModalStar();
-    syncCardStar(idx);
+    
+    try {
+        const res = await fetch('/api/favorites/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: CURRENT_USER_ID, menuId: idx })
+        });
+        if (res.ok) {
+            favState[idx] = !favState[idx];
+            syncModalStar();
+            syncCardStar(idx);
+        }
+    } catch (err) {
+        console.error('Error toggling favorite:', err);
+    }
 });
 
 let allRelatedMenus = []; // เก็บข้อมูลเมนูไว้ใช้ใน Modal
@@ -410,15 +436,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadQuestDetails(questId) {
     try {
-        const [questsResponse, menusResponse] = await Promise.all([
+        const [questsResponse, menusResponse, favResponse, historyResponse] = await Promise.all([
             fetch('/api/quests'),
-            fetch('/api/menus')
+            fetch('/api/menus'),
+            fetch(`/api/favorites?userId=${CURRENT_USER_ID}`),
+            fetch('/api/history')
         ]);
         if (!questsResponse.ok) throw new Error('Failed to load quests');
         if (!menusResponse.ok) throw new Error('Failed to load menus');
         
         const quests = await questsResponse.json();
         const menus = await menusResponse.json();
+        
+        if (favResponse && favResponse.ok) {
+            const favorites = await favResponse.json();
+            favorites.forEach(fav => {
+                if (fav.menuId) favState[fav.menuId] = true;
+            });
+        }
+
+        let menuStatusMap = {};
+        if (historyResponse && historyResponse.ok) {
+            const history = await historyResponse.json();
+            history.forEach(sub => {
+                const req = sub.requestId;
+                if (req && req.menuName) {
+                    const mName = req.menuName;
+                    const newStatus = sub.status;
+                    const currentStatus = menuStatusMap[mName];
+                    if (!currentStatus) {
+                        menuStatusMap[mName] = newStatus;
+                    } else if (currentStatus !== 'approved') {
+                        if (newStatus === 'approved') {
+                            menuStatusMap[mName] = 'approved';
+                        } else if (newStatus === 'pending' && currentStatus === 'rejected') {
+                            menuStatusMap[mName] = 'pending';
+                        }
+                    }
+                }
+            });
+        }
         
         const currentQuest = quests.find(q => q._id === questId);
         if (!currentQuest) return;
@@ -440,13 +497,13 @@ async function loadQuestDetails(questId) {
         });
 
         allRelatedMenus = relatedMenus; // เก็บไว้ใช้ใน Modal
-        renderMenus(relatedMenus);
+        renderMenus(relatedMenus, menuStatusMap);
     } catch (error) {
         console.error('Error fetching data:', error);
     }
 }
 
-function renderMenus(menus) {
+function renderMenus(menus, menuStatusMap = {}) {
     const menuList = document.getElementById('menuList');
     if (!menuList) return;
     
@@ -458,6 +515,11 @@ function renderMenus(menus) {
         card.setAttribute('data-id', menu._id);
         card.setAttribute('data-name', menu.menuName || '');
         card.setAttribute('data-exp', menu.EXP || 0);
+
+        const mStatus = menuStatusMap[menu.menuName];
+        if (mStatus) {
+            card.classList.add(`status-${mStatus}`);
+        }
 
         const isLocked = false; // สามารถปรับเงื่อนไขการล็อคได้ที่นี่
         if (isLocked) {
@@ -472,10 +534,11 @@ function renderMenus(menus) {
         const totalTime = (parseInt(prepTimeStr) || 0) + (parseInt(cookTimeStr) || 0);
         const timeDisplay = totalTime > 0 ? `${totalTime} นาที` : (menu.prepTime || '30 นาที');
 
+        const isFavorited = favState[menu._id];
         card.innerHTML = `
             <span class="quest-title-wrapper">
                 <h2 class="quest-title thaipattaya">${menu.menuName}</h2>
-                <i class="fa-regular fa-star"></i>
+                <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star" ${isFavorited ? 'style="color: #ffffff;"' : ''}></i>
             </span>
             <figure class="quest-image">
                 <img src="${imageUrl}" alt="${menu.menuName}">
