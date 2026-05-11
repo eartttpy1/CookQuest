@@ -10,6 +10,10 @@ const requestSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
+    randomQuests: {
+      type: String,
+      default: ''
+    },
     imageURL: {
       type: String,
       default: ''
@@ -21,7 +25,26 @@ const requestSchema = new mongoose.Schema(
     },
     submittedAt: {
       type: Date
-    }
+    },
+    // Taste : ★★★☆☆  (1–5)
+    tasteRating: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0
+    },
+
+    // tag รสชาติที่กด: ["หวาน","เค็ม","อูมามิ"]
+    tasteTags: {
+      type: [String],
+      default: []
+    },
+
+    // textarea "รสชาติอาหารของคุณเป็นอย่างไรบ้าง"
+    review: {
+      type: String,
+      default: ''
+    },
   },
   {
     timestamps: true,

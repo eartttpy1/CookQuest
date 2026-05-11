@@ -1,111 +1,758 @@
-// assets/js/quest-detail.js
+// ─── Favorite star state (keyed by card index) ───
+const favState = {};
 
-document.addEventListener('DOMContentLoaded', function () {
-
-  // ย้ายโค้ดทั้งหมดจาก (function(){ ... })(); มาใส่ตรงนี้เลย
-  const params  = new URLSearchParams(location.search);
-  const catId   = params.get('cat');
-  const questId = params.get('quest');
-  const main    = document.getElementById('detail-main');
-
-  const cat = DB.categories.find(c => c.id === catId);
-  if (!cat) {
-    main.innerHTML = '<p class="thai" style="padding:2rem;text-align:center">ไม่พบหมวดหมู่นี้</p>';
-    return;
-  }
-
-  let sortMode = 'level';
-
-  function sortedQuests() {
-    const list = [...cat.quests.filter(q => q.visible)];
-    if (sortMode === 'az') {
-      list.sort((a, b) => a.name.localeCompare(b.name, 'th'));
+function syncCardStar(idx) {
+    const cardStar = document.querySelector(`.quest-card[data-id="${idx}"] .fa-star`);
+    if (!cardStar) return;
+    if (favState[idx]) {
+        cardStar.classList.replace('fa-regular', 'fa-solid');
+        cardStar.style.color = '#ffffff';
     } else {
-      list.sort((a, b) => a.exp - b.exp);
+        cardStar.classList.replace('fa-solid', 'fa-regular');
+        cardStar.style.color = '';
     }
-    return list;
-  }
+}
 
-  function renderDetail() {
-    main.innerHTML = '';
+function syncModalStar() {
+    const modalStar = document.querySelector('.modal-star');
+    if (!modalStar) return;
+    const idx = document.getElementById('questModal').dataset.currentCard;
+    if (favState[idx]) {
+        modalStar.classList.replace('fa-regular', 'fa-solid');
+        modalStar.style.color = '#ffffff';
+    } else {
+        modalStar.classList.replace('fa-solid', 'fa-regular');
+        modalStar.style.color = '';
+    }
+}
 
-    const titleSection = document.createElement('section');
-    titleSection.className = 'category-title';
-    titleSection.innerHTML = `
-      <div class="cat-label-name">
-        <span class="cat-badge">${cat.label}</span>
-        <span class="cat-name thai">${cat.name}</span>
-      </div>
-      <div class="sort-wrapper">
-        <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
-        <div class="sort-dropdown hidden" id="sortDropdown">
-          <div class="sort-option${sortMode === 'az' ? ' active' : ''}" data-sort="az">↑ A-Z ก-ฮ</div>
-          <div class="sort-option${sortMode === 'level' ? ' active' : ''}" data-sort="level">↑ ระดับ</div>
+// Card star toggle
+document.querySelector('.quest-section').addEventListener('click', function (e) {
+    if (!e.target.classList.contains('fa-star')) return;
+    const card = e.target.closest('.quest-card');
+    if (!card) return;
+    const idx = card.dataset.id;
+    favState[idx] = !favState[idx];
+    syncCardStar(idx);
+    // ถ้า modal เปิดอยู่และเป็น card เดียวกัน ให้ sync ด้วย
+    const modal = document.getElementById('questModal');
+    if (!modal.classList.contains('hidden') && modal.dataset.currentCard === idx) {
+        syncModalStar();
+    }
+});
+
+// Modal star toggle
+document.querySelector('.modal-star').addEventListener('click', function () {
+    const modal = document.getElementById('questModal');
+    const idx = modal.dataset.currentCard;
+    if (idx === undefined) return;
+    favState[idx] = !favState[idx];
+    syncModalStar();
+    syncCardStar(idx);
+});
+
+let allRelatedMenus = []; // เก็บข้อมูลเมนูไว้ใช้ใน Modal
+
+// pop-up Menu (Event Delegation for dynamically created cards)
+document.addEventListener('click', (e) => {
+    const card = e.target.closest('.menu-card:not(.locked)');
+    if (card && card.closest('#menuList')) {
+        // ป้องกันการเปิด modal ถ้ากดโดนดาว Favorite
+        if (e.target.classList.contains('fa-star')) return;
+        
+        e.preventDefault();
+        const menuId = card.dataset.id;
+        const menuData = allRelatedMenus.find(m => m._id === menuId);
+        
+        const modal = document.getElementById('questModal');
+        if (modal && menuData) {
+            modal.dataset.currentCard = menuId;
+            populateModal(menuData, modal);
+            modal.classList.remove('hidden');
+            syncModalStar();
+        }
+    }
+});
+
+function populateModal(menu, modal) {
+    // Keep it sync or make async?
+    // Let's make it async to fetch history
+    _populateModalAsync(menu, modal);
+}
+
+async function _populateModalAsync(menu, modal) {
+    // Header
+    const titleEl = modal.querySelector('.modal-title');
+    if (titleEl) titleEl.textContent = menu.menuName;
+
+    // Image
+    const imgEl = modal.querySelector('.modal-main-img');
+    if (imgEl) imgEl.src = menu.imageURL || '../../assets/img/emptymenu.jpg';
+
+    // Tags
+    const tagsContainer = modal.querySelector('.modal-tags');
+    if (tagsContainer) {
+        tagsContainer.innerHTML = '';
+        if (menu.tags && menu.tags.length > 0) {
+            menu.tags.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'modal-tag';
+                span.textContent = tag;
+                tagsContainer.appendChild(span);
+            });
+        }
+    }
+
+    // Info (Servings & Time)
+    const infoEls = modal.querySelectorAll('.modal-info');
+    if (infoEls.length >= 2) {
+        infoEls[0].textContent = `จำนวน : ${menu.servings || 1} จาน`;
+        
+        const prepStr = menu.prepTime || '0 นาที';
+        const cookStr = menu.cookTime || '0 นาที';
+        infoEls[1].textContent = `เวลาเตรียม: ${prepStr} | เวลาปรุง: ${cookStr}`;
+    }
+
+    // Ingredients
+    const ingContainer = modal.querySelector('.ingredient-list');
+    if (ingContainer) {
+        ingContainer.innerHTML = '';
+        if (menu.ingredients && menu.ingredients.length > 0) {
+            menu.ingredients.forEach(ing => {
+                const div = document.createElement('div');
+                div.className = 'ing-item';
+                div.innerHTML = `<span class="thai">${ing.name}</span><span>${ing.amount} ${ing.unit}</span>`;
+                ingContainer.appendChild(div);
+            });
+        } else {
+            ingContainer.innerHTML = '<div class="ing-item"><span class="thai">ไม่มีข้อมูลวัตถุดิบ</span></div>';
+        }
+    }
+
+    // Steps
+    const stepContainer = modal.querySelector('.step-list');
+    if (stepContainer) {
+        stepContainer.innerHTML = '';
+        if (menu.instructions && menu.instructions.length > 0) {
+            const sortedSteps = [...menu.instructions].sort((a, b) => a.stepNumber - b.stepNumber);
+            sortedSteps.forEach((step, index) => {
+                const div = document.createElement('div');
+                div.className = 'step-item';
+                let stepHtml = `
+                    <div class="step-num-badge">${step.stepNumber || (index + 1)}</div>
+                    <div class="step-body">
+                        <p class="thai">${step.description}</p>
+                `;
+                if (step.stepImageURL) {
+                    stepHtml += `<img src="${step.stepImageURL}" alt="step ${step.stepNumber}" class="step-img">`;
+                }
+                stepHtml += `</div>`;
+                div.innerHTML = stepHtml;
+                stepContainer.appendChild(div);
+            });
+        } else {
+            stepContainer.innerHTML = '<div class="step-item"><div class="step-body"><p class="thai">ไม่มีข้อมูลขั้นตอนการทำ</p></div></div>';
+        }
+    }
+
+    // EXP in Quest Zone
+    const xpSpan = modal.querySelector('.modal-xp-bar span');
+    if (xpSpan) xpSpan.textContent = `${menu.EXP || 0} EXP`;
+
+    // Random Quest Event
+    const questDesc = modal.querySelector('.modal-quest-desc');
+    if (questDesc) {
+        const randomQuests = [
+            "ถ่ายรูปมือชู 2 นิ้วเคียงข้างจานอาหาร",
+            "ถ่ายรูปมือถือช้อน/ส้อมที่กำลังตักอาหารขึ้นมา (ให้เห็น Texture อาหารชัดๆ)",
+            "ถ่ายรูปมือขณะกำลังโรยพริกไทยหรือตกแต่งจานเป็นขั้นตอนสุดท้าย",
+            "ถ่ายรูปมุม Top View โดยให้มีมือวางอยู่ขอบจานในท่าทางผ่อนคลาย",
+            "ถ่ายรูปมือประคองจานอาหารเพื่อนำเสนอความภูมิใจ (เห็นเฉพาะช่วงอกลงไป)",
+            "ถ่ายรูปการจัดจานแบบ Minimal โดยใช้แสงเงาพาดผ่านจานอาหาร",
+            "ถ่ายรูปมือทำท่า Mini Heart ❤️ คู่กับจานอาหาร",
+            "ถ่ายรูปมือทำท่า 'OK' 👌 เหนือจานอาหารที่ทำสำเร็จ",
+            "ถ่ายรูปมือขณะใช้ตะเกียบหรือส้อมคีบอาหารขึ้นมาในระยะ Macro (เน้นความน่ากิน)",
+            "ถ่ายรูปกำปั้นชนกันข้างจานอาหาร (ท่า Fist Bump แสดงความสะใจ)",
+            "ถ่ายรูปมือที่กำลังยกนิ้วโป้ง 'Like' 👍 ข้างๆ เมนูสุดภูมิใจ",
+            "ถ่ายรูปอาหารโดยเลือกฉากหลังที่มีสีตัดกับสีของอาหาร (เช่น จานเหลืองบนผ้าปูสีน้ำเงิน)",
+            "ถ่ายรูปมือขณะถือขวดซอสหรือกระปุกเครื่องปรุงชูขึ้นเป็น Background",
+            "ถ่ายรูปเงาของมือที่กำลังเอื้อมไปหยิบอาหาร (เล่นกับแสงแดดหรือโคมไฟ)",
+            "ถ่ายรูปมือขณะถือจานอาหารยื่นมาข้างหน้า (เหมือนกำลังจะเสิร์ฟให้คนดู)"
+        ];
+        const randomIndex = Math.floor(Math.random() * randomQuests.length);
+        questDesc.textContent = randomQuests[randomIndex];
+    }
+
+    // Fetch history and update button state
+    const submitBtn = modal.querySelector('.modal-submit-row .btn-submit');
+    try {
+        const res = await fetch(`/api/history?menuName=${encodeURIComponent(menu.menuName)}`);
+        if (res.ok) {
+            const historyData = await res.json();
+            
+            // Render History Modal
+            renderHistory(historyData);
+
+            if (submitBtn) {
+                const latest = historyData[0];
+                if (latest && latest.status === 'pending') {
+                    submitBtn.textContent = 'Pending...';
+                    submitBtn.style.backgroundColor = '#f1c40f'; // yellow
+                    submitBtn.style.color = '#fff';
+                    submitBtn.disabled = true;
+                } else if (latest && latest.status === 'approved') {
+                    submitBtn.textContent = 'Approved';
+                    submitBtn.style.backgroundColor = '#2ecc71'; // green
+                    submitBtn.style.color = '#fff';
+                    submitBtn.disabled = true;
+                } else {
+                    submitBtn.textContent = 'Submit';
+                    submitBtn.style.backgroundColor = ''; 
+                    submitBtn.style.color = '';
+                    submitBtn.disabled = false;
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Failed to fetch history", err);
+    }
+}
+
+function renderHistory(historyData) {
+    const historyModalContent = document.querySelector('.history-modal-content');
+    if (!historyModalContent) return;
+
+    const headerHtml = `
+        <div class="history-header">
+            <span class="thaipattaya history-title">ประวัติการทำ</span>
+            <button class="close-modal" id="closeHistoryModal">✕</button>
         </div>
-      </div>
     `;
-    main.appendChild(titleSection);
 
-    const questSection = document.createElement('section');
-    questSection.className = 'quest-section quest-menu-list';
+    let bodyHtml = '';
+    if (historyData.length === 0) {
+        bodyHtml = '<p class="thai" style="text-align: center; padding: 20px;">ยังไม่มีประวัติการส่ง Quest นี้</p>';
+    } else {
+        historyData.forEach((sub, index) => {
+            const req = sub.requestId || {};
+            const statusLabel = sub.status === 'pending' ? 'Pending ...' : (sub.status === 'approved' ? 'Approved' : 'Rejected');
+            const statusClass = sub.status;
+            
+            const allTags = ["หวาน", "เค็ม", "เปรี้ยว", "ขม", "อูมามิ", "เผ็ด"];
+            const tasteTagsHtml = allTags.map(tag => {
+                const isSelected = sub.tasteTags && sub.tasteTags.includes(tag);
+                return `<button class="taste-tag thai ${isSelected ? 'selected' : ''} disabled" data-taste="${tag}">${tag}</button>`;
+            }).join('');
 
-    sortedQuests().forEach(q => {
-      const rank   = getRankByExp(q.exp);
-      const locked = isQuestLocked(q.exp);
-      const isFocus = q.id === questId;
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= sub.tasteRating) {
+                    starsHtml += `<i class="fa-solid fa-star taste-star active" data-val="${i}" style="color:#FFD700; pointer-events:none"></i>`;
+                } else {
+                    starsHtml += `<i class="fa-regular fa-star taste-star" data-val="${i}" style="pointer-events:none"></i>`;
+                }
+            }
 
-      const cardEl = document.createElement(locked ? 'div' : 'a');
-      cardEl.className = 'quest-card menu-card' + (locked ? ' locked' : '') + (isFocus ? ' focused' : '');
-      if (!locked) {
-        cardEl.href = `q-detail.html?cat=${catId}&quest=${q.id}`;
-      }
+            bodyHtml += `
+            <details class="history-item" id="historyItem${index}">
+                <summary class="history-summary">
+                    <div class="history-summary-left">
+                    <span class="inria-serif history-quest-name">Quest ${historyData.length - index}</span>
+                    <span class="history-badge ${statusClass}">${statusLabel}</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down history-chevron"></i>
+                </summary>
+                <div class="history-body">
+                    <p class="thai history-desc">${req.randomQuests || ''}</p>
+                    <div class="history-photo-wrap">
+                        <img src="${sub.imageURL || '../../assets/img/emptymenu.jpg'}" alt="submitted" class="history-photo" id="historyPhoto${index}">
+                    </div>
+                    <div class="history-photo-actions hidden" id="historyPhotoActions${index}">
+                        <label class="btn-change-img thai" for="historyFileInput${index}">
+                            <i class="fa-solid fa-pen"></i> เปลี่ยนรูป
+                        </label>
+                        <input type="file" id="historyFileInput${index}" accept="image/*" style="display:none" onchange="changeHistoryPhoto(event, ${index})">
+                    </div>
+                    <div class="taste-rating">
+                        <span class="taste-label">Taste :</span>
+                        <div class="taste-stars" id="historyTasteStars${index}">
+                            ${starsHtml}
+                        </div>
+                    </div>
+                    <div class="taste-tags" id="historyTasteTags${index}">
+                        ${tasteTagsHtml}
+                    </div>
+                    <div class="history-review-wrap" id="historyReviewWrap${index}">
+                        <p class="history-review-text thai" id="historyReviewText${index}">${sub.review || ''}</p>
+                        <textarea class="modal-review thai hidden" id="historyReviewInput${index}" rows="2">${sub.review || ''}</textarea>
+                    </div>
+                    <div class="history-btn-row" id="historyBtnRow${index}">
+                        ${sub.status !== 'approved' ? `
+                        <div class="history-view-actions" id="historyViewActions${index}">
+                            <button class="btn-edit-history thai" onclick="enterEditMode(${index})">Edit</button>
+                        </div>
+                        <div class="history-edit-actions hidden" id="historyEditActions${index}">
+                            <button class="btn-submit thai" onclick="saveHistoryEdit(${index}, '${sub._id}')">Save</button>
+                            <button class="btn-cancel-history thai" onclick="cancelEditMode(${index})">Cancel</button>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </details>
+            `;
+        });
+    }
 
-      const lockHtml = locked ? `
-        <div class="lock-overlay">
-          <i class="fa-solid fa-lock"></i>
-          <span class="rank-label" data-rank="${rank.rank}">${rank.label}</span>
-        </div>` : '';
+    historyModalContent.innerHTML = headerHtml + bodyHtml;
 
-      cardEl.innerHTML = `
-        <figure class="quest-image-grid single-image">
-          <img src="${q.image}" alt="${q.name}" loading="lazy">
-          <h2 class="quest-title thaipattaya">${q.name}</h2>
-          ${lockHtml}
-        </figure>
-        <div class="quest-footer">
-          <span class="time"><i class="fa-solid fa-clock"></i> ${q.time} นาที</span>
-          <span class="exp-xp"><i class="fa-solid fa-star"></i> ${q.exp.toLocaleString()} EXP</span>
-          <span class="rank-badge" data-rank="${rank.rank}">
-            <i class="fa-solid fa-shield-halved"></i> ${rank.label}
-          </span>
-        </div>
-      `;
-      questSection.appendChild(cardEl);
+    const closeHistoryBtn = document.getElementById('closeHistoryModal');
+    const historyModal = document.getElementById('historyModal');
+    if (closeHistoryBtn) {
+        closeHistoryBtn.addEventListener('click', () => {
+            historyModal.classList.add('hidden');
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('questModal');
+    const closeBtn = document.getElementById('closeModal');
+
+    // ปิด Modal
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    }
+
+    // ปิดเมื่อคลิกข้างนอก Modal
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
     });
 
-    main.appendChild(questSection);
+    // ─── Submit Quest Logic ───
+    const submitBtn = document.querySelector('.modal-submit-row .btn-submit');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+            const menuId = modal.dataset.currentCard;
+            const menuData = allRelatedMenus.find(m => m._id === menuId);
+            if (!menuData) return;
 
-    // sort dropdown events — ต้อง bind ใหม่ทุกครั้งที่ renderDetail() เพราะ innerHTML ถูก reset
-    const sortBtn = document.getElementById('sortBtn');
-    const sortDD  = document.getElementById('sortDropdown');
+            // Collect data
+            const preview = document.getElementById('uploadPreview');
+            const imageURL = preview.src && !preview.classList.contains('hidden') ? preview.src : '';
+            
+            // หาดาวที่ active โดยนับว่ามีกี่ดวงที่มีคลาส active (หรือเช็คสี)
+            // โค้ดเดิมเวลา click star จะใส่ class .active
+            const activeStars = document.querySelectorAll('#tasteStars .taste-star.active');
+            let tasteRating = 0;
+            if (activeStars.length > 0) {
+                tasteRating = parseInt(activeStars[activeStars.length - 1].dataset.val);
+            }
+            
+            const activeTags = document.querySelectorAll('#tasteTags .taste-tag.selected');
+            const tasteTags = Array.from(activeTags).map(t => t.dataset.taste);
+            
+            const review = document.getElementById('reviewText').value.trim();
+            
+            if (!imageURL || tasteRating === 0 || tasteTags.length === 0 || !review) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วนก่อนส่ง (รูปถ่าย, รสชาติ, รูปแบบรสชาติ, รีวิว)');
+                return;
+            }
+            
+            const randomQuests = modal.querySelector('.modal-quest-desc').textContent;
+            const menuName = menuData.menuName;
 
-    sortBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sortDD.classList.toggle('hidden');
+            try {
+                const res = await fetch('/api/submissions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ menuName, randomQuests, imageURL, tasteRating, tasteTags, review })
+                });
+                
+                if (res.ok) {
+                    // Clear form
+                    removeUpload();
+                    document.querySelectorAll('#tasteStars .taste-star').forEach(s => {
+                        s.classList.replace('fa-solid', 'fa-regular');
+                        s.classList.remove('active');
+                        s.style.color = 'white';
+                    });
+                    document.querySelectorAll('#tasteTags .taste-tag').forEach(t => t.classList.remove('selected'));
+                    document.getElementById('reviewText').value = '';
+                    
+                    // Change button to pending
+                    submitBtn.textContent = 'Pending';
+                    submitBtn.style.backgroundColor = '#f1c40f'; // สีเหลือง
+                    submitBtn.style.color = '#fff';
+                    submitBtn.disabled = true;
+                    
+                    alert('ส่ง Quest สำเร็จ! รอการตรวจสอบจากแอดมิน');
+                } else {
+                    alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
+            }
+        });
+    }
+
+    // Fetch quest data if URL has ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const questId = urlParams.get('id');
+    if (questId) {
+        loadQuestDetails(questId);
+    }
+});
+
+async function loadQuestDetails(questId) {
+    try {
+        const [questsResponse, menusResponse] = await Promise.all([
+            fetch('/api/quests'),
+            fetch('/api/menus')
+        ]);
+        if (!questsResponse.ok) throw new Error('Failed to load quests');
+        if (!menusResponse.ok) throw new Error('Failed to load menus');
+        
+        const quests = await questsResponse.json();
+        const menus = await menusResponse.json();
+        
+        const currentQuest = quests.find(q => q._id === questId);
+        if (!currentQuest) return;
+
+        // Render Title
+        const titleContainer = document.querySelector('.category-container div:first-child');
+        if (titleContainer) {
+            titleContainer.innerHTML = `
+                <span class="category-header">Quest</span>
+                <span class="category-title thai">${currentQuest.name}</span>
+            `;
+        }
+        
+        // Find related menus
+        const relatedMenus = menus.filter(menu => {
+            const hasQuestId = menu.questIds && menu.questIds.includes(questId);
+            const hasTagMatch = currentQuest.tags && currentQuest.tags.some(tag => tag.toLowerCase() === (menu.menuName || '').toLowerCase());
+            return hasQuestId || hasTagMatch;
+        });
+
+        allRelatedMenus = relatedMenus; // เก็บไว้ใช้ใน Modal
+        renderMenus(relatedMenus);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
+function renderMenus(menus) {
+    const menuList = document.getElementById('menuList');
+    if (!menuList) return;
+    
+    menuList.innerHTML = '';
+    
+    menus.forEach(menu => {
+        const card = document.createElement('div');
+        card.className = 'quest-card menu-card';
+        card.setAttribute('data-id', menu._id);
+        card.setAttribute('data-name', menu.menuName || '');
+        card.setAttribute('data-exp', menu.EXP || 0);
+
+        const isLocked = false; // สามารถปรับเงื่อนไขการล็อคได้ที่นี่
+        if (isLocked) {
+            card.classList.add('locked');
+        }
+
+        const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
+        const rankValue = (menu.rank || 'bronze').toLowerCase();
+        const rankDisplay = rankValue.toUpperCase();
+        const prepTimeStr = menu.prepTime || '0';
+        const cookTimeStr = menu.cookTime || '0';
+        const totalTime = (parseInt(prepTimeStr) || 0) + (parseInt(cookTimeStr) || 0);
+        const timeDisplay = totalTime > 0 ? `${totalTime} นาที` : (menu.prepTime || '30 นาที');
+
+        card.innerHTML = `
+            <span class="quest-title-wrapper">
+                <h2 class="quest-title thaipattaya">${menu.menuName}</h2>
+                <i class="fa-regular fa-star"></i>
+            </span>
+            <figure class="quest-image">
+                <img src="${imageUrl}" alt="${menu.menuName}">
+                ${isLocked ? `
+                <div class="lock-overlay">
+                    <i class="fa-solid fa-lock"></i><span class="rank-label rank-text" data-rank="${rankValue}">${rankDisplay}</span>
+                </div>` : ''}
+            </figure>
+            <div class="menu-footer">
+                <span class="time"><i class="fa-solid fa-clock"></i> ${timeDisplay}</span>
+                <span class="exp"><i class="fa-solid fa-star"></i> ${menu.EXP || 0} EXP</span>
+            </div>
+        `;
+        menuList.appendChild(card);
     });
 
-    sortDD.querySelectorAll('.sort-option').forEach(opt => {
-      opt.addEventListener('click', () => {
-        sortMode = opt.dataset.sort;
-        sortDD.classList.add('hidden');
-        renderDetail(); // re-render จะ bind event ใหม่ด้วย
-      });
+    if (typeof applyRankColors === 'function') {
+        applyRankColors();
+    }
+    if (typeof sortQuests === 'function') {
+        sortQuests();
+    }
+}
+// ─── Modal: Taste star rating ───
+document.addEventListener('DOMContentLoaded', () => {
+    const tasteStars = document.querySelectorAll('.taste-star');
+    tasteStars.forEach(star => {
+        star.addEventListener('click', () => {
+            const val = parseInt(star.dataset.val);
+            tasteStars.forEach(s => {
+                const sv = parseInt(s.dataset.val);
+                if (sv <= val) {
+                    s.classList.remove('fa-regular');
+                    s.classList.add('fa-solid', 'active');
+                } else {
+                    s.classList.remove('fa-solid', 'active');
+                    s.classList.add('fa-regular');
+                }
+            });
+        });
+        // hover preview
+        star.addEventListener('mouseenter', () => {
+            const val = parseInt(star.dataset.val);
+            tasteStars.forEach(s => {
+                s.style.color = parseInt(s.dataset.val) <= val ? '#FFD700' : 'white';
+            });
+        });
+        star.addEventListener('mouseleave', () => {
+            tasteStars.forEach(s => {
+                s.style.color = s.classList.contains('active') ? '#FFD700' : 'white';
+            });
+        });
+    });
+ 
+    // ─── Modal & History: Taste tag toggle ───
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('taste-tag')) {
+            if (e.target.classList.contains('disabled')) return; // block ถ้า disabled
+            e.target.classList.toggle('selected');
+        }
+        
+        // ─── History: Taste star rating (Event Delegation) ───
+        if (e.target.classList.contains('taste-star') && e.target.closest('#historyModal')) {
+            const star = e.target;
+            // เช็คว่า pointer-events เป็น none หรือไม่ (ถ้าเป็น none จะคลิกไม่ติดอยู่แล้ว แต่กันไว้ก่อน)
+            if (window.getComputedStyle(star).pointerEvents === 'none') return;
+
+            const group = star.closest('.taste-stars');
+            const val = parseInt(star.dataset.val);
+            group.querySelectorAll('.taste-star').forEach(s => {
+                if (parseInt(s.dataset.val) <= val) {
+                    s.classList.replace('fa-regular','fa-solid');
+                    s.classList.add('active');
+                    s.style.color = '#FFD700';
+                } else {
+                    s.classList.replace('fa-solid','fa-regular');
+                    s.classList.remove('active');
+                    s.style.color = 'white';
+                }
+            });
+        }
+    });
+});
+ // ─── Modal tags: show partial / show all ───
+document.addEventListener('DOMContentLoaded', () => {
+    const tagsContainer = document.querySelector('.modal-tags');
+    if (!tagsContainer) return;
+
+    const allTags = tagsContainer.querySelectorAll('.modal-tag:not(.modal-tag-more)');
+    const moreBtn = tagsContainer.querySelector('.modal-tag-more');
+    const VISIBLE_COUNT = 2; // จำนวน tag ที่แสดงตอนแรก
+    let expanded = false;
+
+    // ซ่อน tag ที่เกิน VISIBLE_COUNT ตอนเริ่มต้น
+    allTags.forEach((tag, i) => {
+        if (i >= VISIBLE_COUNT) tag.style.display = 'none';
     });
 
-    // ปิด dropdown เมื่อคลิกที่อื่น
-    document.addEventListener('click', () => sortDD.classList.add('hidden'), { once: true });
+    if (moreBtn) {
+        moreBtn.addEventListener('click', () => {
+            expanded = !expanded;
+            allTags.forEach((tag, i) => {
+                if (i >= VISIBLE_COUNT) {
+                    tag.style.display = expanded ? 'inline-block' : 'none';
+                }
+            });
+            moreBtn.textContent = expanded ? '▲' : '...';
+        });
+    }
+});
+
+// ─── History Modal ───
+document.addEventListener('DOMContentLoaded', () => {
+  const historyModal = document.getElementById('historyModal');
+  const closeHistoryBtn = document.getElementById('closeHistoryModal');
+  const openHistoryBtn = document.querySelector('.btn-history');
+
+  // เปิด
+  if (openHistoryBtn) {
+    openHistoryBtn.addEventListener('click', () => {
+      historyModal.classList.remove('hidden');
+    });
   }
 
-  renderDetail();
+  // ปิดด้วย X
+  if (closeHistoryBtn) {
+    closeHistoryBtn.addEventListener('click', () => {
+      historyModal.classList.add('hidden');
+    });
+  }
+
+  // ปิดเมื่อคลิกพื้นหลัง
+  historyModal.addEventListener('click', (e) => {
+    if (e.target === historyModal) historyModal.classList.add('hidden');
+  });
 
 });
+
+function enterEditMode(idx) {
+    // unlock tags
+    document.querySelectorAll(`#historyTasteTags${idx} .taste-tag`)
+        .forEach(t => t.classList.remove('disabled'));
+    // unlock stars
+    document.querySelectorAll(`#historyTasteStars${idx} .taste-star`)
+        .forEach(s => s.style.pointerEvents = 'auto');
+
+    document.getElementById(`historyReviewText${idx}`).classList.add('hidden');
+    document.getElementById(`historyReviewInput${idx}`).classList.remove('hidden');
+    document.getElementById(`historyViewActions${idx}`).classList.add('hidden');
+    document.getElementById(`historyEditActions${idx}`).classList.remove('hidden');
+    document.getElementById(`historyPhotoActions${idx}`).classList.remove('hidden');
+}
+
+function cancelEditMode(idx) {
+    // lock tags back
+    document.querySelectorAll(`#historyTasteTags${idx} .taste-tag`)
+        .forEach(t => t.classList.add('disabled'));
+    // lock stars back
+    document.querySelectorAll(`#historyTasteStars${idx} .taste-star`)
+        .forEach(s => s.style.pointerEvents = 'none');
+    const input = document.getElementById(`historyReviewInput${idx}`);
+    const text = document.getElementById(`historyReviewText${idx}`);
+    input.value = text.textContent; // reset
+    input.classList.add('hidden');
+    text.classList.remove('hidden');
+    document.getElementById(`historyViewActions${idx}`).classList.remove('hidden');
+    document.getElementById(`historyEditActions${idx}`).classList.add('hidden');
+    document.getElementById(`historyPhotoActions${idx}`).classList.add('hidden');
+}
+
+async function saveHistoryEdit(idx, submissionId) {
+  const input = document.getElementById(`historyReviewInput${idx}`);
+  const text = document.getElementById(`historyReviewText${idx}`);
+  
+  // รวบรวมข้อมูลใหม่
+  const review = input.value.trim();
+  const activeStars = document.querySelectorAll(`#historyTasteStars${idx} .taste-star.active`);
+  const tasteRating = activeStars.length > 0 ? parseInt(activeStars[activeStars.length - 1].dataset.val) : 0;
+  
+  const activeTags = document.querySelectorAll(`#historyTasteTags${idx} .taste-tag.selected`);
+  const tasteTags = Array.from(activeTags).map(t => t.dataset.taste);
+  
+  const photoImg = document.getElementById(`historyPhoto${idx}`);
+  const imageURL = photoImg.src; // อาจจะเป็น base64 หากเพิ่งเปลี่ยน
+
+  if (tasteRating === 0 || tasteTags.length === 0 || !review) {
+      alert('กรุณากรอกข้อมูลดาว รสชาติ และรีวิวให้ครบถ้วน');
+      return;
+  }
+
+  try {
+      const res = await fetch(`/api/submissions/${submissionId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ review, tasteRating, tasteTags, imageURL })
+      });
+
+      if (res.ok) {
+          text.textContent = review; // อัปเดตใน UI
+          cancelEditMode(idx);
+          alert('บันทึกการแก้ไขสำเร็จ!');
+      } else {
+          alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      }
+  } catch (err) {
+      console.error(err);
+      alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+  }
+}
+
+function changeHistoryPhoto(event, idx) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById(`historyPhoto${idx}`).src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+// ─── Upload preview ───
+function previewUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const preview = document.getElementById('uploadPreview');
+    const icon = document.getElementById('uploadIcon');
+    const label = document.getElementById('uploadLabel');
+    const actions = document.getElementById('uploadActions');
+    const reader = new FileReader();
+    reader.onload = e => {
+        preview.src = e.target.result;
+        preview.classList.remove('hidden');
+        icon.classList.add('hidden');
+        label.classList.add('hidden');
+        actions.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeUpload() {
+    const preview = document.getElementById('uploadPreview');
+    const icon = document.getElementById('uploadIcon');
+    const label = document.getElementById('uploadLabel');
+    const actions = document.getElementById('uploadActions');
+    const input = document.getElementById('questFileInput');
+    preview.classList.add('hidden');
+    icon.classList.remove('hidden');
+    label.classList.remove('hidden');
+    actions.classList.add('hidden');
+    input.value = '';
+}
+
+function getRankColor(rank) {
+  switch (rank.toLowerCase()) {
+    case 'bronze': return '#ffa954ff'; // ทองแดง
+    case 'silver': return '#c0c0c0ff'; // เงิน
+    case 'gold': return '#FFD700'; // ทอง
+    case 'platinum': return '#ff25ffff'; // แพลตินัม
+    case 'diamond': return '#34d0ffff'; // เพชร
+    case 'master': return '#0B5091'; // ปรมาจารย์
+    default: return '#fff';
+  }
+}
+
+function applyRankColors() {
+  const textEls = document.querySelectorAll('.rank-text'); // หรือ class ที่คุณใช้
+  textEls.forEach(el => {
+    const rank = el.textContent.trim();
+    const color = getRankColor(rank);
+    el.style.color = color;
+    
+    // Apply color to the lock icon as well
+    const lockOverlay = el.closest('.lock-overlay');
+    if (lockOverlay) {
+        const lockIcon = lockOverlay.querySelector('.fa-lock');
+        if (lockIcon) {
+            lockIcon.style.color = color;
+        }
+    }
+  });
+}

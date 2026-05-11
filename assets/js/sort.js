@@ -45,7 +45,7 @@ function setupCustomSelect(triggerId, optionsId, textId, type) {
 
 // 3. ฟังก์ชันหลักในการเรียงลำดับการ์ดเควส
 function sortQuests() {
-    const questList = document.getElementById('questList');
+    const questList = document.getElementById('questList') || document.getElementById('menuList');
     if (!questList) return;
 
     // แปลง NodeList เป็น Array เพื่อใช้ฟังก์ชัน sort()

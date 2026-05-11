@@ -8,7 +8,8 @@ const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('.'));
 
 // Import models at the top
@@ -16,6 +17,7 @@ const Menu = require('./serializer/menu');
 const Quest = require('./serializer/quest');
 const Tag = require('./serializer/tag');
 const Request = require('./serializer/request');
+const Submission = require('./serializer/submission');
 
 // MongoDB connection
 const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
@@ -218,6 +220,86 @@ app.delete('/api/quests/:id', async (req, res) => {
     res.json({ message: 'Quest deleted successfully' });
   } catch (error) {
     console.error('Error deleting quest:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/submissions', async (req, res) => {
+  try {
+    const { menuName, randomQuests, imageURL, tasteRating, tasteTags, review } = req.body;
+    
+    const request = new Request({
+      menuName,
+      randomQuests,
+      imageURL,
+      tasteRating,
+      tasteTags,
+      review,
+      status: 'pending',
+      submittedAt: new Date()
+    });
+    await request.save();
+
+    const submission = new Submission({
+      requestId: request._id,
+      imageURL,
+      tasteRating,
+      tasteTags,
+      review,
+      status: 'pending'
+    });
+    await submission.save();
+
+    res.status(201).json({ request, submission });
+  } catch (error) {
+    console.error('Error creating submission:', error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.put('/api/submissions/:id', async (req, res) => {
+  try {
+    const { imageURL, tasteRating, tasteTags, review } = req.body;
+    const submission = await Submission.findByIdAndUpdate(
+      req.params.id,
+      { imageURL, tasteRating, tasteTags, review, editedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+    
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+    res.json(submission);
+  } catch (error) {
+    console.error('Error updating submission:', error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/api/history', async (req, res) => {
+  try {
+    const { requestId, menuName } = req.query;
+    const query = requestId ? { requestId } : {};
+    
+    let matchQuery = {};
+    if (menuName) {
+        matchQuery.menuName = menuName;
+    }
+    
+    const history = await Submission.find(query)
+      .populate({
+          path: 'requestId',
+          select: 'menuName randomQuests status',
+          match: matchQuery
+      })
+      .sort({ submittedAt: -1 });
+      
+    // Filter out submissions where requestId didn't match (if we filtered by menuName)
+    const filteredHistory = menuName ? history.filter(sub => sub.requestId != null) : history;
+      
+    res.json(filteredHistory);
+  } catch (error) {
+    console.error('Error fetching history:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

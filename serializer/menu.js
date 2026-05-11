@@ -5,6 +5,11 @@ const menuSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  rank:{
+    type: String,
+    enum: ['bronze','silver','gold','platinum','diamond','master'],
+    default: 'bronze'
+  },
   servings: {
     type: Number,
     default: 1
@@ -59,6 +64,10 @@ const menuSchema = new mongoose.Schema({
     description: {
       type: String,
       required: true
+    },
+    stepImageURL: {
+      type: String,
+      default: ''
     }
   }],
   tags: [{
@@ -67,11 +76,6 @@ const menuSchema = new mongoose.Schema({
   questIds: [{
     type: String
   }],
-  steps: [{
-    text: {
-      type: String
-    }
-  }]
 }, {
   timestamps: true
 });

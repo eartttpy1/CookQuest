@@ -14,16 +14,22 @@ details.forEach((targetDetail) => {
 // ─── API Connection (Load Quests from Server) ───
 async function loadQuests() {
     try {
-        const response = await fetch('/api/quests');
-        if (!response.ok) throw new Error('Failed to load quests');
-        const quests = await response.json();
-        renderQuests(quests);
+        const [questsResponse, menusResponse] = await Promise.all([
+            fetch('/api/quests'),
+            fetch('/api/menus')
+        ]);
+        if (!questsResponse.ok) throw new Error('Failed to load quests');
+        if (!menusResponse.ok) throw new Error('Failed to load menus');
+        
+        const quests = await questsResponse.json();
+        const menus = await menusResponse.json();
+        renderQuests(quests, menus);
     } catch (error) {
-        console.error('Error fetching quests:', error);
+        console.error('Error fetching quests or menus:', error);
     }
 }
 
-function renderQuests(quests) {
+function renderQuests(quests, menus) {
     const questList = document.getElementById('questList');
     if (!questList) return;
     
@@ -46,17 +52,61 @@ function renderQuests(quests) {
             card.removeAttribute('href');
         }
 
+        // Find related menus based on questIds or matching tags (menuName)
+        const relatedMenus = menus.filter(menu => {
+            const hasQuestId = menu.questIds && menu.questIds.includes(quest._id.toString());
+            const hasTagMatch = quest.tags && quest.tags.some(tag => tag.toLowerCase() === (menu.menuName || '').toLowerCase());
+            return hasQuestId || hasTagMatch;
+        });
+        
+        // Extract up to 4 image URLs
+        const imageUrls = relatedMenus.map(m => m.imageURL).filter(url => url).slice(0, 4);
+        
+        // Fill remaining with placeholders if less than 4 images
+        const defaultPlaceholders = [
+            '../../assets/img/steak1.png',
+            '../../assets/img/steak2.png',
+            '../../assets/img/steak3.png',
+            '../../assets/img/emptymenu.jpg'
+        ];
+        
+        while (imageUrls.length < 4) {
+            imageUrls.push(defaultPlaceholders[imageUrls.length]);
+        }
+        
+        // Find highest rank from related menus
+        const rankOrder = {
+            'bronze': 1,
+            'silver': 2,
+            'gold': 3,
+            'platinum': 4,
+            'diamond': 5,
+            'master': 6
+        };
+        
+        let highestRank = 'bronze'; // default rank
+        let highestRankValue = 0;
+        
+        relatedMenus.forEach(menu => {
+            const r = (menu.rank || 'bronze').toLowerCase();
+            if (rankOrder[r] && rankOrder[r] > highestRankValue) {
+                highestRankValue = rankOrder[r];
+                highestRank = r;
+            }
+        });
+
+
         // We use placeholders since there's no multiple image field in DB right now
         card.innerHTML = `
             <h2 class="quest-title thaipattaya">${quest.name}</h2>
             <figure class="quest-image-grid">
-                <img src="../../assets/img/steak1.png" alt="food">
-                <img src="../../assets/img/steak2.png" alt="food">
-                <img src="../../assets/img/steak3.png" alt="food">
-                <img src="../../assets/img/steak4.png" alt="food">
+                <img src="${imageUrls[0]}" alt="food">
+                <img src="${imageUrls[1]}" alt="food">
+                <img src="${imageUrls[2]}" alt="food">
+                <img src="${imageUrls[3]}" alt="food">
                 ${isLocked ? `
                 <div class="lock-overlay">
-                    <i class="fa-solid fa-lock"></i><span class="rank-text">${quest.level}</span>
+                    <i class="fa-solid fa-lock"></i><span class="rank-text">${highestRank.toUpperCase()}</span>
                 </div>` : ''}
             </figure>
             <div class="quest-footer">
@@ -70,30 +120,41 @@ function renderQuests(quests) {
     if (typeof sortQuests === 'function') {
         sortQuests();
     }
+    
+    // Apply colors after rendering is complete
+    applyRankColors();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('questList')) {
         loadQuests();
-        applyRankColors();
     }
 });
 function getRankColor(rank) {
-  switch (rank) {
-    case 'BRONZE': return '#CD7F32'; // ทองแดง
-    case 'SILVER': return '#C0C0C0'; // เงิน
-    case 'GOLD': return '#FFD700'; // ทอง
-    case 'PLATINUM': return '#E5E4E2'; // แพลตินัม
-    case 'DIAMOND': return '#2574EB'; // เพชร
-    case 'MASTER': return '#0B5091'; // ปรมาจารย์
+  switch (rank.toLowerCase()) {
+    case 'bronze': return '#ffa954ff'; // ทองแดง
+    case 'silver': return '#c0c0c0ff'; // เงิน
+    case 'gold': return '#FFD700'; // ทอง
+    case 'platinum': return '#ff25ffff'; // แพลตินัม
+    case 'diamond': return '#34d0ffff'; // เพชร
+    case 'master': return '#0B5091'; // ปรมาจารย์
     default: return '#fff';
   }
 }
 function applyRankColors() {
   const textEls = document.querySelectorAll('.rank-text'); // หรือ class ที่คุณใช้
   textEls.forEach(el => {
-    const rank = el.textContent.toUpperCase().trim();
+    const rank = el.textContent.trim();
     const color = getRankColor(rank);
     el.style.color = color;
+    
+    // Apply color to the lock icon as well
+    const lockOverlay = el.closest('.lock-overlay');
+    if (lockOverlay) {
+        const lockIcon = lockOverlay.querySelector('.fa-lock');
+        if (lockIcon) {
+            lockIcon.style.color = color;
+        }
+    }
   });
 }
