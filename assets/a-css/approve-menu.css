@@ -239,6 +239,45 @@ body.darkmode{
     gap: 6px;
 }
 
+.item-status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.request-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.request-status.pending {
+    background: #fff4d7;
+    color: #8a6d15;
+}
+
+.request-status.approved {
+    background: #def3de;
+    color: #1d6d27;
+}
+
+.request-status.rejected {
+    background: #f7d3d7;
+    color: #8b1f2b;
+}
+
+.btn-approve[disabled],
+.btn-reject[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .item-menu {
     font-size: 1.2rem;
     font-weight: 700;
