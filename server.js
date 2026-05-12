@@ -178,16 +178,30 @@ app.get('/api/requests', async (req, res) => {
   }
 });
 
-app.patch('/api/requests/:id', async (req, res) => {
+app.put('/api/requests/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
-    const request = await Request.findByIdAndUpdate(
-      req.params.id, 
-      { status }, 
-      { new: true }
-    );
+    const normalizedStatus = String(status || '').trim().toLowerCase();
+    const allowedStatuses = ['approved', 'rejected'];
+
+    if (!allowedStatuses.includes(normalizedStatus)) {
+      return res.status(400).json({ error: 'Invalid status update' });
+    }
+
+    const request = await Request.findById(req.params.id);
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    if (request.status && request.status !== 'pending') {
+      return res.status(400).json({ error: 'Status cannot be changed after decision' });
+    }
+
+    request.status = normalizedStatus;
+    await request.save();
     res.json(request);
   } catch (error) {
+    console.error('Error updating request status:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
