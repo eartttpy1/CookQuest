@@ -368,8 +368,6 @@ async function saveRecipe() {
         prepTime,
         cookTime,
         EXP: 0, // Default values
-        prepareTime: 0,
-        cookingTime: 0,
         createdBy: 'admin', // Default
         imageURL: selectedImageData || (currentEditItem ? currentEditItem.imageURL : ''),
         ingredients,
