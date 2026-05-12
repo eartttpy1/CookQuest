@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadRequests() {
     try {
-        const response = await fetch('/api/requests?status=all');
+        const response = await fetch(`/api/requests?status=${currentStatus}`);
         if (!response.ok) {
             throw new Error('Failed to fetch requests');
         }
@@ -68,25 +68,22 @@ function setupEventListeners() {
     });
 
     if (requestList) {
-        requestList.addEventListener('click', (event) => {
+        requestList.addEventListener('click', async (event) => {
             const button = event.target.closest('button');
             if (!button) return;
 
             const item = button.closest('.request-item');
             if (!item) return;
 
+            const target = requests.find((request) => String(request._id) === String(item.dataset.id));
+            if (!target || getRequestStatus(target) !== 'pending') return;
+
             if (button.classList.contains('btn-approve')) {
-                const target = requests.find((request) => String(request._id) === String(item.dataset.id));
-                if (target) target.status = 'approved';
-                item.remove();
-                updateRequestCount();
+                await updateRequestStatus(target._id, 'approved');
             }
 
             if (button.classList.contains('btn-reject')) {
-                const target = requests.find((request) => String(request._id) === String(item.dataset.id));
-                if (target) target.status = 'rejected';
-                item.remove();
-                updateRequestCount();
+                await updateRequestStatus(target._id, 'rejected');
             }
         });
     }
@@ -130,6 +127,9 @@ function renderRequests() {
         requestItem.className = 'request-item';
         requestItem.dataset.id = request._id || '';
 
+        const requestStatus = getRequestStatus(request);
+        const isPending = requestStatus === 'pending';
+
         requestItem.innerHTML = `
             <div class="item-img">
                 <img src="${getImageUrl(request)}" alt="dish">
@@ -137,7 +137,10 @@ function renderRequests() {
             <div class="item-info">
                 <div class="item-top">
                     <span class="item-menu thai">Menu: ${escapeHtml(getMenuName(request))}</span>
-                    <span class="item-date">${formatDate(request)}</span>
+                    <div class="item-status-row">
+                        <span class="request-status ${requestStatus}">${capitalize(requestStatus)}</span>
+                        <span class="item-date">${formatDate(request)}</span>
+                    </div>
                 </div>
                 <div class="item-meta">
                     <span class="thai">ID &nbsp;&nbsp; ${escapeHtml(String(request._id || '-'))}</span>
@@ -145,8 +148,8 @@ function renderRequests() {
                 </div>
             </div>
             <div class="item-actions">
-                <button class="btn-approve" type="button">Approve</button>
-                <button class="btn-reject" type="button">Reject</button>
+                <button class="btn-approve" type="button" ${isPending ? '' : 'disabled'}>Approve</button>
+                <button class="btn-reject" type="button" ${isPending ? '' : 'disabled'}>Reject</button>
             </div>
         `;
 
@@ -195,12 +198,48 @@ function getDateValue(request) {
     return Number.isNaN(time) ? 0 : time;
 }
 
+async function updateRequestStatus(id, status) {
+    try {
+        const response = await fetch(`/api/requests/${id}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status })
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}));
+            throw new Error(errorBody.error || 'Failed to update request status');
+        }
+
+        const updatedRequest = await response.json();
+        const index = requests.findIndex((request) => String(request._id) === String(updatedRequest._id));
+        if (index !== -1) {
+            requests[index] = updatedRequest;
+        }
+
+        if (currentStatus !== 'all' && currentStatus !== updatedRequest.status) {
+            await loadRequests();
+        } else {
+            renderRequests();
+        }
+    } catch (error) {
+        console.error('Error updating request status:', error);
+    }
+}
+
 function getRequestStatus(request) {
     const normalized = String(request.status || 'pending').trim().toLowerCase();
     if (normalized === 'approved' || normalized === 'rejected' || normalized === 'pending') {
         return normalized;
     }
     return 'pending';
+}
+
+function capitalize(text) {
+    const value = String(text || '');
+    return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function formatDate(request) {
