@@ -68,25 +68,55 @@ function setupEventListeners() {
     });
 
     if (requestList) {
-        requestList.addEventListener('click', (event) => {
+        requestList.addEventListener('click', async (event) => {
             const button = event.target.closest('button');
             if (!button) return;
 
             const item = button.closest('.request-item');
             if (!item) return;
 
+            const requestId = item.dataset.id;
+
             if (button.classList.contains('btn-approve')) {
-                const target = requests.find((request) => String(request._id) === String(item.dataset.id));
-                if (target) target.status = 'approved';
-                item.remove();
-                updateRequestCount();
+                try {
+                    const response = await fetch(`/api/requests/${requestId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: 'approved' })
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to update status');
+                    
+                    const target = requests.find((request) => String(request._id) === String(requestId));
+                    if (target) target.status = 'approved';
+                    
+                    item.remove();
+                    updateRequestCount();
+                } catch (error) {
+                    console.error('Error approving request:', error);
+                    alert('Failed to approve request');
+                }
             }
 
             if (button.classList.contains('btn-reject')) {
-                const target = requests.find((request) => String(request._id) === String(item.dataset.id));
-                if (target) target.status = 'rejected';
-                item.remove();
-                updateRequestCount();
+                try {
+                    const response = await fetch(`/api/requests/${requestId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: 'rejected' })
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to update status');
+                    
+                    const target = requests.find((request) => String(request._id) === String(requestId));
+                    if (target) target.status = 'rejected';
+                    
+                    item.remove();
+                    updateRequestCount();
+                } catch (error) {
+                    console.error('Error rejecting request:', error);
+                    alert('Failed to reject request');
+                }
             }
         });
     }

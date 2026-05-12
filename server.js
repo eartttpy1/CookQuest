@@ -178,6 +178,20 @@ app.get('/api/requests', async (req, res) => {
   }
 });
 
+app.patch('/api/requests/:id', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const request = await Request.findByIdAndUpdate(
+      req.params.id, 
+      { status }, 
+      { new: true }
+    );
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/quests', async (req, res) => {
   try {
     const quests = await Quest.find();
