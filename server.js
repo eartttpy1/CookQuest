@@ -8,7 +8,8 @@ const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('.'));
 
 // Import models at the top
