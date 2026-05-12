@@ -4,6 +4,7 @@ let currentStatus = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
+    updateHeaderTitle(currentStatus);
     loadRequests();
 });
 
@@ -57,6 +58,7 @@ function setupEventListeners() {
             currentStatus = button.dataset.status || 'all';
             document.querySelectorAll('.status-btn').forEach((item) => item.classList.remove('active'));
             button.classList.add('active');
+            updateHeaderTitle(currentStatus);
             await loadRequests();
         });
     }
@@ -258,4 +260,18 @@ function escapeHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+function updateHeaderTitle(status) {
+    const headerTitle = document.querySelector('.page-header h1');
+    if (!headerTitle) return;
+
+    const titles = {
+        all: 'All requests',
+        pending: 'Pending requests',
+        approved: 'Approved requests',
+        rejected: 'Rejected requests'
+    };
+
+    headerTitle.textContent = titles[status] || 'Current requests';
 }
