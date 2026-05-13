@@ -23,7 +23,7 @@ const Tag = require('./serializer/tag');
 const Request = require('./serializer/request');
 const Submission = require('./serializer/submission');
 const Favorite = require('./serializer/favorite');
-
+const UserMenu = require('./serializer/usermenu');
 // MongoDB connection
 const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
 
@@ -380,6 +380,59 @@ app.get('/api/favorites', async (req, res) => {
     res.json(favorites);
   } catch (error) {
     console.error('Error fetching favorites:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
+// UserMenu API Endpoints (Custom Recipes)
+// ==========================================
+
+app.get('/api/usermenus', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const filter = userId ? { createdBy: userId } : {};
+    const menus = await UserMenu.find(filter).sort({ createdAt: -1 });
+    res.json(menus);
+  } catch (error) {
+    console.error('Error fetching usermenus:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/usermenus', async (req, res) => {
+  try {
+    const menu = new UserMenu(req.body);
+    await menu.save();
+    res.status(201).json(menu);
+  } catch (error) {
+    console.error('Error creating usermenu:', error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.put('/api/usermenus/:id', async (req, res) => {
+  try {
+    const menu = await UserMenu.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!menu) {
+      return res.status(404).json({ error: 'UserMenu not found' });
+    }
+    res.json(menu);
+  } catch (error) {
+    console.error('Error updating usermenu:', error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/api/usermenus/:id', async (req, res) => {
+  try {
+    const menu = await UserMenu.findByIdAndDelete(req.params.id);
+    if (!menu) {
+      return res.status(404).json({ error: 'UserMenu not found' });
+    }
+    res.json({ message: 'UserMenu deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting usermenu:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

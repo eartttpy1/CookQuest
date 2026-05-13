@@ -339,7 +339,7 @@ function renderHistory(historyData) {
                         <textarea class="modal-review thai hidden" id="historyReviewInput${index}" rows="2">${sub.review || ''}</textarea>
                     </div>
                     <div class="history-btn-row" id="historyBtnRow${index}">
-                        ${sub.status !== 'approved' ? `
+                        ${sub.status === 'pending' ? `
                         <div class="history-view-actions" id="historyViewActions${index}">
                             <button class="btn-edit-history thai" onclick="enterEditMode(${index})">Edit</button>
                         </div>
@@ -486,53 +486,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-async function loadQuestDetails(questId) {
-    try {
-        const [questsResponse, menusResponse, favResponse, historyResponse] = await Promise.all([
-            fetch('/api/quests'),
-            fetch('/api/menus'),
-            fetch(`/api/favorites?userId=${CURRENT_USER_ID}`),
-            fetch('/api/history')
-        ]);
-        if (!questsResponse.ok) throw new Error('Failed to load quests');
-        if (!menusResponse.ok) throw new Error('Failed to load menus');
-        
-        const quests = await questsResponse.json();
-        const menus = await menusResponse.json();
-        
-        if (favResponse && favResponse.ok) {
-            const favorites = await favResponse.json();
-            favorites.forEach(fav => {
-                if (fav.menuId) favState[fav.menuId] = true;
-            });
-        }
+function showSkeletonLoadersInDetail() {
+    const menuList = document.getElementById('menuList');
+    if (!menuList) return;
+    const skeletonHTML = `
+        <div class="skeleton-card">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-image"></div>
+            <div class="skeleton-footer"></div>
+        </div>
+    `.repeat(6);
+    menuList.innerHTML = skeletonHTML;
+}
 
-        let menuStatusMap = {};
-        if (historyResponse && historyResponse.ok) {
-            const history = await historyResponse.json();
-            history.forEach(sub => {
-                const req = sub.requestId;
-                if (req && req.menuName) {
-                    const mName = req.menuName;
-                    const newStatus = sub.status;
-                    const currentStatus = menuStatusMap[mName];
-                    if (!currentStatus) {
-                        menuStatusMap[mName] = newStatus;
-                    } else if (currentStatus !== 'approved') {
-                        if (newStatus === 'approved') {
-                            menuStatusMap[mName] = 'approved';
-                        } else if (newStatus === 'pending' && currentStatus === 'rejected') {
-                            menuStatusMap[mName] = 'pending';
-                        }
-                    }
-                }
-            });
-        }
-        
+async function loadQuestDetails(questId) {
+    const cacheKey = `cookquest_cache_${CURRENT_USER_ID}`;
+    const cachedData = sessionStorage.getItem(cacheKey);
+
+    const renderFromData = (quests, menus, fState, mStatusMap) => {
+        Object.assign(favState, fState);
         const currentQuest = quests.find(q => q._id === questId);
         if (!currentQuest) return;
 
-        // Render Title
         const titleContainer = document.querySelector('.category-container div:first-child');
         if (titleContainer) {
             titleContainer.innerHTML = `
@@ -541,7 +516,6 @@ async function loadQuestDetails(questId) {
             `;
         }
         
-        // Find related menus
         const relatedMenus = menus.filter(menu => {
             const hasQuestId = menu.questIds && menu.questIds.includes(questId);
             const hasTagMatch = currentQuest.tags && currentQuest.tags.some(tag => tag.toLowerCase() === (menu.menuName || '').toLowerCase());
@@ -549,10 +523,47 @@ async function loadQuestDetails(questId) {
         });
 
         allRelatedMenus = relatedMenus; // เก็บไว้ใช้ใน Modal
-        renderMenus(relatedMenus, menuStatusMap);
-    } catch (error) {
-        console.error('Error fetching data:', error);
+        renderMenus(relatedMenus, mStatusMap);
+    };
+
+    if (cachedData) {
+        try {
+            const data = JSON.parse(cachedData);
+            renderFromData(data.quests, data.menus, data.favState, data.menuStatusMap);
+        } catch (e) {
+            console.error('Cache parsing failed', e);
+            showSkeletonLoadersInDetail();
+        }
+    } else {
+        showSkeletonLoadersInDetail();
     }
+
+    if (!window.Worker) {
+        console.error('Web Workers are not supported in this browser.');
+        return;
+    }
+
+    const worker = new Worker('../../assets/js/worker.js');
+    worker.postMessage({ userId: CURRENT_USER_ID });
+
+    worker.onmessage = function(e) {
+        const data = e.data;
+        if (!data.success) {
+            console.error('Worker error:', data.error);
+            return;
+        }
+
+        const { quests, menus, favState: newFavState, menuStatusMap } = data;
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+            quests, menus, favState: newFavState, menuStatusMap
+        }));
+        
+        renderFromData(quests, menus, newFavState, menuStatusMap);
+    };
+
+    worker.onerror = function(error) {
+        console.error('Worker failed:', error);
+    };
 }
 
 function renderMenus(menus, menuStatusMap = {}) {

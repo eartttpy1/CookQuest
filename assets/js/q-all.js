@@ -3,7 +3,6 @@ const details = document.querySelectorAll(".dropdown");
 
 details.forEach((targetDetail) => {
     targetDetail.addEventListener("click", () => {
-        // เมื่อคลิกอันใดอันหนึ่ง ให้วนลูปปิดอันอื่นที่เหลือ
         details.forEach((detail) => {
             if (detail !== targetDetail) {
                 detail.removeAttribute("open");
@@ -11,25 +10,177 @@ details.forEach((targetDetail) => {
         });
     });
 });
-// ─── API Connection (Load Quests from Server) ───
-async function loadQuests() {
-    try {
-        const [questsResponse, menusResponse] = await Promise.all([
-            fetch('/api/quests'),
-            fetch('/api/menus')
-        ]);
-        if (!questsResponse.ok) throw new Error('Failed to load quests');
-        if (!menusResponse.ok) throw new Error('Failed to load menus');
-        
-        const quests = await questsResponse.json();
-        const menus = await menusResponse.json();
-        renderQuests(quests, menus);
-    } catch (error) {
-        console.error('Error fetching quests or menus:', error);
+
+// Global state for SPA filtering
+window.allQuestsData = [];
+window.allMenusData = [];
+window.currentMenuStatusMap = {};
+
+function setupTabNavigation() {
+    const navLinks = document.querySelectorAll('.top-nav .nav-link');
+    const questSectionWrapper = document.getElementById('questSectionWrapper');
+
+    // ตรวจสอบ URL parameter ว่ามีการส่ง tab มาหรือไม่ (เช่น ?tab=pending)
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialTab = urlParams.get('tab');
+    
+    if (initialTab) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const targetLink = document.querySelector(`.top-nav .nav-link[data-filter="${initialTab}"]`);
+        if (targetLink) targetLink.classList.add('active');
     }
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const filter = e.currentTarget.getAttribute('data-filter');
+            if (!filter) return; // Let normal links (like q-self.html) pass through
+
+            e.preventDefault();
+            
+            // Update active class
+            navLinks.forEach(l => l.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+
+            // Apply filter
+            let filteredMenus = window.allMenusData;
+
+            if (filter === 'pending') {
+                filteredMenus = window.allMenusData.filter(menu => 
+                    window.currentMenuStatusMap[menu.menuName] === 'pending'
+                );
+                if (questSectionWrapper) questSectionWrapper.style.display = 'none';
+            } else if (filter === 'complete') {
+                filteredMenus = window.allMenusData.filter(menu => {
+                    const status = window.currentMenuStatusMap[menu.menuName];
+                    return status === 'approved' || status === 'rejected';
+                });
+                if (questSectionWrapper) questSectionWrapper.style.display = 'none';
+            } else {
+                // all
+                if (questSectionWrapper) questSectionWrapper.style.display = '';
+            }
+
+            if (typeof renderMenus === 'function') {
+                renderMenus(filteredMenus, window.currentMenuStatusMap);
+                // Re-apply any active sorts after re-rendering
+                if (typeof window.sortQuests === 'function') {
+                    window.sortQuests();
+                }
+            }
+        });
+    });
 }
 
-function renderQuests(quests, menus) {
+document.addEventListener('DOMContentLoaded', () => {
+    setupTabNavigation();
+});
+
+// ─── API Connection (Load Quests from Server) ───
+function showSkeletonLoaders() {
+    const questList = document.getElementById('questList');
+    const menuList = document.getElementById('menuList');
+    
+    const skeletonHTML = `
+        <div class="skeleton-card">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-image"></div>
+            <div class="skeleton-footer"></div>
+        </div>
+    `.repeat(6); 
+    
+    if (questList) questList.innerHTML = skeletonHTML;
+    if (menuList) menuList.innerHTML = skeletonHTML;
+}
+
+async function loadQuests() {
+    if (!window.Worker) {
+        console.error('Web Workers are not supported in this browser.');
+        return;
+    }
+
+    const userId = typeof CURRENT_USER_ID !== 'undefined' ? CURRENT_USER_ID : 'user123';
+    const cacheKey = `cookquest_cache_${userId}`;
+    const cachedData = sessionStorage.getItem(cacheKey);
+
+    if (cachedData) {
+        try {
+            const data = JSON.parse(cachedData);
+            window.allQuestsData = data.quests;
+            window.allMenusData = data.menus;
+            window.currentMenuStatusMap = data.menuStatusMap;
+            
+            if (typeof favState !== 'undefined') Object.assign(favState, data.favState);
+            if (typeof allRelatedMenus !== 'undefined') allRelatedMenus = data.menus;
+            
+            // Check current active tab to render correctly from cache
+            const activeNav = document.querySelector('.top-nav .nav-link.active');
+            const activeFilter = activeNav ? activeNav.getAttribute('data-filter') : 'all';
+            
+            renderQuests(data.quests);
+            
+            if (typeof renderMenus === 'function') {
+                if (activeFilter === 'all') {
+                    renderMenus(data.menus, data.menuStatusMap);
+                } else {
+                    // Trigger the click logic for current filter
+                    activeNav.click();
+                }
+            }
+        } catch (e) {
+            console.error('Cache parsing failed', e);
+            showSkeletonLoaders();
+        }
+    } else {
+        showSkeletonLoaders();
+    }
+
+    const worker = new Worker('../../assets/js/worker.js');
+    worker.postMessage({ userId });
+
+    worker.onmessage = function(e) {
+        const data = e.data;
+        if (!data.success) {
+            console.error('Worker error:', data.error);
+            return;
+        }
+
+        const { quests, menus, favState: newFavState, menuStatusMap } = data;
+        
+        window.allQuestsData = quests;
+        window.allMenusData = menus;
+        window.currentMenuStatusMap = menuStatusMap;
+
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+            quests, menus, favState: newFavState, menuStatusMap
+        }));
+
+        // Update global variables
+        if (typeof favState !== 'undefined') {
+            Object.assign(favState, newFavState);
+        }
+        if (typeof allRelatedMenus !== 'undefined') {
+            allRelatedMenus = menus;
+        }
+
+        renderQuests(quests);
+        if (typeof renderMenus === 'function') {
+            const activeNav = document.querySelector('.top-nav .nav-link.active');
+            const activeFilter = activeNav ? activeNav.getAttribute('data-filter') : 'all';
+            
+            if (activeFilter === 'all') {
+                renderMenus(menus, menuStatusMap);
+            } else {
+                activeNav.click();
+            }
+        }
+    };
+
+    worker.onerror = function(error) {
+        console.error('Worker failed:', error);
+    };
+}
+
+function renderQuests(quests) {
     const questList = document.getElementById('questList');
     if (!questList) return;
     
@@ -52,49 +203,11 @@ function renderQuests(quests, menus) {
             card.removeAttribute('href');
         }
 
-        // Find related menus based on questIds or matching tags (menuName)
-        const relatedMenus = menus.filter(menu => {
-            const hasQuestId = menu.questIds && menu.questIds.includes(quest._id.toString());
-            const hasTagMatch = quest.tags && quest.tags.some(tag => tag.toLowerCase() === (menu.menuName || '').toLowerCase());
-            return hasQuestId || hasTagMatch;
-        });
-        
-        // Extract up to 4 image URLs
-        const imageUrls = relatedMenus.map(m => m.imageURL).filter(url => url).slice(0, 4);
-        
-        // Fill remaining with placeholders if less than 4 images
-        const defaultPlaceholders = [
-            '../../assets/img/steak1.png',
-            '../../assets/img/steak2.png',
-            '../../assets/img/steak3.png',
-            '../../assets/img/emptymenu.jpg'
-        ];
-        
-        while (imageUrls.length < 4) {
-            imageUrls.push(defaultPlaceholders[imageUrls.length]);
-        }
-        
-        // Find highest rank from related menus
-        const rankOrder = {
-            'bronze': 1,
-            'silver': 2,
-            'gold': 3,
-            'platinum': 4,
-            'diamond': 5,
-            'master': 6
+        // Use pre-calculated data from the worker
+        const { imageUrls, highestRank } = quest.processedData || { 
+            imageUrls: ['../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg'], 
+            highestRank: 'bronze' 
         };
-        
-        let highestRank = 'bronze'; // default rank
-        let highestRankValue = 0;
-        
-        relatedMenus.forEach(menu => {
-            const r = (menu.rank || 'bronze').toLowerCase();
-            if (rankOrder[r] && rankOrder[r] > highestRankValue) {
-                highestRankValue = rankOrder[r];
-                highestRank = r;
-            }
-        });
-
 
         // We use placeholders since there's no multiple image field in DB right now
         card.innerHTML = `

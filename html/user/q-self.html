@@ -114,18 +114,18 @@
         </div>
 
         <nav class="top-nav">
-            <a href="q-all.html" class="nav-link active"><span class="thai">ทั้งหมด</span></a>
-            <a href="q-pending.html" class="nav-link"><span class="thai">รอดำเนินการ</span></a>
-            <a href="q-complete.html" class="nav-link"><span class="thai">เสร็จสิ้น</span></a>
-            <a href="q-self.html" class="nav-link"><span class="thai">บันทึกสูตร</span></a>
+            <a href="q-all.html?tab=all" class="nav-link"><span class="thai">ทั้งหมด</span></a>
+            <a href="q-all.html?tab=pending" class="nav-link"><span class="thai">รอดำเนินการ</span></a>
+            <a href="q-all.html?tab=complete" class="nav-link"><span class="thai">เสร็จสิ้น</span></a>
+            <a href="q-self.html" class="nav-link active"><span class="thai">บันทึกสูตร</span></a>
         </nav>
 
         <main class="content-container" id="detail-main">
             <span class ="category-title thai">บันทึกสูตรอาหารของคุณ</span>
             <!-- PAGE -->
             <div class="page-wrap">
-                <div class="menu-grid" id="menuGrid"></div>
                 <button class="btn-add-menu" onclick="openAddMenu()">+</button>
+                <div class="quest-section" id="menuGrid"></div>
             </div>
             
             <!-- ADD POPUP -->
@@ -229,7 +229,11 @@
             
                 <div class="am-popup-header">
                     <span class="am-popup-title thai" id="viewTitle"></span>
-                    <button class="am-close-btn" onclick="closeViewMenu()"><i class="fa-solid fa-xmark"></i></button>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="am-close-btn" style="color:var(--primary-color); font-size:1.2rem;" id="btnEditMenu" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>
+                        <button class="am-close-btn" style="color:red; font-size:1.2rem;" id="btnDeleteMenu" title="ลบ"><i class="fa-solid fa-trash"></i></button>
+                        <button class="am-close-btn" onclick="closeViewMenu()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
                 </div>
             
                 <div id="viewImgWrap" class="hidden">

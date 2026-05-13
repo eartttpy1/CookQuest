@@ -5,6 +5,10 @@ const userMenuSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  imageURL: {
+    type: String,
+    default: ''
+  },
   servings: {
     type: Number,
     default: 1
@@ -18,10 +22,6 @@ const userMenuSchema = new mongoose.Schema({
     default: ''
   },
   createdBy: {
-    type: String,
-    default: ''
-  },
-  imageURL: {
     type: String,
     default: ''
   },
@@ -55,7 +55,18 @@ const userMenuSchema = new mongoose.Schema({
   }],
   tags: [{
     type: String
-  }]
+  }],
+  tasteRating: {
+    type: Number,
+    default: 0
+  },
+  tasteTags: [{
+    type: String
+  }],
+  review: {
+    type: String,
+    default: ''
+  }
 }, 
 {   
   timestamps: true,
@@ -63,4 +74,4 @@ const userMenuSchema = new mongoose.Schema({
 }
 );
 
-module.exports = mongoose.model('userMenu', menuItemSchema);    
+module.exports = mongoose.model('userMenu', userMenuSchema);

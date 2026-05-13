@@ -2,11 +2,115 @@
    ADD MENU — JAVASCRIPT
    ════════════════════════════════ */
 
-// ─── ข้อมูลเมนูทั้งหมด ───────────────────────────────────────
-let menuList = []; // เก็บเมนูที่ add แล้ว
+const USER_ID_LOCAL = typeof CURRENT_USER_ID !== 'undefined' ? CURRENT_USER_ID : 'user123';
+let menuList = []; // เก็บเมนูที่ดึงมาจาก Database
+let editingMenuId = null; // เก็บ ID ของเมนูที่กำลังแก้ไข
+
+// ─── Fetch Data ──────────────────────────────────────────────
+async function fetchUserMenus() {
+  try {
+    const res = await fetch(`/api/usermenus?userId=${USER_ID_LOCAL}`);
+    if (res.ok) {
+      menuList = await res.json();
+      renderMenuCards();
+    }
+  } catch (e) {
+    console.error('Error fetching menus:', e);
+  }
+}
 
 // ─── Open / Close Add Popup ──────────────────────────────────
-function openAddMenu() {
+function openAddMenu(menuId = null) {
+  amResetForm();
+  editingMenuId = menuId;
+
+  if (menuId) {
+    // โหมดแก้ไข
+    const menu = menuList.find(m => m._id === menuId);
+    if (menu) {
+      document.querySelector('.am-popup-title').textContent = 'แก้ไขเมนู';
+      document.querySelector('.am-btn-submit').textContent = 'Save Changes';
+
+      document.getElementById('amName').value = menu.menuName || '';
+      document.getElementById('amQty').value = menu.servings || '';
+      document.getElementById('amPrepTime').value = menu.prepTime || '';
+      document.getElementById('amCookTime').value = menu.cookTime || '';
+      document.getElementById('amReview').value = menu.review || '';
+
+      if (menu.imageURL) {
+        mainImgSrc = menu.imageURL;
+        document.getElementById('amMainPreview').src = mainImgSrc;
+        document.getElementById('amMainPreview').classList.remove('hidden');
+        document.getElementById('amMainIcon').classList.add('hidden');
+        document.getElementById('amMainLabel').classList.add('hidden');
+        document.getElementById('amMainActions').classList.remove('hidden');
+        document.getElementById('amMainBox').style.minHeight = 'auto';
+      }
+
+      amTags = [...(menu.tags || [])];
+      amRenderTags();
+
+      // Ingredients
+      document.getElementById('amIngList').innerHTML = '';
+      if (menu.ingredients && menu.ingredients.length > 0) {
+        menu.ingredients.forEach(i => {
+          amAddIngredient();
+          const rows = document.querySelectorAll('#amIngList .am-ing-row');
+          const lastRow = rows[rows.length - 1];
+          lastRow.querySelector('.am-ing-name').value = i.name || '';
+          lastRow.querySelector('.am-ing-qty').value = i.amount || '';
+          lastRow.querySelector('.am-ing-unit').value = i.unit || '';
+        });
+      } else {
+        amAddIngredient();
+      }
+
+      // Steps
+      document.getElementById('amStepList').innerHTML = '';
+      if (menu.instructions && menu.instructions.length > 0) {
+        menu.instructions.forEach((s, idx) => {
+          amAddStep();
+          const rows = document.querySelectorAll('#amStepList .am-step-item');
+          const lastRow = rows[rows.length - 1];
+          const n = lastRow.id.replace('amStep_', '');
+          lastRow.querySelector('.am-step-text').value = s.description || '';
+          if (s.stepImageURL) {
+             stepImgSrcs[n] = s.stepImageURL;
+             const box = document.getElementById('amStepBox_' + n);
+             box.innerHTML = `
+               <img src="${s.stepImageURL}" alt="step">
+               <input type="file" id="amStepFile_${n}" accept="image/*" style="display:none" onchange="amPreviewStep(event, ${n})">
+             `;
+          }
+        });
+      } else {
+        amAddStep();
+      }
+
+      amUpdateStars(menu.tasteRating || 0);
+      amStarValue = menu.tasteRating || 0;
+
+      // Taste Tags
+      if (menu.tasteTags) {
+        document.querySelectorAll('#amTasteTags .am-ttag').forEach(btn => {
+          if (menu.tasteTags.includes(btn.textContent.trim())) {
+            btn.classList.add('selected');
+          }
+        });
+      }
+    }
+  } else {
+    // โหมดเพิ่มใหม่
+    document.querySelector('.am-popup-title').textContent = 'เพิ่มเมนูใหม่';
+    document.querySelector('.am-btn-submit').textContent = 'Add';
+    amAddIngredient();
+    amAddIngredient();
+    amAddIngredient();
+    amAddStep();
+    amAddStep();
+    amAddStep();
+  }
+
   const overlay = document.getElementById('amOverlay');
   overlay.classList.remove('hidden');
   overlay.classList.add('show-flex');
@@ -32,13 +136,35 @@ function openViewMenu(index) {
   if (!menu) return;
 
   // ชื่อ
-  document.getElementById('viewTitle').textContent = menu.name || 'ไม่มีชื่อ';
+  document.getElementById('viewTitle').textContent = menu.menuName || 'ไม่มีชื่อ';
+
+  // ปุ่มลบและแก้ไข
+  document.getElementById('btnEditMenu').onclick = () => {
+    closeViewMenu();
+    openAddMenu(menu._id);
+  };
+  
+  document.getElementById('btnDeleteMenu').onclick = async () => {
+    if (confirm('คุณต้องการลบเมนูนี้ใช่หรือไม่?')) {
+      try {
+        const res = await fetch(`/api/usermenus/${menu._id}`, { method: 'DELETE' });
+        if (res.ok) {
+          closeViewMenu();
+          fetchUserMenus();
+        } else {
+          alert('เกิดข้อผิดพลาดในการลบ');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
 
   // รูป
   const imgWrap = document.getElementById('viewImgWrap');
   const viewImg = document.getElementById('viewImg');
-  if (menu.imgSrc) {
-    viewImg.src = menu.imgSrc;
+  if (menu.imageURL) {
+    viewImg.src = menu.imageURL;
     imgWrap.classList.remove('hidden');
   } else {
     imgWrap.classList.add('hidden');
@@ -49,10 +175,10 @@ function openViewMenu(index) {
   const timeEl  = document.getElementById('viewTimeInfo');
   const infoRow = document.getElementById('viewInfoRow');
 
-  qtyEl.innerHTML  = menu.qty  ? `<i class="fa-solid fa-utensils"></i> ${menu.qty} จาน` : '';
+  qtyEl.innerHTML  = menu.servings  ? `<i class="fa-solid fa-utensils"></i> ${menu.servings} จาน` : '';
   const totalTime  = (parseInt(menu.prepTime) || 0) + (parseInt(menu.cookTime) || 0);
   timeEl.innerHTML = totalTime  ? `<i class="fa-regular fa-clock"></i> ${totalTime} นาที` : '';
-  infoRow.style.display = (menu.qty || totalTime) ? '' : 'none';
+  infoRow.style.display = (menu.servings || totalTime) ? '' : 'none';
 
   // Tags
   const tagsSec  = document.getElementById('viewTagsSection');
@@ -74,7 +200,7 @@ function openViewMenu(index) {
     ingList.innerHTML = ings.map(i =>
       `<div class="view-ing-row">
         <span class="thai">${i.name}</span>
-        <span style="text-align:center">${i.qty || ''}</span>
+        <span style="text-align:center">${i.amount || ''}</span>
         <span class="thai">${i.unit || ''}</span>
        </div>`
     ).join('');
@@ -86,13 +212,13 @@ function openViewMenu(index) {
   // ขั้นตอน
   const stepSection = document.getElementById('viewStepSection');
   const stepList    = document.getElementById('viewStepList');
-  const steps = (menu.steps || []).filter(s => s.text.trim() || s.imgSrc);
+  const steps = (menu.instructions || []).filter(s => s.description.trim() || s.stepImageURL);
   if (steps.length > 0) {
     stepList.innerHTML = steps.map((s, idx) =>
       `<div class="view-step-item">
         <div class="view-step-num">${idx + 1}.</div>
-        ${s.imgSrc ? `<img src="${s.imgSrc}" class="view-step-img" alt="step">` : ''}
-        ${s.text   ? `<div class="view-step-text thai">${s.text}</div>` : ''}
+        ${s.stepImageURL ? `<img src="${s.stepImageURL}" class="view-step-img" alt="step">` : ''}
+        ${s.description   ? `<div class="view-step-text thai">${s.description}</div>` : ''}
        </div>`
     ).join('');
     stepSection.classList.remove('hidden');
@@ -149,25 +275,32 @@ document.getElementById('viewOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeViewMenu();
 });
 
-// ─── Render เมนูการ์ด ────────────────────────────────────────
+// ─── Render เมนูการ์ด (อิงตามดีไซน์ q-all.html) ──────────────
 function renderMenuCards() {
   const grid = document.getElementById('menuGrid');
+  if (!grid) return;
+  
+  if (menuList.length === 0) {
+      grid.innerHTML = '<div style="width: 100%; text-align: center; color: #888; font-family: var(--font-thai); font-size: 1.2rem;">ยังไม่มีสูตรอาหารของคุณ<br>กดปุ่ม + ด้านล่างขวาเพื่อเพิ่มเลย!</div>';
+      return;
+  }
+
   grid.innerHTML = menuList.map((menu, idx) => {
     const totalTime = (parseInt(menu.prepTime) || 0) + (parseInt(menu.cookTime) || 0);
-    const imgHTML   = menu.imgSrc
-      ? `<img class="menu-card-img" src="${menu.imgSrc}" alt="${menu.name}">`
-      : `<div class="menu-card-img-placeholder"><i class="fa-regular fa-image"></i></div>`;
-    const timeHTML  = totalTime
-      ? `<div class="menu-card-footer">
-           <i class="fa-regular fa-clock"></i>
-           <span class="thai">${totalTime} นาที</span>
-         </div>`
-      : '';
+    const imgHTML   = menu.imageURL
+      ? `<figure class="quest-image"><img src="${menu.imageURL}" alt="${menu.menuName}"></figure>`
+      : `<figure class="quest-image" style="background:#eee; display:flex; align-items:center; justify-content:center;"><i class="fa-regular fa-image fa-3x" style="color:#ccc"></i></figure>`;
+    
     return `
-      <div class="menu-card" onclick="openViewMenu(${idx})">
-        <div class="menu-card-title">${menu.name || 'ไม่มีชื่อ'}</div>
+      <div class="quest-card menu-card" onclick="openViewMenu(${idx})" style="cursor: pointer; margin:0;">
+        <div class="menu-card-header">
+            <h3 class="quest-title">${menu.menuName || 'ไม่มีชื่อ'}</h3>
+        </div>
         ${imgHTML}
-        ${timeHTML}
+        <div class="quest-footer">
+            <span class="quest-info"><i class="fa-solid fa-utensils"></i> ${menu.servings || 1} จาน</span>
+            <span class="quest-info"><i class="fa-regular fa-clock"></i> ${totalTime} นาที</span>
+        </div>
       </div>`;
   }).join('');
 }
@@ -252,9 +385,9 @@ function amRemoveIng(id) {
 function collectIngredients() {
   return [...document.querySelectorAll('#amIngList .am-ing-row')].map(row => ({
     name : row.querySelector('.am-ing-name').value.trim(),
-    qty  : row.querySelector('.am-ing-qty').value.trim(),
+    amount  : parseFloat(row.querySelector('.am-ing-qty').value.trim()) || 0,
     unit : row.querySelector('.am-ing-unit').value.trim(),
-  }));
+  })).filter(i => i.name !== ''); // เอาเฉพาะที่กรอกชื่อ
 }
 
 // ─── Steps ───────────────────────────────────────────────────
@@ -307,11 +440,15 @@ function amPreviewStep(event, n) {
 }
 
 function collectSteps() {
+  let stepNumber = 1;
   return [...document.querySelectorAll('#amStepList .am-step-item')].map(item => {
     const n    = item.id.replace('amStep_', '');
     const text = item.querySelector('.am-step-text')?.value.trim() || '';
-    return { imgSrc: stepImgSrcs[n] || '', text };
-  });
+    if (text || stepImgSrcs[n]) {
+      return { stepNumber: stepNumber++, stepImageURL: stepImgSrcs[n] || '', description: text };
+    }
+    return null;
+  }).filter(s => s !== null);
 }
 
 // ─── Taste Stars ─────────────────────────────────────────────
@@ -364,6 +501,7 @@ function amResetForm() {
   amStepCount = 0;
   stepImgSrcs = {};
   amStarValue = 0;
+  editingMenuId = null;
 
   amRenderTags();
   amUpdateStars(0);
@@ -371,54 +509,80 @@ function amResetForm() {
   document.getElementById('amIngList').innerHTML  = '';
   document.getElementById('amStepList').innerHTML = '';
   removeMainImg();
-
-  // เพิ่มแถวเริ่มต้น
-  amAddIngredient();
-  amAddIngredient();
-  amAddIngredient();
-  amAddStep();
-  amAddStep();
-  amAddStep();
 }
 
-// ─── Submit ──────────────────────────────────────────────────
-function amSubmit() {
+// ─── Submit (Save to DB with Validation) ─────────────────────
+async function amSubmit() {
   const name = document.getElementById('amName').value.trim();
-  if (!name) {
-    alert('กรุณาใส่ชื่อเมนู');
-    document.getElementById('amName').focus();
-    return;
-  }
+  const qty = document.getElementById('amQty').value.trim();
+  const prepTime = document.getElementById('amPrepTime').value.trim();
+  const cookTime = document.getElementById('amCookTime').value.trim();
+  
+  const ingredients = collectIngredients();
+  const steps = collectSteps();
 
-  const menu = {
-    name       : name,
-    imgSrc     : mainImgSrc,
-    qty        : document.getElementById('amQty').value.trim(),
-    prepTime   : document.getElementById('amPrepTime').value.trim(),
-    cookTime   : document.getElementById('amCookTime').value.trim(),
+  // 1) Validation (ต้องกรอกให้ครบ)
+  if (!name) { alert('กรุณาใส่ชื่อเมนู'); return document.getElementById('amName').focus(); }
+  if (!qty) { alert('กรุณาใส่จำนวนจาน'); return document.getElementById('amQty').focus(); }
+  if (!prepTime && !cookTime) { alert('กรุณาใส่เวลาเตรียมหรือเวลาปรุง'); return document.getElementById('amPrepTime').focus(); }
+  if (ingredients.length === 0) { alert('กรุณาใส่วัตถุดิบอย่างน้อย 1 อย่าง'); return; }
+  if (steps.length === 0) { alert('กรุณาใส่ขั้นตอนอย่างน้อย 1 ขั้นตอน'); return; }
+  if (amStarValue === 0) { alert('กรุณาให้คะแนนรสชาติ (ดาว)'); return; }
+
+  // 2) Prepare Data
+  const payload = {
+    createdBy  : USER_ID_LOCAL,
+    menuName   : name,
+    imageURL   : mainImgSrc,
+    servings   : parseInt(qty) || 1,
+    prepTime   : prepTime,
+    cookTime   : cookTime,
     tags       : [...amTags],
-    ingredients: collectIngredients(),
-    steps      : collectSteps(),
+    ingredients: ingredients,
+    instructions: steps,
     tasteRating: amStarValue,
     tasteTags  : [...document.querySelectorAll('#amTasteTags .am-ttag.selected')].map(b => b.textContent.trim()),
     review     : document.getElementById('amReview').value.trim(),
   };
 
-  menuList.push(menu);
-  renderMenuCards();
-  amResetForm();
-  closeAddMenu();
+  // 3) Send API Request
+  try {
+    const url = editingMenuId ? `/api/usermenus/${editingMenuId}` : '/api/usermenus';
+    const method = editingMenuId ? 'PUT' : 'POST';
+
+    // เปลี่ยนข้อความปุ่มระหว่างรอ
+    const btn = document.querySelector('.am-btn-submit');
+    const oldText = btn.textContent;
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    const res = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      // โหลดข้อมูลใหม่
+      await fetchUserMenus();
+      closeAddMenu();
+    } else {
+      const errorData = await res.json();
+      alert('เกิดข้อผิดพลาดในการบันทึก: ' + (errorData.error || 'Unknown error'));
+    }
+
+    btn.textContent = oldText;
+    btn.disabled = false;
+  } catch (err) {
+    console.error('Submit error:', err);
+    alert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+  }
 }
 
 // ─── Init ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   amRenderTags();
-  amAddIngredient();
-  amAddIngredient();
-  amAddIngredient();
-  amAddStep();
-  amAddStep();
-  amAddStep();
   amInitStars();
   amInitTasteTags();
+  fetchUserMenus(); // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
 });
