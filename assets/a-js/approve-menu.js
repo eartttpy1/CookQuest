@@ -118,7 +118,8 @@ function renderRequests() {
         const menuName = getMenuName(request).toLowerCase();
         const userName = getUserName(request).toLowerCase();
         const requestId = String(request._id || '').toLowerCase();
-        return menuName.includes(searchTerm) || userName.includes(searchTerm) || requestId.includes(searchTerm);
+        const quest = (request.randomQuests || '').toLowerCase();
+        return menuName.includes(searchTerm) || userName.includes(searchTerm) || requestId.includes(searchTerm) || quest.includes(searchTerm);
     });
 
     const sorted = [...filtered].sort((a, b) => {
@@ -157,6 +158,7 @@ function renderRequests() {
                 </div>
                 <div class="item-meta">
                     <span class="thai">ID &nbsp;&nbsp; ${escapeHtml(String(request._id || '-'))}</span>
+                    <span class="thai">Quest &nbsp; ${escapeHtml(request.randomQuests || '-')}</span>
                     <span class="thai">User &nbsp; ${escapeHtml(getUserName(request))}</span>
                 </div>
             </div>
