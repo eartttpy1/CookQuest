@@ -6,7 +6,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const dns = require("dns");
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');  
 const JWT_SECRET = 'cookquest_secret_key';
 const nodemailer = require('nodemailer');
 require('dotenv').config();
@@ -122,8 +122,8 @@ app.post('/api/register', async (req, res) => {
       msg: 'Register success',
       user: {
         id: user._id,
-        username: user.username,
-        email: user.email
+        username: 'theripper754@gmail.com',
+        email: 'vbfjgtqzlbidhmhx'
       }
     });
 
