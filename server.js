@@ -5,7 +5,13 @@ const bodyParser = require('body-parser');
 const http = require('http');
 const { Server } = require('socket.io');
 const dns = require("dns");
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = 'cookquest_secret_key';
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
+// ผมไม่สามารถเข้าปกติได้ ต้องset dns ไว้
 dns.setServers([
   "8.8.8.8",
   "8.8.4.4",
@@ -56,15 +62,27 @@ mongoose.connection.on('error', (err) => {
   console.error('✗ MongoDB error:', err.message);
 });
 
+//OTP
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
 // Routes
 app.post('/api/register', async (req, res) => {
+
   try {
+
     const { username, email, password } = req.body;
 
+    // เช็ค user ซ้ำ
     const exist = await User.findOne({
       $or: [
-        { email },
-        { username }
+        { username },
+        { email }
       ]
     });
 
@@ -74,55 +92,34 @@ app.post('/api/register', async (req, res) => {
       });
     }
 
-    const newUser = await User.create({
+    // HASH PASSWORD
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // CREATE USER
+    const user = await User.create({
       username,
       email,
-      password
+      password: hashedPassword
     });
+    
+    //OTP
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      user.otp = otp;
+      user.otpExpire = Date.now() + 5 * 60 * 1000;
+
+      await user.save();
+ 
+      await transporter.sendMail({
+        from: 'CookQuest',
+        to: user.email,
+        subject: 'Your OTP Code',
+        text: `Your OTP is ${otp}`
+     });
 
     res.json({
       msg: 'Register success',
-      user: {
-        id: newUser._id,
-        username: newUser.username,
-        email: newUser.email
-      }
-    });
-
-  } catch (err) {
-
-    console.error(err.message);
-
-    res.status(500).json({
-      msg: 'Server error'
-    });
-
-  }
-});
-
-app.post('/api/login', async (req, res) => {
-
-  try {
-
-    const { username, password } = req.body;
-
-    const user = await User.findOne({
-      $or: [
-        { username: username },
-        { email: username }
-      ]
-    });
-
-    if (!user || user.password !== password) {
-
-      return res.status(400).json({
-        msg: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'
-      });
-
-    }
-
-    res.json({
-      msg: 'Login success',
       user: {
         id: user._id,
         username: user.username,
@@ -132,7 +129,202 @@ app.post('/api/login', async (req, res) => {
 
   } catch (err) {
 
-    console.error(err.message);
+    console.error(err);
+
+    res.status(500).json({
+      msg: 'Server error'
+    });
+
+  }
+
+});
+
+app.post('/api/verify-otp', async (req, res) => {
+  console.log("BODY:", req.body);
+
+  const { email, otp } = req.body;
+
+  const user = await User.findOne({ email });
+    console.log("email:", email);
+    console.log("otp:", otp);
+
+  if (!user) {
+    return res.status(404).json({
+      msg: 'User not found'
+    });
+  }
+
+  if (user.otp !== otp) {
+    return res.status(400).json({
+      msg: 'OTP incorrect'
+    });
+  }
+
+  if (user.otpExpire < Date.now()) {
+    return res.status(400).json({
+      msg: 'OTP expired'
+    });
+  }
+
+  user.isVerified = true;
+
+  user.otp = null;
+  user.otpExpire = null;
+
+  await user.save();
+
+  res.json({
+    msg: 'Verify success'
+  });
+
+});
+
+app.post('/api/login', async (req, res) => {
+
+  try {
+
+    const { username, password } = req.body;
+
+    // หา user
+    const user = await User.findOne({
+      $or: [
+        { username },
+        { email: username }
+      ]
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        msg: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'
+      });
+    }
+
+    // เช็ครหัสผ่าน
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!isMatch) {
+      return res.status(400).json({
+        msg: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'
+      });
+    }
+
+   if (!user.isVerified) {
+      return res.status(400).json({
+        msg: 'Please verify OTP first',
+        needsOtp: true,  // เพิ่ม flag เพื่อบอก front-end
+        email: user.email // ส่ง email กลับไปเพื่อใช้ในหน้า verify-otp
+      });
+}
+
+    // สร้าง TOKEN
+    const token = jwt.sign(
+      {
+        id: user._id,
+        username: user.username,
+        role: user.role
+      },
+      JWT_SECRET,
+      {
+        expiresIn: '7d'
+      }
+    );
+
+    res.json({
+      msg: 'Login success',
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      msg: 'Server error'
+    });
+
+  }
+
+});
+
+
+const authMiddleware = (req, res, next) => {
+
+  try {
+
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+
+      return res.status(401).json({
+        msg: 'No token'
+      });
+
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    const decoded = jwt.verify(
+      token,
+      JWT_SECRET
+    );
+
+    req.user = decoded;
+
+    next();
+
+  } catch (err) {
+
+    return res.status(401).json({
+      msg: 'Invalid token'
+    });
+
+  }
+
+};
+
+const adminMiddleware = (req, res, next) => {
+
+  if (req.user.role !== 'admin') {
+
+    return res.status(403).json({
+      msg: 'Admin only'
+    });
+
+  }
+
+  next();
+
+};
+
+app.get('/api/profile', authMiddleware, async (req, res) => {
+
+  try {
+
+    const user = await User.findById(req.user.id)
+      .select('-password');
+
+    if (!user) {
+
+      return res.status(404).json({
+        msg: 'User not found'
+      });
+
+    }
+
+    res.json(user);
+
+  } catch (err) {
+
+    console.error(err);
 
     res.status(500).json({
       msg: 'Server error'
@@ -176,7 +368,7 @@ app.put('/api/menus/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/menus/:id', async (req, res) => {
+app.delete('/api/menus/:id', authMiddleware, adminMiddleware,async (req, res) => {
   try {
     const menu = await Menu.findByIdAndDelete(req.params.id);
     if (!menu) {

@@ -19,8 +19,43 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+
+    otp: String,
+    otpExpire: Date,
+    isVerified: {
+    type: Boolean,
+    default: false
+    },
+
+    role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
+
+  level: {
+        type: Number,
+        default: 1
+    },
+
+    rank: {
+        type: String,
+        default: 'IRON Chef'
+    },
+
+    xp: {
+        type: Number,
+        default: 0
+    },
+
+    completedRecipes: {
+        type: Number,
+        default: 0
+    }
 }, {
   timestamps: true
 });
+
+
 
 module.exports = mongoose.model('User', userSchema);

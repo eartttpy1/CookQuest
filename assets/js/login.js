@@ -18,11 +18,34 @@ const login = async () => {
         localStorage.setItem('user_data', JSON.stringify(response.data));
 
         // นำทางผู้ใช้ไปยังหน้าหลัก
-        window.location.href = 'index.html'; 
+        const role = response.data.user.role;
 
-    } catch (error) {
+if (role === 'admin') {
+
+    window.location.href = '/html/admin/admin-main.html';
+
+} else {
+
+    window.location.href = '/index.html';
+
+}
+
+   } catch (error) {
+        // 1. ตรวจสอบว่า Backend บอกว่าต้องไปหน้า OTP หรือไม่
+        if (error.response && error.response.data && error.response.data.needsOtp) {
+            alert('กรุณายืนยันรหัส OTP ก่อนเข้าใช้งาน');
+            
+            // เก็บ email ไว้ใช้ในหน้า otp.html
+            localStorage.setItem('pendingEmail', error.response.data.email);
+            
+            // ย้ายไปหน้า OTP
+            window.location.href = 'otp.html'; 
+            return; // หยุดการทำงานใน block นี้ทันที
+        } 
+
+        // 2. จัดการ Error กรณีอื่นๆ (เช่น รหัสผ่านผิด หรือ Server ล่ม)
         console.error('Login failed:', error);
-        // การจัดการ Response Status Code ให้ดีขึ้น
+        
         const errorMessage = error.response && error.response.data && error.response.data.msg 
                             ? error.response.data.msg 
                             : 'Login failed. Please check your credentials and try again.';
@@ -44,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('authToken'); // มี token = login สำเร็จ
         const user = localStorage.getItem('user_data');
 
-        if (true) {
+        if (token && user) {
             // ถ้า Login แล้ว → ซ่อนปุ่ม Login / แสดง User Icon
             loginBtn.classList.add('hidden');
             userProfile.classList.remove('hidden');
