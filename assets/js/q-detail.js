@@ -28,6 +28,30 @@ function syncModalStar() {
 
 const CURRENT_USER_ID = 'user123'; // Mock user
 
+// Initialize socket.io connection
+const socket = typeof io !== 'undefined' ? io() : null;
+
+if (socket) {
+    socket.on('status_updated', async (data) => {
+        // Re-load the main quest details
+        const urlParams = new URLSearchParams(window.location.search);
+        const questId = urlParams.get('id');
+        if (questId) {
+            await loadQuestDetails(questId);
+        }
+
+        // If the modal is currently open for a menu, re-populate it
+        const modal = document.getElementById('questModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            const menuId = modal.dataset.currentCard;
+            const menuData = allRelatedMenus.find(m => String(m._id) === String(menuId));
+            if (menuData) {
+                populateModal(menuData, modal);
+            }
+        }
+    });
+}
+
 // Card star toggle
 document.querySelector('.quest-section').addEventListener('click', async function (e) {
     if (!e.target.classList.contains('fa-star')) return;
@@ -227,15 +251,17 @@ async function _populateModalAsync(menu, modal) {
                     submitBtn.style.color = '#fff';
                     submitBtn.disabled = true;
                 } else if (latest && latest.status === 'approved') {
-                    submitBtn.textContent = 'Approved';
+                    submitBtn.textContent = 'Submit';
                     submitBtn.style.backgroundColor = '#2ecc71'; // green
                     submitBtn.style.color = '#fff';
-                    submitBtn.disabled = true;
+                    submitBtn.disabled = false;
+                    submitBtn.dataset.isResubmit = 'true';
                 } else {
                     submitBtn.textContent = 'Submit';
                     submitBtn.style.backgroundColor = ''; 
                     submitBtn.style.color = '';
                     submitBtn.disabled = false;
+                    submitBtn.dataset.isResubmit = 'false';
                 }
             }
         }
@@ -388,6 +414,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
+            if (submitBtn.dataset.isResubmit === 'true') {
+                const confirmResubmit = confirm('การส่งใหม่จะไม่ได้ EXP เพิ่มเติม จะถูกบันทึกเป็นประวัติเท่านั้น ยืนยันที่จะส่งหรือไม่?');
+                if (!confirmResubmit) return;
+            }
+            
             const randomQuests = modal.querySelector('.modal-quest-desc').textContent;
             const menuName = menuData.menuName;
 
@@ -414,6 +445,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     submitBtn.style.backgroundColor = '#f1c40f'; // สีเหลือง
                     submitBtn.style.color = '#fff';
                     submitBtn.disabled = true;
+                    submitBtn.dataset.isResubmit = 'false';
+                    
+                    // Update history UI dynamically
+                    try {
+                        const historyRes = await fetch(`/api/history?menuName=${encodeURIComponent(menuName)}`);
+                        if (historyRes.ok) {
+                            const historyData = await historyRes.json();
+                            if (typeof renderHistory === 'function') {
+                                renderHistory(historyData);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Failed to update history UI', e);
+                    }
+
+                    // Update quest card color immediately
+                    const card = document.querySelector(`.quest-card[data-id="${menuId}"]`);
+                    if (card) {
+                        card.classList.remove('status-approved', 'status-rejected');
+                        card.classList.add('status-pending');
+                    }
                     
                     alert('ส่ง Quest สำเร็จ! รอการตรวจสอบจากแอดมิน');
                 } else {

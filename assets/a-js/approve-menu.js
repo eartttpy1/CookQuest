@@ -2,6 +2,17 @@ let requests = [];
 let currentSort = 'desc';
 let currentStatus = 'all';
 
+// Initialize socket.io connection
+const socket = typeof io !== 'undefined' ? io() : null;
+
+if (socket) {
+    // Listen for new submissions
+    socket.on('new_submission', (data) => {
+        // Re-fetch requests when a new submission is created
+        loadRequests();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     updateHeaderTitle(currentStatus);

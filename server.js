@@ -2,9 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
 
 // Middleware
 app.use(cors());
@@ -199,6 +203,15 @@ app.put('/api/requests/:id/status', async (req, res) => {
 
     request.status = normalizedStatus;
     await request.save();
+
+    // Update the corresponding submission status
+    await Submission.updateMany(
+      { requestId: request._id },
+      { $set: { status: normalizedStatus } }
+    );
+
+    io.emit('status_updated', { requestId: request._id, status: normalizedStatus });
+
     res.json(request);
   } catch (error) {
     console.error('Error updating request status:', error.message);
@@ -278,6 +291,8 @@ app.post('/api/submissions', async (req, res) => {
       status: 'pending'
     });
     await submission.save();
+
+    io.emit('new_submission', { request, submission });
 
     res.status(201).json({ request, submission });
   } catch (error) {
@@ -369,7 +384,7 @@ app.get('/api/favorites', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Check server at http://localhost:${PORT}`);
 });

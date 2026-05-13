@@ -876,7 +876,8 @@
   font-weight: 600;
 }
 .history-badge.pending { background: #d4a017; }
-.history-badge.done { background: #1aab5a; }
+.history-badge.approved { background: #1aab5a; }
+.history-badge.rejected { background: #c0392b; }
 
 .history-chevron {
   color: var(--red-main);
