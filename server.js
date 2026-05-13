@@ -4,6 +4,12 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const http = require('http');
 const { Server } = require('socket.io');
+const dns = require("dns");
+
+dns.setServers([
+  "8.8.8.8",
+  "8.8.4.4",
+]);
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -23,6 +29,7 @@ const Tag = require('./serializer/tag');
 const Request = require('./serializer/request');
 const Submission = require('./serializer/submission');
 const Favorite = require('./serializer/favorite');
+const User = require('./serializer/user');
 
 // MongoDB connection
 const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
@@ -50,6 +57,91 @@ mongoose.connection.on('error', (err) => {
 });
 
 // Routes
+app.post('/api/register', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    const exist = await User.findOne({
+      $or: [
+        { email },
+        { username }
+      ]
+    });
+
+    if (exist) {
+      return res.status(400).json({
+        msg: 'User already exists'
+      });
+    }
+
+    const newUser = await User.create({
+      username,
+      email,
+      password
+    });
+
+    res.json({
+      msg: 'Register success',
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email
+      }
+    });
+
+  } catch (err) {
+
+    console.error(err.message);
+
+    res.status(500).json({
+      msg: 'Server error'
+    });
+
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+
+  try {
+
+    const { username, password } = req.body;
+
+    const user = await User.findOne({
+      $or: [
+        { username: username },
+        { email: username }
+      ]
+    });
+
+    if (!user || user.password !== password) {
+
+      return res.status(400).json({
+        msg: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'
+      });
+
+    }
+
+    res.json({
+      msg: 'Login success',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email
+      }
+    });
+
+  } catch (err) {
+
+    console.error(err.message);
+
+    res.status(500).json({
+      msg: 'Server error'
+    });
+
+  }
+
+});
+
 app.get('/api/menus', async (req, res) => {
   try {
     const menus = await Menu.find();

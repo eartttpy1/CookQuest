@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // ส่งข้อมูลสมัครสมาชิกไป backend
-            const response = await axios.post("http://localhost:3000/api/register", {
+            const response = await axios.post("http://localhost:4000/api/register", {
                 username,
                 email,
                 password
