@@ -9,7 +9,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = 'cookquest_secret_key';
 const nodemailer = require('nodemailer');
-require('dotenv').config();
 
 // ผมไม่สามารถเข้าปกติได้ ต้องset dns ไว้
 dns.setServers([
@@ -65,8 +64,8 @@ mongoose.connection.on('error', (err) => {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    user: 'theripper754@gmail.com',
+    pass: 'vbfjgtqzlbidhmhx'
   }
 });
 
