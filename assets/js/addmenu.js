@@ -280,12 +280,26 @@ function renderMenuCards() {
   const grid = document.getElementById('menuGrid');
   if (!grid) return;
   
-  if (menuList.length === 0) {
-      grid.innerHTML = '<div style="width: 100%; text-align: center; color: #888; font-family: var(--font-thai); font-size: 1.2rem;">ยังไม่มีสูตรอาหารของคุณ<br>กดปุ่ม + ด้านล่างขวาเพื่อเพิ่มเลย!</div>';
+  const searchInput = document.querySelector('.search-input');
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+  let filteredMenus = menuList;
+  if (query) {
+      filteredMenus = filteredMenus.filter(menu => {
+          const nameMatch = (menu.menuName || '').toLowerCase().includes(query);
+          const tagMatch = menu.tags && menu.tags.some(tag => tag.toLowerCase().includes(query));
+          const ingMatch = menu.ingredients && menu.ingredients.some(ing => (ing.name || '').toLowerCase().includes(query));
+          return nameMatch || tagMatch || ingMatch;
+      });
+  }
+  
+  if (filteredMenus.length === 0) {
+      grid.innerHTML = '<div style="width: 100%; text-align: center; color: #888; font-family: var(--font-thai); font-size: 1.2rem;">ไม่มีสูตรอาหารของคุณ<br>ลองค้นหาคำอื่น หรือกดปุ่ม + ด้านล่างขวาเพื่อเพิ่มเลย!</div>';
       return;
   }
 
-  grid.innerHTML = menuList.map((menu, idx) => {
+  grid.innerHTML = filteredMenus.map((menu) => {
+    const idx = menuList.indexOf(menu);
     const totalTime = (parseInt(menu.prepTime) || 0) + (parseInt(menu.cookTime) || 0);
     const imgHTML   = menu.imageURL
       ? `<figure class="quest-image"><img src="${menu.imageURL}" alt="${menu.menuName}"></figure>`
@@ -585,4 +599,16 @@ document.addEventListener('DOMContentLoaded', () => {
   amInitStars();
   amInitTasteTags();
   fetchUserMenus(); // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
+
+  const searchInput = document.querySelector('.search-input');
+  const searchBtn = document.querySelector('.search-button');
+  if (searchInput) {
+      searchInput.addEventListener('input', renderMenuCards);
+      searchInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') renderMenuCards();
+      });
+  }
+  if (searchBtn) {
+      searchBtn.addEventListener('click', renderMenuCards);
+  }
 });

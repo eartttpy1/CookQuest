@@ -42,33 +42,75 @@ function setupTabNavigation() {
             e.currentTarget.classList.add('active');
 
             // Apply filter
-            let filteredMenus = window.allMenusData;
-
-            if (filter === 'pending') {
-                filteredMenus = window.allMenusData.filter(menu => 
-                    window.currentMenuStatusMap[menu.menuName] === 'pending'
-                );
-                if (questSectionWrapper) questSectionWrapper.style.display = 'none';
-            } else if (filter === 'complete') {
-                filteredMenus = window.allMenusData.filter(menu => {
-                    const status = window.currentMenuStatusMap[menu.menuName];
-                    return status === 'approved' || status === 'rejected';
-                });
-                if (questSectionWrapper) questSectionWrapper.style.display = 'none';
-            } else {
-                // all
-                if (questSectionWrapper) questSectionWrapper.style.display = '';
-            }
-
-            if (typeof renderMenus === 'function') {
-                renderMenus(filteredMenus, window.currentMenuStatusMap);
-                // Re-apply any active sorts after re-rendering
-                if (typeof window.sortQuests === 'function') {
-                    window.sortQuests();
-                }
-            }
+            applyFilters();
         });
     });
+
+    // Add search event listeners
+    const searchInput = document.querySelector('.search-input');
+    const searchBtn = document.querySelector('.search-button');
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') applyFilters();
+        });
+    }
+    if (searchBtn) {
+        searchBtn.addEventListener('click', applyFilters);
+    }
+}
+
+function applyFilters() {
+    const activeNav = document.querySelector('.top-nav .nav-link.active');
+    const filter = activeNav ? activeNav.getAttribute('data-filter') : 'all';
+    const questSectionWrapper = document.getElementById('questSectionWrapper');
+    
+    const searchInput = document.querySelector('.search-input');
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+    let filteredMenus = window.allMenusData || [];
+    let filteredQuests = window.allQuestsData || [];
+
+    if (filter === 'pending') {
+        filteredMenus = filteredMenus.filter(menu => 
+            window.currentMenuStatusMap && window.currentMenuStatusMap[menu.menuName] === 'pending'
+        );
+        if (questSectionWrapper) questSectionWrapper.style.display = 'none';
+    } else if (filter === 'complete') {
+        filteredMenus = filteredMenus.filter(menu => {
+            const status = window.currentMenuStatusMap ? window.currentMenuStatusMap[menu.menuName] : null;
+            return status === 'approved' || status === 'rejected';
+        });
+        if (questSectionWrapper) questSectionWrapper.style.display = 'none';
+    } else {
+        if (questSectionWrapper) questSectionWrapper.style.display = '';
+    }
+
+    if (query) {
+        filteredMenus = filteredMenus.filter(menu => {
+            const nameMatch = (menu.menuName || '').toLowerCase().includes(query);
+            const tagMatch = menu.tags && menu.tags.some(tag => tag.toLowerCase().includes(query));
+            const ingMatch = menu.ingredients && menu.ingredients.some(ing => (ing.name || '').toLowerCase().includes(query));
+            return nameMatch || tagMatch || ingMatch;
+        });
+        
+        filteredQuests = filteredQuests.filter(quest => {
+            const nameMatch = (quest.name || '').toLowerCase().includes(query);
+            const tagMatch = quest.tags && quest.tags.some(tag => tag.toLowerCase().includes(query));
+            const ingMatch = quest.ingredients && quest.ingredients.some(ing => (ing.name || '').toLowerCase().includes(query));
+            return nameMatch || tagMatch || ingMatch;
+        });
+    }
+
+    if (typeof renderQuests === 'function') {
+        renderQuests(filteredQuests);
+    }
+    if (typeof renderMenus === 'function') {
+        renderMenus(filteredMenus, window.currentMenuStatusMap);
+    }
+    if (typeof window.sortQuests === 'function') {
+        window.sortQuests();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -116,16 +158,7 @@ async function loadQuests() {
             const activeNav = document.querySelector('.top-nav .nav-link.active');
             const activeFilter = activeNav ? activeNav.getAttribute('data-filter') : 'all';
             
-            renderQuests(data.quests);
-            
-            if (typeof renderMenus === 'function') {
-                if (activeFilter === 'all') {
-                    renderMenus(data.menus, data.menuStatusMap);
-                } else {
-                    // Trigger the click logic for current filter
-                    activeNav.click();
-                }
-            }
+            applyFilters();
         } catch (e) {
             console.error('Cache parsing failed', e);
             showSkeletonLoaders();
@@ -162,17 +195,7 @@ async function loadQuests() {
             allRelatedMenus = menus;
         }
 
-        renderQuests(quests);
-        if (typeof renderMenus === 'function') {
-            const activeNav = document.querySelector('.top-nav .nav-link.active');
-            const activeFilter = activeNav ? activeNav.getAttribute('data-filter') : 'all';
-            
-            if (activeFilter === 'all') {
-                renderMenus(menus, menuStatusMap);
-            } else {
-                activeNav.click();
-            }
-        }
+        applyFilters();
     };
 
     worker.onerror = function(error) {
