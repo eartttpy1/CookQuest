@@ -26,7 +26,14 @@ function syncModalStar() {
     }
 }
 
-const CURRENT_USER_ID = 'user123'; // Mock user
+const CURRENT_USER_ID = (() => {
+    try {
+        const data = JSON.parse(localStorage.getItem('user_data'));
+        return data?.user?.id || 'user123';
+    } catch (e) {
+        return 'user123';
+    }
+})();
 
 // Initialize socket.io connection
 const socket = typeof io !== 'undefined' ? io() : null;
@@ -233,10 +240,36 @@ async function _populateModalAsync(menu, modal) {
         questDesc.textContent = randomQuests[randomIndex];
     }
 
+    const isLoggedIn = !!localStorage.getItem('authToken');
+    const interactables = modal.querySelectorAll('.upload-box, .upload-actions, .taste-rating, .taste-tags, .modal-review, .modal-submit-row');
+    let loginPrompt = modal.querySelector('.login-prompt-zone');
+
+    if (!isLoggedIn) {
+        interactables.forEach(el => { if (el) el.style.display = 'none'; });
+        if (!loginPrompt) {
+            const prompt = document.createElement('div');
+            prompt.className = 'login-prompt-zone';
+            prompt.style.textAlign = 'center';
+            prompt.style.padding = '20px';
+            prompt.innerHTML = `
+                <p class="thai" style="margin-bottom: 15px; color: #e74c3c; font-weight: bold;">กรุณาเข้าสู่ระบบให้เรียบร้อยเพื่อทำ Quest</p>
+                <a href="login.html" class="btn-submit thai" style="display: inline-block; text-decoration: none; padding: 10px 20px; border-radius: 20px; color: white;">เข้าสู่ระบบ (Login)</a>
+            `;
+            if (questDesc && questDesc.parentNode) {
+                questDesc.parentNode.insertBefore(prompt, questDesc.nextSibling);
+            }
+        } else {
+            loginPrompt.style.display = 'block';
+        }
+    } else {
+        interactables.forEach(el => { if (el) el.style.display = ''; });
+        if (loginPrompt) loginPrompt.style.display = 'none';
+    }
+
     // Fetch history and update button state
     const submitBtn = modal.querySelector('.modal-submit-row .btn-submit');
     try {
-        const res = await fetch(`/api/history?menuName=${encodeURIComponent(menu.menuName)}`);
+        const res = await fetch(`/api/history?menuName=${encodeURIComponent(menu.menuName)}&userId=${CURRENT_USER_ID}`);
         if (res.ok) {
             const historyData = await res.json();
             
@@ -426,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await fetch('/api/submissions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ menuName, randomQuests, imageURL, tasteRating, tasteTags, review })
+                    body: JSON.stringify({ menuName, randomQuests, imageURL, tasteRating, tasteTags, review, createdBy: CURRENT_USER_ID })
                 });
                 
                 if (res.ok) {
@@ -449,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Update history UI dynamically
                     try {
-                        const historyRes = await fetch(`/api/history?menuName=${encodeURIComponent(menuName)}`);
+                        const historyRes = await fetch(`/api/history?menuName=${encodeURIComponent(menuName)}&userId=${CURRENT_USER_ID}`);
                         if (historyRes.ok) {
                             const historyData = await historyRes.json();
                             if (typeof renderHistory === 'function') {

@@ -6,7 +6,7 @@ self.onmessage = async function(e) {
             fetch('/api/quests'),
             fetch('/api/menus'),
             fetch(`/api/favorites?userId=${userId}`),
-            fetch('/api/history')
+            fetch(`/api/history?userId=${userId}`)
         ]);
 
         if (!questsResponse.ok) throw new Error('Failed to load quests');

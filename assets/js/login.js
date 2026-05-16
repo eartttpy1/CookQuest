@@ -100,9 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('isLoggedIn');
 
         alert('ออกจากระบบสำเร็จ');
-        // โหลดหน้าใหม่
-        window.location.reload();
-        window.location.href = 'login.html';
+        window.location.href = '/html/user/login.html';
     });
 
     // --- เรียกครั้งแรกตอนโหลดหน้าเว็บ ---

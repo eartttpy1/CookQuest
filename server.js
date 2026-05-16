@@ -551,7 +551,7 @@ app.delete('/api/quests/:id', async (req, res) => {
 
 app.post('/api/submissions', async (req, res) => {
   try {
-    const { menuName, randomQuests, imageURL, tasteRating, tasteTags, review } = req.body;
+    const { menuName, randomQuests, imageURL, tasteRating, tasteTags, review, createdBy } = req.body;
     
     const request = new Request({
       menuName,
@@ -561,7 +561,8 @@ app.post('/api/submissions', async (req, res) => {
       tasteTags,
       review,
       status: 'pending',
-      submittedAt: new Date()
+      submittedAt: new Date(),
+      createdBy
     });
     await request.save();
 
@@ -571,7 +572,8 @@ app.post('/api/submissions', async (req, res) => {
       tasteRating,
       tasteTags,
       review,
-      status: 'pending'
+      status: 'pending',
+      createdBy
     });
     await submission.save();
 
@@ -605,8 +607,10 @@ app.put('/api/submissions/:id', async (req, res) => {
 
 app.get('/api/history', async (req, res) => {
   try {
-    const { requestId, menuName } = req.query;
-    const query = requestId ? { requestId } : {};
+    const { requestId, menuName, userId } = req.query;
+    const query = {};
+    if (requestId) query.requestId = requestId;
+    if (userId) query.createdBy = userId;
     
     let matchQuery = {};
     if (menuName) {

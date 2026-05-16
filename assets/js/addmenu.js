@@ -2,7 +2,14 @@
    ADD MENU — JAVASCRIPT
    ════════════════════════════════ */
 
-const USER_ID_LOCAL = typeof CURRENT_USER_ID !== 'undefined' ? CURRENT_USER_ID : 'user123';
+const USER_ID_LOCAL = (() => {
+    try {
+        const data = JSON.parse(localStorage.getItem('user_data'));
+        return data?.user?.id || 'user123';
+    } catch (e) {
+        return 'user123';
+    }
+})();
 let menuList = []; // เก็บเมนูที่ดึงมาจาก Database
 let editingMenuId = null; // เก็บ ID ของเมนูที่กำลังแก้ไข
 

@@ -140,7 +140,11 @@ async function loadQuests() {
         return;
     }
 
-    const userId = typeof CURRENT_USER_ID !== 'undefined' ? CURRENT_USER_ID : 'user123';
+    let userId = 'user123';
+    try {
+        const data = JSON.parse(localStorage.getItem('user_data'));
+        if (data?.user?.id) userId = data.user.id;
+    } catch (e) {}
     const cacheKey = `cookquest_cache_${userId}`;
     const cachedData = sessionStorage.getItem(cacheKey);
 
