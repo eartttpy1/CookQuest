@@ -35,6 +35,7 @@ const Request = require('./serializer/request');
 const Submission = require('./serializer/submission');
 const Favorite = require('./serializer/favorite');
 const UserMenu = require('./serializer/usermenu');
+const User = require('./serializer/user');
 // MongoDB connection
 const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
 
