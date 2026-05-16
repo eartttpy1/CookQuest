@@ -313,12 +313,12 @@ function renderMenuCards() {
       : `<figure class="quest-image" style="background:#eee; display:flex; align-items:center; justify-content:center;"><i class="fa-regular fa-image fa-3x" style="color:#ccc"></i></figure>`;
     
     return `
-      <div class="quest-card menu-card" onclick="openViewMenu(${idx})" style="cursor: pointer; margin:0;">
+      <div class="quest-card menu-card" onclick="openViewMenu(${idx})" style="cursor: pointer; margin:0; background-color: #5BC8E0; border: 3px solid #3aafca;">
         <div class="menu-card-header">
             <h3 class="quest-title">${menu.menuName || 'ไม่มีชื่อ'}</h3>
         </div>
         ${imgHTML}
-        <div class="quest-footer">
+        <div class="menu-footer">
             <span class="quest-info"><i class="fa-solid fa-utensils"></i> ${menu.servings || 1} จาน</span>
             <span class="quest-info"><i class="fa-regular fa-clock"></i> ${totalTime} นาที</span>
         </div>
