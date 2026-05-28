@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- ============== Page Title ============== -->
-    <title>View All Profile</title>
+    <title>Performance & Badges</title>
 
     <!-- ============== Font&Icon ============== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,13 +17,40 @@
     
     <!-- ============== Start  Stylesheet ============== -->
     <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="../../assets/css/profile.css"> <!-- Re-use profile container styles -->
     <link rel="stylesheet" href="../../assets/css/profile-view.css">
     <!-- ============== Start  Script ============== -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>     
     <script src="../../assets/js/login.js" defer></script>
     <script src="../../assets/js/profile-view.js" defer></script>
 
+    <style>
+        /* Make this page feel like a full page, not a modal */
+        .view-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Pushes items to the edges */
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .view-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--text-color);
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
     
@@ -100,12 +127,12 @@
     </nav>
   
     <!-- ==============Profile view all page content ============== -->
-     <div class="perf-page">
+     <div class="profile-container">
 
   <!-- Header -->
-  <div class="perf-header">
-    <h2>Your Performance</h2>
-    <span class="close">✕</span>
+  <div class="view-header">
+    <h2>Performance & Badges</h2>
+    <a href="profile.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Profile</a>
   </div>
 
   <!-- Level -->
@@ -113,59 +140,130 @@
     <div class="avatar"></div>
 
     <div class="level-info">
-      <div class="level-title">Level 1 IRON Chef</div>
+      <div class="level-title" id="view-level-title">Loading...</div>
 
       <div class="xp-bar">
         <div class="xp-fill"></div>
       </div>
 
-      <span class="xp-text">100/500 XP</span>
+      <span class="xp-text" id="view-xp-text">...</span>
     </div>
   </div>
 
   <!-- Chart -->
   <div class="chart-box">
-    <img src="https://via.placeholder.com/300x200" alt="chart">
+    <canvas id="progressChart"></canvas>
   </div>
 
   <!-- Badge -->
   <h3 class="badge-title">Badge Collection</h3>
 
-  <div class="badge-grid">
-
-    <div class="badge-card">
-      <div class="badge-icon">⏱</div>
-      <p>Time Skipper</p>
-    </div>
-
-    <div class="badge-card lock">
-      <div class="badge-icon">🔥</div>
-      <p>Unlock</p>
-    </div>
-
-    <div class="badge-card lock">
-      <div class="badge-icon">🍖</div>
-      <p>Unlock</p>
-    </div>
-
-    <div class="badge-card lock">
-      <div class="badge-icon">🥐</div>
-      <p>Unlock</p>
-    </div>
-
-    <div class="badge-card lock">
-      <div class="badge-icon">🍳</div>
-      <p>Unlock</p>
-    </div>
-
-    <div class="badge-card lock">
-      <div class="badge-icon">⏱</div>
-      <p>Unlock</p>
-    </div>
-
+  <div class="badge-grid" id="view-badge-grid">
+    <!-- Badges will be loaded dynamically from the database -->
   </div>
 
 </div>
 
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const userDataStr = localStorage.getItem('user_data');
+      if (!userDataStr) return;
+      const userData = JSON.parse(userDataStr);
+      const userId = userData.user.id;
+      const token = localStorage.getItem('authToken');
+
+      // 1. Fetch real profile data (Level, XP, Rank)
+      const profileRes = await axios.get('http://localhost:4000/api/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+      });
+      const profile = profileRes.data;
+      
+      // 2. Calculate and display Level, Rank, and XP Bar
+      const levelSystem = {
+        1: { rank: 'IRON Chef', minXP: 0, maxXP: 500 },
+        2: { rank: 'BRONZE Chef', minXP: 501, maxXP: 1500 },
+        3: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+        4: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+        5: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: Infinity }
+      };
+      const lvl = profile.level || 1;
+      const currentLevelData = levelSystem[lvl] || levelSystem[1];
+      const xp = profile.xp || 0;
+      const xpPercentage = Math.min(((xp - currentLevelData.minXP) / (currentLevelData.maxXP - currentLevelData.minXP)) * 100, 100);
+
+      document.getElementById('view-level-title').textContent = `Level ${lvl} ${profile.rank || 'IRON Chef'}`;
+      document.getElementById('view-xp-text').textContent = `${xp}/${currentLevelData.maxXP} XP`;
+      document.querySelector('.xp-fill').style.width = `${xpPercentage}%`;
+
+      // 3. Fetch the real history from MongoDB for Chart
+      const response = await axios.get(`http://localhost:4000/api/history?userId=${userId}`);
+      const historyData = response.data || [];
+
+      // 1. Filter only 'approved' dishes and sort them by date (oldest to newest)
+      const approvedDishes = historyData.filter(item => item.status === 'approved');
+      approvedDishes.sort((a, b) => new Date(a.submittedAt || a.createdAt) - new Date(b.submittedAt || b.createdAt));
+
+      // 2. Group the dishes by Date
+      const dateCounts = {};
+      approvedDishes.forEach(dish => {
+        const date = new Date(dish.submittedAt || dish.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+        dateCounts[date] = (dateCounts[date] || 0) + 1;
+      });
+
+      const labels = Object.keys(dateCounts);
+      const dailyCounts = Object.values(dateCounts);
+
+      // 3. Make the data cumulative so the chart shows total progress over time
+      let total = 0;
+      const cumulativeData = dailyCounts.map(count => {
+        total += count;
+        return total;
+      });
+
+      // 4. Render the Chart
+      const ctx = document.getElementById('progressChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels.length ? labels : ['No Data'],
+          datasets: [{
+            label: 'Total Completed Dishes',
+            data: cumulativeData.length ? cumulativeData : [0],
+            borderColor: '#b30000',
+            backgroundColor: 'rgba(179, 0, 0, 0.2)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.3,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#b30000',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // 4. Render Earned Badges from Database
+      const badgeGrid = document.getElementById('view-badge-grid');
+      if (profile.badges && profile.badges.length > 0) {
+          let badgeHTML = ``;
+          profile.badges.forEach(badge => {
+              badgeHTML += `
+                <div class="badge-card"><div class="badge-icon">${badge.icon || '🏆'}</div><p>${badge.name}</p></div>
+              `;
+          });
+          badgeGrid.innerHTML = badgeHTML;
+      } else {
+          badgeGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; font-size: 14px; opacity: 0.7;">Start cooking to unlock badges!</p>';
+      }
+    } catch (err) {
+      console.error('Failed to load progress chart:', err);
+    }
+  });
+</script>
 </body>
 </html>

@@ -27,6 +27,65 @@
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
+    <script src="../../assets/js/profile.js" defer></script>
+
+    <style>
+        /* Info Icon Tooltip Styles */
+        .info-icon-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        .info-icon-wrapper:hover {
+            color: var(--primary-color, #ff6a6c);
+        }
+
+        /* Hide tooltip from the main card hover */
+        .card.level .level-info-tooltip {
+            display: none !important;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Show tooltip only when hovering the info icon */
+        .info-icon-wrapper:hover .level-info-tooltip {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            position: absolute;
+            bottom: 150%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            cursor: default;
+        }
+
+        /* Fix tooltip going out of screen on mobile */
+        @media screen and (max-width: 768px) {
+            .info-icon-wrapper:hover .level-info-tooltip {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                bottom: auto !important;
+                transform: translate(-50%, -50%) !important;
+                width: 90vw !important;
+                max-width: 320px !important;
+                z-index: 1000 !important;
+            }
+
+            /* Ensure content inside tooltip wraps on small screens */
+            .rank-progression {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -164,13 +223,49 @@
         <div class="card level">
 
             <!-- LEVEL -->
-            <p id="profile-level">Level 1</p>
+            <p id="profile-level">Loading...</p>
 
             <!-- RANK -->
-            <h3 id="profile-rank">IRON Chef</h3>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <h3 id="profile-rank" style="margin: 0;">Loading...</h3>
+                <div class="info-icon-wrapper">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <div class="level-info-tooltip">
+                        <div class="tooltip-content">
+                            <div class="tooltip-section">
+                                <h4>Rank Progression</h4>
+                                <p>Here is how your XP unlocks each rank.</p>
+                                <div class="rank-progression">
+                                    <div class="rank-item">
+                                        <span class="rank-badge" id="rank-iron">IRON</span>
+                                        <span class="rank-xp">0-500 XP</span>
+                                    </div>
+                                    <div class="rank-item">
+                                        <span class="rank-badge" id="rank-bronze">BRONZE</span>
+                                        <span class="rank-xp">501-1500 XP</span>
+                                    </div>
+                                    <div class="rank-item">
+                                        <span class="rank-badge" id="rank-silver">SILVER</span>
+                                        <span class="rank-xp">1501-3000 XP</span>
+                                    </div>
+                                    <div class="rank-item">
+                                        <span class="rank-badge" id="rank-gold">GOLD</span>
+                                        <span class="rank-xp">3001+ XP</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- XP -->
-            <span id="profile-xp">100 / 500 XP</span>
+            <span id="profile-xp">...</span>
+
+            <!-- XP PROGRESS BAR (shown on hover) -->
+            <div class="xp-bar">
+                <div class="xp-bar-fill"></div>
+            </div>
 
         </div>
 
@@ -203,172 +298,40 @@
             </span>
         </div>
 
-        <div class="badge-list">
-
-            <div class="badge">
-                <div class="circle"></div>
-                <p>Grill Master</p>
-            </div>
-
-            <div class="badge">
-                <div class="circle"></div>
-                <p>Grill Master</p>
-            </div>
-
-            <div class="badge">
-                <div class="circle"></div>
-                <p>Grill Master</p>
-            </div>
-
+        <div class="badge-list" id="badge-list">
+            <!-- Badges will be loaded dynamically from the database -->
         </div>
 
     </div>
 
 </div>
 
-<script>
 
-document.addEventListener('DOMContentLoaded', async () => {
-
-    try {
-
-        const token = localStorage.getItem('authToken');
-
-        const response = await axios.get(
-            'http://localhost:4000/api/profile',
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
-        );
-
-        const user = response.data;
-
-        // USERNAME
-        document.getElementById(
-            'profile-username'
-        ).textContent = user.username;
-
-        // LEVEL
-        document.getElementById(
-            'profile-level'
-        ).textContent = `Level ${user.level || 1}`;
-
-        // RANK
-        document.getElementById(
-            'profile-rank'
-        ).textContent = user.rank || 'IRON Chef';
-
-        // XP
-        document.getElementById(
-            'profile-xp'
-        ).textContent = `${user.xp || 100} / 500 XP`;
-
-        // COMPLETED
-        document.getElementById(
-            'profile-completed'
-        ).textContent = user.completedRecipes || 0;
-
-    } catch (err) {
-
-        console.error(err);
-
-    }
-
-});
-
-</script>
 
 <!-- TABS -->
 <div class="tabs">
-    <span class="active">Recipes</span>
-    <span>Favorites</span>
+    <span class="tab-item active" data-tab="recipes">
+        <i class="fa-solid fa-utensils"></i>
+        Recipes
+    </span>
+    <span class="tab-item" data-tab="favorites">
+        <i class="fa-solid fa-heart"></i>
+        Favorites
+    </span>
 </div>
 
-<!-- RECIPE CARD -->
-<div class="recipe-card">
-
-    <div class="recipe-header">
-        <i class="fa-regular fa-star"></i>
-        <span>สเต็กหมู</span>
-        <span class="material-symbols-outlined">
-            arrow_drop_down
-        </span>
+<!-- RECIPES CONTAINER -->
+<div class="tab-content active" id="recipes-tab">
+    <div class="recipes-list" id="recipes-container">
+        <!-- Recipe cards will be populated here -->
     </div>
-
-    <img src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092">
-
-    <div class="recipe-footer">
-
-        <span>
-            <i class="fa-regular fa-clock"></i>
-            45 นาที
-        </span>
-
-        <span>
-            <i class="fa-solid fa-star"></i>
-            200 XP
-        </span>
-
-    </div>
-
 </div>
 
-<div class="recipe-card">
-
-    <div class="recipe-header">
-        <i class="fa-regular fa-star"></i>
-        <span>สเต็กหมู</span>
-        <span class="material-symbols-outlined">
-            arrow_drop_down
-        </span>
+<!-- FAVORITES CONTAINER -->
+<div class="tab-content" id="favorites-tab">
+    <div class="favorites-list" id="favorites-container">
+        <!-- Favorite recipe cards will be populated here -->
     </div>
-
-    <img src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092">
-
-    <div class="recipe-footer">
-
-        <span>
-            <i class="fa-regular fa-clock"></i>
-            45 นาที
-        </span>
-
-        <span>
-            <i class="fa-solid fa-star"></i>
-            200 XP
-        </span>
-
-    </div>
-
-</div>
-
-<div class="recipe-card">
-
-    <div class="recipe-header">
-        <i class="fa-regular fa-star"></i>
-        <span>สเต็กหมู</span>
-        <span class="material-symbols-outlined">
-            arrow_drop_down
-        </span>
-    </div>
-
-    <img src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092">
-
-    <div class="recipe-footer">
-
-        <span>
-            <i class="fa-regular fa-clock"></i>
-            45 นาที
-        </span>
-
-        <span>
-            <i class="fa-solid fa-star"></i>
-            200 XP
-        </span>
-
-    </div>
-
 </div>
 
 </body>

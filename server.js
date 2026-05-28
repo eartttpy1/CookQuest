@@ -333,6 +333,43 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
 
 });
 
+app.post('/api/profile/add-xp', authMiddleware, async (req, res) => {
+  try {
+    const { xpToAdd } = req.body;
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Add XP
+    user.xp = (user.xp || 0) + Number(xpToAdd);
+
+    // Re-calculate Level and Rank
+    const levelSystem = {
+        1: { rank: 'IRON Chef', minXP: 0, maxXP: 500 },
+        2: { rank: 'BRONZE Chef', minXP: 501, maxXP: 1500 },
+        3: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+        4: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+        5: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: Infinity }
+    };
+
+    for (let level = 5; level >= 1; level--) {
+        if (user.xp >= levelSystem[level].minXP) {
+            user.level = level;
+            user.rank = levelSystem[level].rank;
+            break;
+        }
+    }
+
+    await user.save();
+    res.json({ msg: 'XP & Level updated successfully', user });
+  } catch (err) {
+    console.error('Error updating XP:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
 app.get('/api/menus', async (req, res) => {
   try {
     const menus = await Menu.find();
@@ -492,6 +529,64 @@ app.put('/api/requests/:id/status', async (req, res) => {
       { requestId: request._id },
       { $set: { status: normalizedStatus } }
     );
+
+    // Safely get the user ID (If Request schema lacks createdBy, fallback to Submission)
+    const submission = await Submission.findOne({ requestId: request._id });
+    const creatorId = request.createdBy || (submission ? submission.createdBy : null);
+
+    // Give XP and increment completed recipes if approved
+    if (normalizedStatus === 'approved' && creatorId) {
+      const user = await User.findById(creatorId);
+      if (user) {
+        let xpReward = 100; // Default XP fallback
+
+        // Try to find the exact EXP from the database models
+        const menu = await Menu.findOne({ menuName: request.menuName });
+        if (menu && menu.EXP) { xpReward = menu.EXP; }
+        else {
+          const quest = await Quest.findOne({ name: request.menuName });
+          if (quest && quest.exp) { xpReward = quest.exp; }
+          else {
+            const userMenu = await UserMenu.findOne({ menuName: request.menuName });
+            if (userMenu && userMenu.EXP) { xpReward = userMenu.EXP; }
+          }
+        }
+
+        user.xp = (user.xp || 0) + xpReward;
+        user.completedRecipes = (user.completedRecipes || 0) + 1;
+
+        // Re-calculate Level and Rank
+        const levelSystem = {
+            1: { rank: 'IRON Chef', minXP: 0, maxXP: 500 },
+            2: { rank: 'BRONZE Chef', minXP: 501, maxXP: 1500 },
+            3: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+            4: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+            5: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: Infinity }
+        };
+
+        for (let level = 5; level >= 1; level--) {
+            if (user.xp >= levelSystem[level].minXP) {
+                user.level = level;
+                user.rank = levelSystem[level].rank;
+                break;
+            }
+        }
+
+        // Check and award Milestone Badges directly to the database
+        const earnedBadges = user.badges.map(b => b.name);
+        if (user.completedRecipes >= 1 && !earnedBadges.includes('First Dish')) {
+            user.badges.push({ name: 'First Dish', icon: '👨‍🍳' });
+        }
+        if (user.completedRecipes >= 5 && !earnedBadges.includes('5 Dishes')) {
+            user.badges.push({ name: '5 Dishes', icon: '🔥' });
+        }
+        if (user.completedRecipes >= 10 && !earnedBadges.includes('10 Dishes')) {
+            user.badges.push({ name: '10 Dishes', icon: '👑' });
+        }
+
+        await user.save();
+      }
+    }
 
     io.emit('status_updated', { requestId: request._id, status: normalizedStatus });
 

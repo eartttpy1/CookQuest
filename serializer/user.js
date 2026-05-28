@@ -51,7 +51,13 @@ const userSchema = new mongoose.Schema({
     completedRecipes: {
         type: Number,
         default: 0
-    }
+    },
+
+    badges: [{
+        name: String,
+        icon: String,
+        earnedAt: { type: Date, default: Date.now }
+    }]
 }, {
   timestamps: true
 });
