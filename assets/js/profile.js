@@ -298,10 +298,12 @@ function loadUserBadges(badges = []) {
     if (badges.length > 0) {
             // Use flexbox to group badges closer together and move slightly inward from the left
             badgeList.style.display = 'flex';
-            badgeList.style.flexWrap = 'wrap';
+            badgeList.style.flexWrap = 'nowrap';
             badgeList.style.justifyContent = 'flex-start';
             badgeList.style.gap = '20px';
             badgeList.style.paddingLeft = '5px';
+            badgeList.style.overflowX = 'auto';
+            badgeList.style.paddingBottom = '10px'; // Extra space for the scrollbar
 
         badges.forEach(badge => {
             badgeList.innerHTML += `
