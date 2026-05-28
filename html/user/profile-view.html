@@ -40,7 +40,7 @@
         .view-header h2 {
             margin: 0;
             font-size: 1.8rem;
-            color: var(--text-color);
+            color: #800002; /* CookQuest Navbar Red */
         }
         .back-link {
             display: inline-flex;
@@ -49,6 +49,157 @@
             text-decoration: none;
             color: var(--primary-color);
             font-weight: 600;
+        }
+        body.darkmode .view-header h2 {
+            color: #ff6a6c; /* Lighter red for dark mode contrast */
+        }
+
+        /* Modern UI Enhancements for Performance Page */
+        .level-box {
+            background: linear-gradient(145deg, #9e0002, #800002);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #eaeaea;
+        }
+        body.darkmode .level-box {
+            background: linear-gradient(145deg, #4a0001, #330000);
+            border-color: transparent;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .level-info {
+            flex-grow: 1;
+        }
+        #view-level-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: white;
+        }
+        .xp-bar {
+            height: 14px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+            width: 100%;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+        body.darkmode .xp-bar {
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .xp-fill {
+            height: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #view-xp-text {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .section-heading {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #800002; /* CookQuest Navbar Red */
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        body.darkmode .section-heading {
+            color: #ff6a6c; /* Lighter red for dark mode contrast */
+        }
+        
+        .avatar {
+            width: 75px;
+            height: 75px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 45px;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .chart-box {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+            border: 1px solid #eaeaea;
+        }
+        body.darkmode .chart-box {
+            background: #2a2a2a;
+            border-color: #444;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .badge-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: flex-start;
+        }
+        .badge-card {
+            background: linear-gradient(145deg, #ffffff, #f9f9f9);
+            border: 1px solid #eaeaea;
+            border-radius: 20px;
+            padding: 20px 15px;
+            width: 120px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: default;
+        }
+        body.darkmode .badge-card {
+            background: linear-gradient(145deg, #333, #2a2a2a);
+            border-color: #444;
+        }
+        .badge-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(128, 0, 2, 0.2);
+            border-color: #800002;
+        }
+        .badge-icon {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #9e0002, #800002);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(128, 0, 2, 0.4);
+            transition: transform 0.3s ease;
+        }
+        .badge-card:hover .badge-icon {
+            transform: scale(1.1) rotate(10deg);
+        }
+        .badge-card p {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #444;
+        }
+        body.darkmode .badge-card p {
+            color: #eee;
         }
     </style>
 </head>
@@ -131,13 +282,13 @@
 
   <!-- Header -->
   <div class="view-header">
-    <h2>Performance & Badges</h2>
+    <h2 style="display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-chart-pie" style="color: #800002;"></i> Performance & Badges</h2>
     <a href="profile.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Profile</a>
   </div>
 
   <!-- Level -->
   <div class="level-box">
-    <div class="avatar"></div>
+    <div class="avatar"><i class="fa-solid fa-circle-user"></i></div>
 
     <div class="level-info">
       <div class="level-title" id="view-level-title">Loading...</div>
@@ -151,12 +302,13 @@
   </div>
 
   <!-- Chart -->
+  <h3 class="section-heading"><i class="fa-solid fa-chart-line" style="color: #800002;"></i> Activity History</h3>
   <div class="chart-box">
     <canvas id="progressChart"></canvas>
   </div>
 
   <!-- Badge -->
-  <h3 class="badge-title">Badge Collection</h3>
+  <h3 class="section-heading"><i class="fa-solid fa-medal" style="color: #800002;"></i> Badge Collection</h3>
 
   <div class="badge-grid" id="view-badge-grid">
     <!-- Badges will be loaded dynamically from the database -->
@@ -230,14 +382,16 @@
           datasets: [{
             label: 'Total Completed Dishes',
             data: cumulativeData.length ? cumulativeData : [0],
-            borderColor: '#b30000',
-            backgroundColor: 'rgba(179, 0, 0, 0.2)',
+            borderColor: '#800002',
+            backgroundColor: 'rgba(128, 0, 2, 0.15)',
             borderWidth: 3,
             fill: true,
-            tension: 0.3,
+            tension: 0.4, /* Makes the line graph much smoother */
             pointBackgroundColor: '#fff',
-            pointBorderColor: '#b30000',
-            pointRadius: 4
+            pointBorderColor: '#800002',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7
           }]
         },
         options: {
@@ -258,7 +412,12 @@
           });
           badgeGrid.innerHTML = badgeHTML;
       } else {
-          badgeGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; font-size: 14px; opacity: 0.7;">Start cooking to unlock badges!</p>';
+          badgeGrid.innerHTML = `
+            <div style="width: 100%; text-align: center; padding: 40px 20px; opacity: 0.6;">
+                <i class="fa-solid fa-award fa-3x" style="margin-bottom: 15px; color: #ccc;"></i>
+                <p style="font-size: 1.1rem; margin: 0;">Start cooking to unlock badges!</p>
+            </div>
+          `;
       }
     } catch (err) {
       console.error('Failed to load progress chart:', err);

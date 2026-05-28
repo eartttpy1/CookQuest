@@ -370,6 +370,35 @@ app.post('/api/profile/add-xp', authMiddleware, async (req, res) => {
   }
 });
 
+app.post('/api/profile/add-badge', authMiddleware, async (req, res) => {
+  try {
+    const { badgeName, badgeIcon } = req.body;
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Initialize badges array if it doesn't exist
+    if (!user.badges) {
+      user.badges = [];
+    }
+
+    // Check if badge already exists
+    const hasBadge = user.badges.some(b => b.name === badgeName);
+    if (!hasBadge) {
+      user.badges.push({ name: badgeName, icon: badgeIcon, earnedAt: new Date() });
+      await user.save();
+      return res.json({ msg: 'Badge added successfully', user });
+    } else {
+      return res.status(400).json({ msg: 'Badge already collected' });
+    }
+  } catch (err) {
+    console.error('Error adding badge:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
 app.get('/api/menus', async (req, res) => {
   try {
     const menus = await Menu.find();

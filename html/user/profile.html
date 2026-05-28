@@ -29,63 +29,7 @@
     <script src="../../assets/js/login.js" defer></script>
     <script src="../../assets/js/profile.js" defer></script>
 
-    <style>
-        /* Info Icon Tooltip Styles */
-        .info-icon-wrapper {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            cursor: pointer;
-            color: #888;
-            font-size: 1.1rem;
-        }
 
-        .info-icon-wrapper:hover {
-            color: var(--primary-color, #ff6a6c);
-        }
-
-        /* Hide tooltip from the main card hover */
-        .card.level .level-info-tooltip {
-            display: none !important;
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        /* Show tooltip only when hovering the info icon */
-        .info-icon-wrapper:hover .level-info-tooltip {
-            display: block !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            position: absolute;
-            bottom: 150%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            cursor: default;
-        }
-
-        /* Fix tooltip going out of screen on mobile */
-        @media screen and (max-width: 768px) {
-            .info-icon-wrapper:hover .level-info-tooltip {
-                position: fixed !important;
-                top: 50% !important;
-                left: 50% !important;
-                bottom: auto !important;
-                transform: translate(-50%, -50%) !important;
-                width: 90vw !important;
-                max-width: 320px !important;
-                z-index: 1000 !important;
-            }
-
-            /* Ensure content inside tooltip wraps on small screens */
-            .rank-progression {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-                justify-content: center;
-            }
-        }
-    </style>
 </head>
 
 <body>
@@ -226,47 +170,43 @@
             <p id="profile-level">Loading...</p>
 
             <!-- RANK -->
-            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <h3 id="profile-rank" style="margin: 0;">Loading...</h3>
-                <div class="info-icon-wrapper">
-                    <i class="fa-solid fa-circle-info"></i>
-                    <div class="level-info-tooltip">
-                        <div class="tooltip-content">
-                            <div class="tooltip-section">
-                                <h4>Rank Progression</h4>
-                                <p>Here is how your XP unlocks each rank.</p>
-                                <div class="rank-progression">
-                                    <div class="rank-item">
-                                        <span class="rank-badge" id="rank-iron">IRON</span>
-                                        <span class="rank-xp">0-500 XP</span>
-                                    </div>
-                                    <div class="rank-item">
-                                        <span class="rank-badge" id="rank-bronze">BRONZE</span>
-                                        <span class="rank-xp">501-1500 XP</span>
-                                    </div>
-                                    <div class="rank-item">
-                                        <span class="rank-badge" id="rank-silver">SILVER</span>
-                                        <span class="rank-xp">1501-3000 XP</span>
-                                    </div>
-                                    <div class="rank-item">
-                                        <span class="rank-badge" id="rank-gold">GOLD</span>
-                                        <span class="rank-xp">3001+ XP</span>
-                                    </div>
-                                </div>
+            <h3 id="profile-rank">Loading...</h3>
+
+            <!-- XP -->
+            <span id="profile-xp">...</span>
+
+            <!-- XP PROGRESS BAR -->
+            <div class="xp-bar">
+                <div class="xp-bar-fill"></div>
+            </div>
+
+            <!-- LEVEL INFO TOOLTIP (Shows when hovering over the card) -->
+            <div class="level-info-tooltip">
+                <div class="tooltip-content">
+                    <div class="tooltip-section">
+                        <h4>Rank Progression</h4>
+                        <p>Here is how your XP unlocks each rank.</p>
+                        <div class="rank-progression">
+                            <div class="rank-item">
+                                <span class="rank-badge" id="rank-iron">IRON</span>
+                                <span class="rank-xp">0-500 XP</span>
+                            </div>
+                            <div class="rank-item">
+                                <span class="rank-badge" id="rank-bronze">BRONZE</span>
+                                <span class="rank-xp">501-1500 XP</span>
+                            </div>
+                            <div class="rank-item">
+                                <span class="rank-badge" id="rank-silver">SILVER</span>
+                                <span class="rank-xp">1501-3000 XP</span>
+                            </div>
+                            <div class="rank-item">
+                                <span class="rank-badge" id="rank-gold">GOLD</span>
+                                <span class="rank-xp">3001+ XP</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- XP -->
-            <span id="profile-xp">...</span>
-
-            <!-- XP PROGRESS BAR (shown on hover) -->
-            <div class="xp-bar">
-                <div class="xp-bar-fill"></div>
-            </div>
-
         </div>
 
         <div class="card recipe">
@@ -281,6 +221,15 @@
 
             <span>Completed</span>
 
+            <!-- RECIPE INFO TOOLTIP (Shows when hovering over the card) -->
+            <div class="recipe-info-tooltip">
+                <div class="tooltip-content">
+                    <div class="tooltip-section">
+                        <h4>Completed Recipes</h4>
+                        <p>Cook and submit quests to increase this number! Only approved quests will be counted here.</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>

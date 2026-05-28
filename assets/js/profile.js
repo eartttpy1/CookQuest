@@ -109,6 +109,7 @@ function loadFavoritesFromStorage() {
     const stored = localStorage.getItem('userFavorites');
     return stored ? JSON.parse(stored) : mockUserData.favorites;
 }
+
 function createRecipeCard(recipe) {
     const recipeId = recipe._id ? recipe._id.toString() : '';
     const isFavorite = mockUserData.favorites.includes(recipeId);
@@ -295,6 +296,13 @@ function loadUserBadges(badges = []) {
     badgeList.innerHTML = '';
 
     if (badges.length > 0) {
+            // Use flexbox to group badges closer together and move slightly inward from the left
+            badgeList.style.display = 'flex';
+            badgeList.style.flexWrap = 'wrap';
+            badgeList.style.justifyContent = 'flex-start';
+            badgeList.style.gap = '20px';
+            badgeList.style.paddingLeft = '5px';
+
         badges.forEach(badge => {
             badgeList.innerHTML += `
                 <div class="badge">
@@ -304,6 +312,10 @@ function loadUserBadges(badges = []) {
             `;
         });
     } else {
+            // Keep center alignment for the empty message
+            badgeList.style.display = 'grid'; // Revert back to grid for the empty message
+            badgeList.style.justifyContent = 'center';
+            badgeList.style.paddingLeft = '0';
         badgeList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; font-size: 14px; opacity: 0.7;">Start cooking to unlock badges!</p>';
     }
 }
@@ -430,6 +442,21 @@ document.addEventListener('DOMContentLoaded', () => {
             location.reload(); // Reload the page to see the changes immediately
         } catch (err) {
             console.error("Failed to add XP to database:", err);
+        }
+    };
+
+    // Test function for adding Badges and syncing to database
+    window.addTestBadge = async (name = 'Master Chef', icon = '👨‍🍳') => {
+        try {
+            const token = localStorage.getItem('authToken');
+            const res = await axios.post('http://localhost:4000/api/profile/add-badge', 
+                { badgeName: name, badgeIcon: icon },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            console.log(`✅ Success! Badge Added:`, res.data.user.badges);
+            location.reload(); 
+        } catch (err) {
+            console.error("Failed to add badge:", err.response?.data?.msg || err);
         }
     };
 });
