@@ -2,15 +2,16 @@
 const favState = {};
 
 function syncCardStar(idx) {
-    const cardStar = document.querySelector(`.quest-card[data-id="${idx}"] .fa-star`);
-    if (!cardStar) return;
-    if (favState[idx]) {
-        cardStar.classList.replace('fa-regular', 'fa-solid');
-        cardStar.style.color = '#ffffff';
-    } else {
-        cardStar.classList.replace('fa-solid', 'fa-regular');
-        cardStar.style.color = '';
-    }
+    const cardStars = document.querySelectorAll(`.quest-card[data-id="${idx}"] .quest-title-wrapper .fa-star`);
+    cardStars.forEach(cardStar => {
+        if (favState[idx]) {
+            cardStar.classList.replace('fa-regular', 'fa-solid');
+            cardStar.style.color = '#ffffff';
+        } else {
+            cardStar.classList.replace('fa-solid', 'fa-regular');
+            cardStar.style.color = '';
+        }
+    });
 }
 
 function syncModalStar() {
@@ -59,9 +60,10 @@ if (socket) {
     });
 }
 
-// Card star toggle
-document.querySelector('.quest-section').addEventListener('click', async function (e) {
+// Card star toggle (using document-level delegation to support multiple quest-sections)
+document.addEventListener('click', async function (e) {
     if (!e.target.classList.contains('fa-star')) return;
+    if (!e.target.closest('.quest-title-wrapper')) return; // Target only the favorite star, not the EXP star
     const card = e.target.closest('.quest-card');
     if (!card) return;
     const idx = card.dataset.id;
