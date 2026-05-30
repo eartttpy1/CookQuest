@@ -129,6 +129,7 @@ function openAddForm() {
     document.getElementById('formTitle').textContent = 'เพิ่มเมนูอาหาร';
     document.getElementById('menuName').value = '';
     document.getElementById('menuServings').value = 1;
+    document.getElementById('menuExp').value = 0;
     document.getElementById('prepTime').value = '';
     document.getElementById('cookTime').value = '';
     document.getElementById('tagsArea').innerHTML = '';
@@ -187,6 +188,7 @@ function openEditForm(button) {
     document.getElementById('formTitle').textContent = 'แก้ไขเมนูอาหาร';
     document.getElementById('menuName').value = currentEditItem.menuName;
     document.getElementById('menuServings').value = currentEditItem.servings || 1;
+    document.getElementById('menuExp').value = currentEditItem.EXP ?? 0;
     document.getElementById('prepTime').value = currentEditItem.prepTime || '';
     document.getElementById('cookTime').value = currentEditItem.cookTime || '';
     document.getElementById('tagsArea').innerHTML = (currentEditItem.tags || []).map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
@@ -344,6 +346,7 @@ function removeTag(button) {
 async function saveRecipe() {
     const menuName = document.getElementById('menuName').value;
     const servings = parseInt(document.getElementById('menuServings').value);
+    const EXP = parseInt(document.getElementById('menuExp').value) || 0;
     const prepTime = document.getElementById('prepTime').value;
     const cookTime = document.getElementById('cookTime').value;
     const tags = Array.from(document.querySelectorAll('#tagsArea .tag')).map(tag => tag.textContent.replace(/\s*X$/, '').trim());
@@ -367,7 +370,7 @@ async function saveRecipe() {
         servings,
         prepTime,
         cookTime,
-        EXP: 0, // Default values
+        EXP,
         createdBy: 'admin', // Default
         imageURL: selectedImageData || (currentEditItem ? currentEditItem.imageURL : ''),
         ingredients,

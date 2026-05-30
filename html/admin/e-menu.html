@@ -165,11 +165,13 @@
                     <input type="text" class="form-input thai" id="menuName" placeholder="ชื่อเมนูอาหาร">
                 </div>
  
-                <!-- Servings -->
+                <!-- Servings & EXP -->
                 <div class="form-row">
                     <label class="form-label thai">จำนวน</label>
-                    <input type="number" class="form-input small thai" id="menuServings" value="1">
+                    <input type="number" class="form-input small thai" id="menuServings" value="1" min="1">
                     <span class="thai unit-label">จาน</span>
+                    <label class="form-label thai" style="margin-left:20px;">EXP</label>
+                    <input type="number" class="form-input small thai" id="menuExp" value="0" min="0">
                 </div>
  
                 <!-- Prep / Cook Time -->
