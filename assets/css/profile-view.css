@@ -118,3 +118,258 @@
   margin: 0;
   font-size: 12px;
 }
+
+        .view-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Pushes items to the edges */
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .view-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #800002; /* CookQuest Navbar Red */
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        body.darkmode .view-header h2 {
+        color: #e57373; /* Softer red for dark mode contrast */
+
+        }
+
+            .header-icon {
+        color: #800002;
+    }
+    body.darkmode .header-icon {
+        color: #e57373;
+    }
+
+        /* Modern UI Enhancements for Performance Page */
+        .level-box {
+            background: linear-gradient(145deg, #9e0002, #800002);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #eaeaea;
+        }
+        body.darkmode .level-box {
+        background: linear-gradient(145deg, #0b074d, #0d0944);
+        border-color: transparent;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        body.darkmode .level-title {
+        background: linear-gradient(145deg, #080446, #110b6e);
+        color: white;
+        }
+        .level-info {
+            flex-grow: 1;
+        }
+        #view-level-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: white;
+        }
+        .xp-bar {
+            height: 14px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+            width: 100%;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+        body.darkmode .xp-bar {
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .xp-fill {
+            height: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #view-xp-text {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .section-heading {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #800002; /* CookQuest Navbar Red */
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        body.darkmode .section-heading {
+            color: #e57373;
+
+        }
+        
+        .avatar {
+            width: 75px;
+            height: 75px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 45px;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .chart-box {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+            border: 1px solid #eaeaea;
+        }
+        body.darkmode .chart-box {
+        background: #2a2a2a;
+        border-color: #444;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+        }
+        .badge-card {
+            background: linear-gradient(145deg, #ffffff, #f9f9f9);
+            border: 1px solid #eaeaea;
+            border-radius: 20px;
+            padding: 15px 10px;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: default;
+        }
+        body.darkmode .badge-card {
+        background: linear-gradient(145deg, #333, #2a2a2a);
+        border-color: #444;
+        }
+        .badge-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(128, 0, 2, 0.2);
+            border-color: #800002;
+        }
+        .badge-icon {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #9e0002, #800002);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(128, 0, 2, 0.4);
+            transition: transform 0.3s ease;
+        }
+        .badge-card:hover .badge-icon {
+            transform: scale(1.1) rotate(10deg);
+        }
+        .badge-card p {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #444;
+        }
+        body.darkmode .badge-card p {
+        color: #eee;
+        }
+
+    /* Skeleton Loaders */
+    .skeleton-bg { background: rgba(0, 0, 0, 0.1); }
+body.darkmode .skeleton-bg { background: rgba(255, 255, 255, 0.1); }
+    .skeleton-bg-main { background: #eee; }
+body.darkmode .skeleton-bg-main { background: #333; }
+
+    /* Badge Modal Styles */
+    .badge-modal-content {
+        background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; position: relative; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    body.darkmode .badge-modal-content {
+    background: #2a2a2a; color: #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    }
+    #modalBadgeName {
+        margin-bottom: 10px; color: #800002;
+    }
+    body.darkmode #modalBadgeName {
+    color: #e57373;
+    }
+    #modalBadgeDesc {
+        color: #666; margin-bottom: 20px; font-size: 1.1rem; line-height: 1.4;
+    }
+    body.darkmode #modalBadgeDesc {
+    color: #bbb;
+    }
+    #modalBadgeStatus { padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; }
+
+    body.darkmode .unlocked-badge {
+        background: linear-gradient(135deg, #0b074d, #0d0944) !important;
+        color: white !important;
+    }
+
+            #badgeModal.hidden { display: none !important; }
+    
+    /* Overlay fade in */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    /* Modal content pop and scale bounce */
+    @keyframes popIn {
+        0% { transform: scale(0.8); opacity: 0; }
+        70% { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* 3D flip for the icon */
+    @keyframes flipIcon {
+        0% { transform: perspective(400px) rotateY(-180deg); }
+        100% { transform: perspective(400px) rotateY(0deg); }
+    }
+    
+    #badgeModal:not(.hidden) {
+        animation: fadeIn 0.3s ease forwards;
+    }
+    
+    #badgeModal:not(.hidden) .modal-content {
+        animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    
+    .icon-animate {
+        animation: flipIcon 0.6s ease-out forwards;
+        animation-delay: 0.1s; /* Add a small delay so it flips after popping in */
+    }
+
+    

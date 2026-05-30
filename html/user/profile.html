@@ -18,9 +18,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="../../style.css">
-    <link rel="stylesheet" href="../../assets/css/profile-view.css">
-    <link rel="stylesheet" href="../../assets/css/profile.css">
+    <link rel="stylesheet" href="../../style.css?v=5">
+    <link rel="stylesheet" href="../../assets/css/profile-view.css?v=5">
+    <link rel="stylesheet" href="../../assets/css/profile.css?v=5">
 
     <!-- JS -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -29,6 +29,67 @@
     <script src="../../assets/js/login.js" defer></script>
     <script src="../../assets/js/profile.js" defer></script>
 
+    <style>
+        /* Dark Mode fixes for Profile Page Elements */
+        body.darkmode .profile-container,
+        body.darkmode .tabs {
+            color: #e0e0e0;
+        }
+        body.darkmode .card {
+            background: linear-gradient(145deg, #0b074d, #0d0944) !important;
+            border: 1px solid #1a1668 !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        body.darkmode .card p,
+        body.darkmode .card span {
+            color: #bbb;
+        }
+        body.darkmode .card h1,
+        body.darkmode .card h3,
+        body.darkmode .badges h3 {
+            color: #ffffff;
+        }
+        body.darkmode #profile-username {
+            color: #000000 !important;
+        }
+        body.darkmode .tooltip-content {
+            background: linear-gradient(145deg, #0b074d, #0d0944) !important;
+            color: #e0e0e0;
+            border: 1px solid #1a1668;
+        }
+        body.darkmode .rank-item {
+            border-bottom: 1px solid #444;
+        }
+        body.darkmode .tab-item {
+            color: #888;
+        }
+        body.darkmode .recipe-card {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #eee;
+        }
+        body.darkmode .unlocked-badge {
+            background: linear-gradient(135deg, #0b074d, #0d0944) !important;
+            color: white !important;
+        }
+        body.darkmode .empty-message { color: #bbb; }
+        
+        /* Skeleton Loader Dark Mode Support */
+        .skeleton-card { border: 1px solid #eee; overflow: hidden; height: 260px; }
+        .skeleton-bg { background: #eee; }
+        .skeleton-bg-main { background: #e0e0e0; }
+        body.darkmode .skeleton-card { border-color: #444; background: #2a2a2a; }
+        body.darkmode .skeleton-bg { background: rgba(255, 255, 255, 0.1); }
+        body.darkmode .skeleton-bg-main { background: #333; }
+
+        /* Tooltip Rank Colors */
+        #rank-bronze { background-color: #ffa954; color: black; border-color: #ffa954; }
+        #rank-silver { background-color: #c0c0c0; color: black; border-color: #c0c0c0; }
+        #rank-gold { background-color: #FFD700; color: black; border-color: #FFD700; }
+        #rank-platinum { background-color: #ff25ff; color: white; border-color: #ff25ff; }
+        #rank-diamond { background-color: #34d0ff; color: black; border-color: #34d0ff; }
+        #rank-master { background-color: #0B5091; color: white; border-color: #0B5091; }
+    </style>
 
 </head>
 
@@ -122,6 +183,17 @@
                     <li class="dropdown-item theme-item-container">
                         <i class="fa-solid fa-circle-half-stroke"></i>
                         <span>Theme</span>
+                        <div class="theme-selector-wrapper">
+                            <button class="theme-select-trigger" id="theme-select-trigger">
+                                <span id="current-theme-text">Light</span>
+                                <i class="fa-solid fa-caret-down"></i>
+                            </button>
+
+                            <div class="theme-options hidden" id="theme-options">
+                                <div class="theme-option" data-value="light">Light</div>
+                                <div class="theme-option" data-value="dark">Dark</div>
+                            </div>
+                        </div>
                     </li>
 
                     <li class="dropdown-item logout-item" id="logout-btn">
@@ -188,12 +260,8 @@
                         <p>Here is how your XP unlocks each rank.</p>
                         <div class="rank-progression">
                             <div class="rank-item">
-                                <span class="rank-badge" id="rank-iron">IRON</span>
-                                <span class="rank-xp">0-500 XP</span>
-                            </div>
-                            <div class="rank-item">
                                 <span class="rank-badge" id="rank-bronze">BRONZE</span>
-                                <span class="rank-xp">501-1500 XP</span>
+                                <span class="rank-xp">0-1500 XP</span>
                             </div>
                             <div class="rank-item">
                                 <span class="rank-badge" id="rank-silver">SILVER</span>
@@ -201,7 +269,19 @@
                             </div>
                             <div class="rank-item">
                                 <span class="rank-badge" id="rank-gold">GOLD</span>
-                                <span class="rank-xp">3001+ XP</span>
+                                <span class="rank-xp">3001-5000 XP</span>
+                            </div>
+                            <div class="rank-item">
+                                <span class="rank-badge" id="rank-platinum">PLATINUM</span>
+                                <span class="rank-xp">5001-8000 XP</span>
+                            </div>
+                            <div class="rank-item">
+                                <span class="rank-badge" id="rank-diamond">DIAMOND</span>
+                                <span class="rank-xp">8001-12000 XP</span>
+                            </div>
+                            <div class="rank-item">
+                                <span class="rank-badge" id="rank-master">MASTER</span>
+                                <span class="rank-xp">12001+ XP</span>
                             </div>
                         </div>
                     </div>

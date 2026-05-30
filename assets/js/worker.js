@@ -1,13 +1,29 @@
 self.onmessage = async function(e) {
-    const { userId } = e.data;
+    const { userId, token } = e.data;
 
     try {
-        const [questsResponse, menusResponse, favResponse, historyResponse] = await Promise.all([
-            fetch('/api/quests'),
-            fetch('/api/menus'),
-            fetch(`/api/favorites?userId=${userId}`),
-            fetch(`/api/history?userId=${userId}`)
-        ]);
+        const fetchPromises = [
+            fetch('http://localhost:4000/api/quests'),
+            fetch('http://localhost:4000/api/menus'),
+            fetch(`http://localhost:4000/api/favorites?userId=${userId}`),
+            fetch(`http://localhost:4000/api/history?userId=${userId}`)
+        ];
+
+        if (token) {
+            fetchPromises.push(
+                fetch('http://localhost:4000/api/profile', {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+            );
+        }
+
+        const responses = await Promise.all(fetchPromises);
+        
+        const questsResponse = responses[0];
+        const menusResponse = responses[1];
+        const favResponse = responses[2];
+        const historyResponse = responses[3];
+        const profileResponse = responses[4];
 
         if (!questsResponse.ok) throw new Error('Failed to load quests');
         if (!menusResponse.ok) throw new Error('Failed to load menus');
@@ -19,13 +35,17 @@ self.onmessage = async function(e) {
         if (favResponse && favResponse.ok) {
             const favorites = await favResponse.json();
             favorites.forEach(fav => {
-                if (fav.menuId) favState[fav.menuId] = true;
+                const menuIdStr = (fav.menuId && typeof fav.menuId === 'object' && fav.menuId._id)
+                    ? fav.menuId._id.toString()
+                    : (fav.menuId ? fav.menuId.toString() : '');
+                if (menuIdStr) favState[menuIdStr] = true;
             });
         }
 
         let menuStatusMap = {};
+        let history = [];
         if (historyResponse && historyResponse.ok) {
-            const history = await historyResponse.json();
+            history = await historyResponse.json();
             history.forEach(sub => {
                 const req = sub.requestId;
                 if (req && req.menuName) {
@@ -43,6 +63,11 @@ self.onmessage = async function(e) {
                     }
                 }
             });
+        }
+
+        let profile = null;
+        if (profileResponse && profileResponse.ok) {
+            profile = await profileResponse.json();
         }
 
         // Optimization: Create a fast lookup for menus by questId and tag
@@ -125,7 +150,9 @@ self.onmessage = async function(e) {
             quests: processedQuests,
             menus,
             favState,
-            menuStatusMap
+            menuStatusMap,
+            history,
+            profile
         });
     } catch (error) {
         self.postMessage({

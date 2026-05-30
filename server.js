@@ -98,7 +98,10 @@ app.post('/api/register', async (req, res) => {
     const user = await User.create({
       username,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      level: 1,
+      rank: 'BRONZE Chef',
+      xp: 0
     });
     
     //OTP
@@ -347,14 +350,15 @@ app.post('/api/profile/add-xp', authMiddleware, async (req, res) => {
 
     // Re-calculate Level and Rank
     const levelSystem = {
-        1: { rank: 'IRON Chef', minXP: 0, maxXP: 500 },
-        2: { rank: 'BRONZE Chef', minXP: 501, maxXP: 1500 },
-        3: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
-        4: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
-        5: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: Infinity }
+        1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
+        2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+        3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+        4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
+        5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
+        6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
     };
 
-    for (let level = 5; level >= 1; level--) {
+    for (let level = 6; level >= 1; level--) {
         if (user.xp >= levelSystem[level].minXP) {
             user.level = level;
             user.rank = levelSystem[level].rank;
@@ -586,14 +590,15 @@ app.put('/api/requests/:id/status', async (req, res) => {
 
         // Re-calculate Level and Rank
         const levelSystem = {
-            1: { rank: 'IRON Chef', minXP: 0, maxXP: 500 },
-            2: { rank: 'BRONZE Chef', minXP: 501, maxXP: 1500 },
-            3: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
-            4: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
-            5: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: Infinity }
+            1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
+            2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+            3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+            4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
+            5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
+            6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
         };
 
-        for (let level = 5; level >= 1; level--) {
+        for (let level = 6; level >= 1; level--) {
             if (user.xp >= levelSystem[level].minXP) {
                 user.level = level;
                 user.rank = levelSystem[level].rank;

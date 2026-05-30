@@ -8,11 +8,11 @@
 }
 body.darkmode{
   --base-color: #3D4459;
-  --background-color: #2a2f3e;;
+  --background-color: #2a2f3e;
   --text-color: white;
   --hover-color: rgba(255,255,255, 0.2);
   --black-color: rgb(0, 0, 0);
-  --border-color-focus: #c0cfff;
+  --border-color-focus: #ff6a6c;
 }
 
 

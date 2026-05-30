@@ -6,10 +6,10 @@ function syncCardStar(idx) {
     cardStars.forEach(cardStar => {
         if (favState[idx]) {
             cardStar.classList.replace('fa-regular', 'fa-solid');
-            cardStar.style.color = '#ffffff';
+            cardStar.style.color = '#ff6b6b';
         } else {
             cardStar.classList.replace('fa-solid', 'fa-regular');
-            cardStar.style.color = '';
+            cardStar.style.color = 'white';
         }
     });
 }
@@ -20,10 +20,10 @@ function syncModalStar() {
     const idx = document.getElementById('questModal').dataset.currentCard;
     if (favState[idx]) {
         modalStar.classList.replace('fa-regular', 'fa-solid');
-        modalStar.style.color = '#ffffff';
+        modalStar.style.color = '#ff6b6b';
     } else {
         modalStar.classList.replace('fa-solid', 'fa-regular');
-        modalStar.style.color = '';
+        modalStar.style.color = 'white';
     }
 }
 
@@ -37,7 +37,7 @@ const CURRENT_USER_ID = (() => {
 })();
 
 // Initialize socket.io connection
-const socket = typeof io !== 'undefined' ? io() : null;
+const socket = typeof io !== 'undefined' ? io('http://localhost:4000') : null;
 
 if (socket) {
     socket.on('status_updated', async (data) => {
@@ -68,8 +68,12 @@ document.addEventListener('click', async function (e) {
     if (!card) return;
     const idx = card.dataset.id;
     
+    // Prevent double clicking
+    if (e.target.classList.contains('is-loading')) return;
+    e.target.classList.add('is-loading');
+    
     try {
-        const res = await fetch('/api/favorites/toggle', {
+        const res = await fetch('http://localhost:4000/api/favorites/toggle', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: CURRENT_USER_ID, menuId: idx })
@@ -85,17 +89,22 @@ document.addEventListener('click', async function (e) {
         }
     } catch (err) {
         console.error('Error toggling favorite:', err);
+    } finally {
+        e.target.classList.remove('is-loading');
     }
 });
 
 // Modal star toggle
-document.querySelector('.modal-star').addEventListener('click', async function () {
+document.querySelector('.modal-star').addEventListener('click', async function (e) {
     const modal = document.getElementById('questModal');
     const idx = modal.dataset.currentCard;
     if (idx === undefined) return;
     
+    if (e.target.classList.contains('is-loading')) return;
+    e.target.classList.add('is-loading');
+    
     try {
-        const res = await fetch('/api/favorites/toggle', {
+        const res = await fetch('http://localhost:4000/api/favorites/toggle', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: CURRENT_USER_ID, menuId: idx })
@@ -107,6 +116,8 @@ document.querySelector('.modal-star').addEventListener('click', async function (
         }
     } catch (err) {
         console.error('Error toggling favorite:', err);
+    } finally {
+        e.target.classList.remove('is-loading');
     }
 });
 
@@ -271,7 +282,7 @@ async function _populateModalAsync(menu, modal) {
     // Fetch history and update button state
     const submitBtn = modal.querySelector('.modal-submit-row .btn-submit');
     try {
-        const res = await fetch(`/api/history?menuName=${encodeURIComponent(menu.menuName)}&userId=${CURRENT_USER_ID}`);
+        const res = await fetch(`http://localhost:4000/api/history?menuName=${encodeURIComponent(menu.menuName)}&userId=${CURRENT_USER_ID}`);
         if (res.ok) {
             const historyData = await res.json();
             
@@ -458,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const menuName = menuData.menuName;
 
             try {
-                const res = await fetch('/api/submissions', {
+                const res = await fetch('http://localhost:4000/api/submissions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ menuName, randomQuests, imageURL, tasteRating, tasteTags, review, createdBy: CURRENT_USER_ID })
@@ -484,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Update history UI dynamically
                     try {
-                        const historyRes = await fetch(`/api/history?menuName=${encodeURIComponent(menuName)}&userId=${CURRENT_USER_ID}`);
+                        const historyRes = await fetch(`http://localhost:4000/api/history?menuName=${encodeURIComponent(menuName)}&userId=${CURRENT_USER_ID}`);
                         if (historyRes.ok) {
                             const historyData = await historyRes.json();
                             if (typeof renderHistory === 'function') {
@@ -539,6 +550,7 @@ async function loadQuestDetails(questId) {
     const cachedData = sessionStorage.getItem(cacheKey);
 
     const renderFromData = (quests, menus, fState, mStatusMap) => {
+        for (let key in favState) delete favState[key];
         Object.assign(favState, fState);
         const currentQuest = quests.find(q => q._id === questId);
         if (!currentQuest) return;
@@ -589,9 +601,13 @@ async function loadQuestDetails(questId) {
         }
 
         const { quests, menus, favState: newFavState, menuStatusMap } = data;
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-            quests, menus, favState: newFavState, menuStatusMap
-        }));
+        try {
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                quests, menus, favState: newFavState, menuStatusMap
+            }));
+        } catch (e) {
+            console.warn('Could not cache data in sessionStorage. Quota might be exceeded:', e);
+        }
         
         renderFromData(quests, menus, newFavState, menuStatusMap);
     };
@@ -636,7 +652,7 @@ function renderMenus(menus, menuStatusMap = {}) {
         card.innerHTML = `
             <span class="quest-title-wrapper">
                 <h2 class="quest-title thaipattaya">${menu.menuName}</h2>
-                <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star" ${isFavorited ? 'style="color: #ffffff;"' : ''}></i>
+                <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star" style="cursor:pointer; color: ${isFavorited ? '#ff6b6b' : 'white'};"></i>
             </span>
             <figure class="quest-image">
                 <img src="${imageUrl}" alt="${menu.menuName}">
@@ -828,7 +844,7 @@ async function saveHistoryEdit(idx, submissionId) {
   }
 
   try {
-      const res = await fetch(`/api/submissions/${submissionId}`, {
+      const res = await fetch(`http://localhost:4000/api/submissions/${submissionId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ review, tasteRating, tasteTags, imageURL })

@@ -155,7 +155,10 @@ async function loadQuests() {
             window.allMenusData = data.menus;
             window.currentMenuStatusMap = data.menuStatusMap;
             
-            if (typeof favState !== 'undefined') Object.assign(favState, data.favState);
+            if (typeof favState !== 'undefined') {
+                for (let key in favState) delete favState[key];
+                Object.assign(favState, data.favState);
+            }
             if (typeof allRelatedMenus !== 'undefined') allRelatedMenus = data.menus;
             
             // Check current active tab to render correctly from cache
@@ -187,12 +190,17 @@ async function loadQuests() {
         window.allMenusData = menus;
         window.currentMenuStatusMap = menuStatusMap;
 
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-            quests, menus, favState: newFavState, menuStatusMap
-        }));
+        try {
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                quests, menus, favState: newFavState, menuStatusMap
+            }));
+        } catch (e) {
+            console.warn('Could not cache data in sessionStorage. Quota might be exceeded:', e);
+        }
 
         // Update global variables
         if (typeof favState !== 'undefined') {
+            for (let key in favState) delete favState[key];
             Object.assign(favState, newFavState);
         }
         if (typeof allRelatedMenus !== 'undefined') {

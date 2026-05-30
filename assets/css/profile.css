@@ -8,11 +8,11 @@
 }
 body.darkmode{
   --base-color: #3D4459;
-  --background-color: #2a2f3e;;
+  --background-color: #2a2f3e;
   --text-color: white;
   --hover-color: rgba(255,255,255, 0.2);
   --black-color: rgb(0, 0, 0);
-  --border-color-focus: #c0cfff;
+  --border-color-focus: #ff6a6c;
 }
 
 /* CONTAINER */
@@ -37,6 +37,7 @@ body.darkmode{
 .user-info h2 {
   margin: 0;
   font-family: "Inria Serif";
+  color: #000000;
 }
 a {
     margin: 0;
@@ -232,7 +233,7 @@ body.darkmode .badge-list::-webkit-scrollbar-thumb {
 }
 
 .badge:hover .circle {
-  transform: scale(1.15) translateY(-4px);
+  transform: scale(1.05) translateY(2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
@@ -247,7 +248,7 @@ body.darkmode .badge-list::-webkit-scrollbar-thumb {
 }
 
 body.darkmode .badge p {
-  color: #e0e0e0;
+  color: #000000;
 }
 
 body.darkmode .badges {
@@ -284,11 +285,14 @@ body.darkmode .badges {
 .tab-item:hover {
   background: rgba(0, 0, 0, 0.15); /* Slightly darker when hovered */
   color: var(--background-color);
+  color: #0B5091;
 }
 
 .tab-item.active {
   color: white;
   background: var(--background-color);
+  color: #ffffff !important;
+  background: #800002 !important; /* Dark Blue */
   border-bottom: none;
   border-radius: 8px 8px 0 0;
 }
@@ -443,7 +447,7 @@ body.darkmode .badges {
 /* DARK MODE ADJUSTMENTS */
 body.darkmode .level-info-tooltip,
 body.darkmode .recipe-info-tooltip {
-  background: linear-gradient(135deg, var(--background-color) 0%, rgba(61, 68, 89, 0.8) 100%);
+  background: linear-gradient(135deg, #0b074d 0%, #0d0944 100%) !important;
 }
 
 body.darkmode .tabs {
@@ -456,8 +460,13 @@ body.darkmode .tab-item {
 }
 
 body.darkmode .tab-item:hover {
-  color: #c0cfff;
+  color: #ffffff;
   background: rgba(0, 0, 0, 0.5); /* Darker hover for dark mode */
+}
+
+body.darkmode .tab-item.active {
+  background: #0B5091 !important; /* Theme-matching dark blue in dark mode */
+  color: #ffffff !important;
 }
 
 body.darkmode .empty-message {
