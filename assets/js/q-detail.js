@@ -400,7 +400,7 @@ function renderHistory(historyData) {
                             <button class="btn-edit-history thai" onclick="enterEditMode(${index})">Edit</button>
                         </div>
                         <div class="history-edit-actions hidden" id="historyEditActions${index}">
-                            <button class="btn-submit thai" onclick="saveHistoryEdit(${index}, '${sub._id}')">Save</button>
+                            <button class="btn-submit thai" onclick="saveHistoryEdit(${index}, '${sub._id}', this)">Save</button>
                             <button class="btn-cancel-history thai" onclick="cancelEditMode(${index})">Cancel</button>
                         </div>
                         ` : ''}
@@ -441,19 +441,54 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ─── Submit Quest Logic ───
-    const submitBtn = document.querySelector('.modal-submit-row .btn-submit');
-    if (submitBtn) {
-        submitBtn.addEventListener('click', async () => {
+    // ─── Submit Quest Logic with Bulletproof Event Delegation ───
+    if (!window.hasQuestSubmitListener) {
+        window.hasQuestSubmitListener = true;
+        document.addEventListener('click', async (e) => {
+            const submitBtn = e.target.closest('.modal-submit-row .btn-submit');
+            if (!submitBtn) return;
+
+            e.preventDefault();
+
+            // Check if it's already submitting or disabled
+            if (window.isQuestSubmitting || submitBtn.disabled || submitBtn.getAttribute('data-submitting') === 'true') {
+                return;
+            }
+
+            // Lock submitting state synchronously in the first execution tick
+            window.isQuestSubmitting = true;
+            submitBtn.disabled = true;
+            submitBtn.setAttribute('data-submitting', 'true');
+            submitBtn.style.pointerEvents = 'none';
+
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+
+            const modal = document.getElementById('questModal');
+            if (!modal) {
+                window.isQuestSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.removeAttribute('data-submitting');
+                submitBtn.style.pointerEvents = '';
+                submitBtn.textContent = originalText;
+                return;
+            }
+
             const menuId = modal.dataset.currentCard;
             const menuData = window.allRelatedMenus.find(m => m._id === menuId);
-            if (!menuData) return;
+            if (!menuData) {
+                window.isQuestSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.removeAttribute('data-submitting');
+                submitBtn.style.pointerEvents = '';
+                submitBtn.textContent = originalText;
+                return;
+            }
 
             // Collect data
             const preview = document.getElementById('uploadPreview');
             const imageURL = preview.src && !preview.classList.contains('hidden') ? preview.src : '';
             
-            // หาดาวที่ active โดยนับว่ามีกี่ดวงที่มีคลาส active (หรือเช็คสี)
-            // โค้ดเดิมเวลา click star จะใส่ class .active
             const activeStars = document.querySelectorAll('#tasteStars .taste-star.active');
             let tasteRating = 0;
             if (activeStars.length > 0) {
@@ -467,12 +502,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!imageURL || tasteRating === 0 || tasteTags.length === 0 || !review) {
                 alert('กรุณากรอกข้อมูลให้ครบถ้วนก่อนส่ง (รูปถ่าย, รสชาติ, รูปแบบรสชาติ, รีวิว)');
+                window.isQuestSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.removeAttribute('data-submitting');
+                submitBtn.style.pointerEvents = '';
+                submitBtn.textContent = originalText;
                 return;
             }
             
             if (submitBtn.dataset.isResubmit === 'true') {
                 const confirmResubmit = confirm('การส่งใหม่จะไม่ได้ EXP เพิ่มเติม จะถูกบันทึกเป็นประวัติเท่านั้น ยืนยันที่จะส่งหรือไม่?');
-                if (!confirmResubmit) return;
+                if (!confirmResubmit) {
+                    window.isQuestSubmitting = false;
+                    submitBtn.disabled = false;
+                    submitBtn.removeAttribute('data-submitting');
+                    submitBtn.style.pointerEvents = '';
+                    submitBtn.textContent = originalText;
+                    return;
+                }
             }
             
             const randomQuests = modal.querySelector('.modal-quest-desc').textContent;
@@ -526,10 +573,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('ส่ง Quest สำเร็จ! รอการตรวจสอบจากแอดมิน');
                 } else {
                     alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                 }
             } catch (error) {
                 console.error(error);
                 alert('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            } finally {
+                window.isQuestSubmitting = false;
+                submitBtn.removeAttribute('data-submitting');
+                submitBtn.style.pointerEvents = '';
             }
         });
     }
@@ -875,7 +930,14 @@ function cancelEditMode(idx) {
     document.getElementById(`historyPhotoActions${idx}`).classList.add('hidden');
 }
 
-async function saveHistoryEdit(idx, submissionId) {
+async function saveHistoryEdit(idx, submissionId, btn) {
+  if (btn) {
+      if (btn.getAttribute('data-saving') === 'true' || btn.disabled) return;
+      btn.setAttribute('data-saving', 'true');
+      btn.disabled = true;
+      btn.style.pointerEvents = 'none';
+  }
+
   const input = document.getElementById(`historyReviewInput${idx}`);
   const text = document.getElementById(`historyReviewText${idx}`);
   
@@ -892,6 +954,11 @@ async function saveHistoryEdit(idx, submissionId) {
 
   if (tasteRating === 0 || tasteTags.length === 0 || !review) {
       alert('กรุณากรอกข้อมูลดาว รสชาติ และรีวิวให้ครบถ้วน');
+      if (btn) {
+          btn.removeAttribute('data-saving');
+          btn.disabled = false;
+          btn.style.pointerEvents = '';
+      }
       return;
   }
 
@@ -912,6 +979,12 @@ async function saveHistoryEdit(idx, submissionId) {
   } catch (err) {
       console.error(err);
       alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+  } finally {
+      if (btn) {
+          btn.removeAttribute('data-saving');
+          btn.disabled = false;
+          btn.style.pointerEvents = '';
+      }
   }
 }
 

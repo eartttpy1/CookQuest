@@ -527,7 +527,7 @@ app.get('/api/requests', async (req, res) => {
     }
 
     const query = status === 'all' ? {} : { status };
-    const requests = await Request.find(query).sort({ createdAt: -1 });
+    const requests = await Request.find(query).sort({ _id: -1 });
     res.json(requests);
   } catch (error) {
     console.error('Error fetching requests:', error.message);
@@ -817,7 +817,7 @@ app.get('/api/history', async (req, res) => {
           select: 'menuName randomQuests status',
           match: matchQuery
       })
-      .sort({ submittedAt: -1 });
+      .sort({ _id: -1 });
       
     // Filter out submissions where requestId didn't match (if we filtered by menuName)
     const filteredHistory = menuName ? history.filter(sub => sub.requestId != null) : history;
@@ -873,7 +873,7 @@ app.get('/api/usermenus', async (req, res) => {
   try {
     const { userId } = req.query;
     const filter = userId ? { createdBy: userId } : {};
-    const menus = await UserMenu.find(filter).sort({ createdAt: -1 });
+    const menus = await UserMenu.find(filter).sort({ _id: -1 });
     res.json(menus);
   } catch (error) {
     console.error('Error fetching usermenus:', error.message);
