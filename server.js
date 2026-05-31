@@ -124,7 +124,10 @@ app.post('/api/register', async (req, res) => {
     const user = await User.create({
       username,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      level: 1,
+      rank: 'BRONZE Chef',
+      xp: 0
     });
     
     //OTP
@@ -373,14 +376,15 @@ app.post('/api/profile/add-xp', authMiddleware, async (req, res) => {
 
     // Re-calculate Level and Rank
     const levelSystem = {
-        1: { rank: 'IRON Chef', minXP: 0, maxXP: 500 },
-        2: { rank: 'BRONZE Chef', minXP: 501, maxXP: 1500 },
-        3: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
-        4: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
-        5: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: Infinity }
+        1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
+        2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+        3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+        4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
+        5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
+        6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
     };
 
-    for (let level = 5; level >= 1; level--) {
+    for (let level = 6; level >= 1; level--) {
         if (user.xp >= levelSystem[level].minXP) {
             user.level = level;
             user.rank = levelSystem[level].rank;
@@ -603,45 +607,8 @@ app.get('/api/requests', async (req, res) => {
       return res.status(400).json({ error: 'Invalid status filter' });
     }
 
-    const pipeline = [];
-    if (status !== 'all') {
-      pipeline.push({ $match: { status } });
-    }
-
-    pipeline.push(
-      { $sort: { createdAt: -1 } },
-      {
-        $project: {
-          menuName: 1,
-          createdBy: 1,
-          randomQuests: 1,
-          status: 1,
-          submittedAt: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          hasImage: {
-            $regexMatch: {
-              input: { $ifNull: ['$imageURL', ''] },
-              regex: /^data:/
-            }
-          },
-          imageURL: {
-            $cond: {
-              if: {
-                $regexMatch: {
-                  input: { $ifNull: ['$imageURL', ''] },
-                  regex: /^data:/
-                }
-              },
-              then: '',
-              else: { $ifNull: ['$imageURL', ''] }
-            }
-          }
-        }
-      }
-    );
-
-    const requests = await Request.aggregate(pipeline);
+    const query = status === 'all' ? {} : { status };
+    const requests = await Request.find(query).sort({ _id: -1 });
     res.json(requests);
   } catch (error) {
     console.error('Error fetching requests:', error.message);
@@ -715,16 +682,69 @@ app.put('/api/requests/:id/status', async (req, res) => {
         user.xp = (user.xp || 0) + xpReward;
         user.completedRecipes = (user.completedRecipes || 0) + 1;
 
+        // Check Quest completion and award Quest EXP
+        try {
+          const allQuests = await Quest.find();
+          const allMenus = await Menu.find();
+          const userSubmissions = await Submission.find({ createdBy: creatorId, status: 'approved' }).populate('requestId');
+          
+          const approvedMenuNames = new Set();
+          userSubmissions.forEach(sub => {
+            if (sub.requestId && sub.requestId.menuName) {
+              approvedMenuNames.add(sub.requestId.menuName.toLowerCase().trim());
+            }
+          });
+          if (request.menuName) {
+            approvedMenuNames.add(request.menuName.toLowerCase().trim());
+          }
+          
+          for (const quest of allQuests) {
+            const questIdStr = quest._id.toString();
+            if (user.completedQuests && user.completedQuests.includes(questIdStr)) {
+              continue;
+            }
+            
+            const relatedMenus = allMenus.filter(m => {
+              const hasQuestId = m.questIds && m.questIds.includes(questIdStr);
+              const hasTagMatch = quest.tags && quest.tags.some(tag => tag.toLowerCase() === (m.menuName || '').toLowerCase());
+              return hasQuestId || hasTagMatch;
+            });
+            
+            if (relatedMenus.length > 0) {
+              let questCompleted = true;
+              for (const m of relatedMenus) {
+                if (!approvedMenuNames.has((m.menuName || '').toLowerCase().trim())) {
+                  questCompleted = false;
+                  break;
+                }
+              }
+              
+              if (questCompleted) {
+                const questExp = quest.exp || 0;
+                user.xp = (user.xp || 0) + questExp;
+                if (!user.completedQuests) {
+                  user.completedQuests = [];
+                }
+                user.completedQuests.push(questIdStr);
+                console.log(`User ${user.username} completed quest: ${quest.name}. Awarded ${questExp} EXP.`);
+              }
+            }
+          }
+        } catch (qErr) {
+          console.error('Error checking quest completions:', qErr);
+        }
+
         // Re-calculate Level and Rank
         const levelSystem = {
-            1: { rank: 'IRON Chef', minXP: 0, maxXP: 500 },
-            2: { rank: 'BRONZE Chef', minXP: 501, maxXP: 1500 },
-            3: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
-            4: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
-            5: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: Infinity }
+            1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
+            2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+            3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+            4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
+            5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
+            6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
         };
 
-        for (let level = 5; level >= 1; level--) {
+        for (let level = 6; level >= 1; level--) {
             if (user.xp >= levelSystem[level].minXP) {
                 user.level = level;
                 user.rank = levelSystem[level].rank;
@@ -853,6 +873,19 @@ app.put('/api/submissions/:id', async (req, res) => {
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
     }
+
+    // Also update the corresponding Request in database
+    if (submission.requestId) {
+      const request = await Request.findByIdAndUpdate(
+        submission.requestId,
+        { imageURL, tasteRating, tasteTags, review },
+        { new: true }
+      );
+      
+      // Emit socket event so that admin page reloads immediately
+      io.emit('new_submission', { request, submission });
+    }
+
     res.json(submission);
   } catch (error) {
     console.error('Error updating submission:', error.message);
@@ -873,26 +906,16 @@ app.get('/api/history', async (req, res) => {
     if (menuName) {
       matchQuery.menuName = menuName;
     }
-
-    let historyQuery = Submission.find(query);
-
-    if (useSummary) {
-      historyQuery = historyQuery
-        .select('status requestId submittedAt')
-        .populate({
+    
+    const history = await Submission.find(query)
+      .populate({
           path: 'requestId',
-          select: 'menuName status',
+          select: 'menuName randomQuests status',
           match: matchQuery
-        });
-    } else {
-      historyQuery = historyQuery.populate({
-        path: 'requestId',
-        select: 'menuName randomQuests status',
-        match: matchQuery
-      });
-    }
-
-    const history = await historyQuery.sort({ submittedAt: -1 }).lean();
+      })
+      .sort({ _id: -1 });
+      
+    // Filter out submissions where requestId didn't match (if we filtered by menuName)
     const filteredHistory = menuName ? history.filter(sub => sub.requestId != null) : history;
 
     res.json(filteredHistory);
@@ -946,7 +969,7 @@ app.get('/api/usermenus', async (req, res) => {
   try {
     const { userId } = req.query;
     const filter = userId ? { createdBy: userId } : {};
-    const menus = await UserMenu.find(filter).sort({ createdAt: -1 });
+    const menus = await UserMenu.find(filter).sort({ _id: -1 });
     res.json(menus);
   } catch (error) {
     console.error('Error fetching usermenus:', error.message);

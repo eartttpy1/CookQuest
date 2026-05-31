@@ -355,6 +355,15 @@ function createAndAddMenuTag(tagName) {
 }
 
 async function saveQuest() {
+    const saveBtn = document.querySelector('.btn-save');
+    if (window.isQuestSaving || (saveBtn && (saveBtn.disabled || saveBtn.getAttribute('data-saving') === 'true'))) return;
+    window.isQuestSaving = true;
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.setAttribute('data-saving', 'true');
+        saveBtn.style.pointerEvents = 'none';
+    }
+
     const name = document.getElementById('questName').value;
     const level = document.getElementById('questLevel').value;
     const exp = parseInt(document.getElementById('questExp').value);
@@ -362,6 +371,12 @@ async function saveQuest() {
 
     if (!name || !exp) {
         alert('Please fill in all required fields');
+        window.isQuestSaving = false;
+        if (saveBtn) {
+            saveBtn.removeAttribute('data-saving');
+            saveBtn.disabled = false;
+            saveBtn.style.pointerEvents = '';
+        }
         return;
     }
 
@@ -396,6 +411,13 @@ async function saveQuest() {
     } catch (error) {
         console.error('Error saving quest:', error);
         alert('Error saving quest');
+    } finally {
+        window.isQuestSaving = false;
+        if (saveBtn) {
+            saveBtn.removeAttribute('data-saving');
+            saveBtn.disabled = false;
+            saveBtn.style.pointerEvents = '';
+        }
     }
 }
 

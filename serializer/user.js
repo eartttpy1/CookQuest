@@ -57,6 +57,10 @@ const userSchema = new mongoose.Schema({
         name: String,
         icon: String,
         earnedAt: { type: Date, default: Date.now }
+    }],
+
+    completedQuests: [{
+        type: String
     }]
 }, {
   timestamps: true

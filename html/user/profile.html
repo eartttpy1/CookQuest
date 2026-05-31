@@ -18,17 +18,82 @@
     <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="../../style.css">
-    <link rel="stylesheet" href="../../assets/css/profile-view.css">
-    <link rel="stylesheet" href="../../assets/css/profile.css">
+    <link rel="stylesheet" href="../../style.css?v=5">
+    <link rel="stylesheet" href="../../assets/css/profile-view.css?v=5">
+    <link rel="stylesheet" href="../../assets/css/profile.css?v=5">
+    <link rel="stylesheet" href="../../quest-style.css">
+    <link rel="stylesheet" href="../../assets/css/quest.css">
 
     <!-- JS -->
+    <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
     <script src="../../assets/js/profile.js" defer></script>
+    <script src="../../assets/js/q-detail.js" defer></script>
 
+    <style>
+        /* Dark Mode fixes for Profile Page Elements */
+        body.darkmode .profile-container,
+        body.darkmode .tabs {
+            color: #e0e0e0;
+        }
+        body.darkmode .card {
+            background: linear-gradient(145deg, #0b074d, #0d0944) !important;
+            border: 1px solid #1a1668 !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        body.darkmode .card p,
+        body.darkmode .card span {
+            color: #bbb;
+        }
+        body.darkmode .card h1,
+        body.darkmode .card h3,
+        body.darkmode .badges h3 {
+            color: #ffffff;
+        }
+        body.darkmode #profile-username {
+            color: #000000 !important;
+        }
+        body.darkmode .tooltip-content {
+            background: linear-gradient(145deg, #0b074d, #0d0944) !important;
+            color: #e0e0e0;
+            border: 1px solid #1a1668;
+        }
+        body.darkmode .rank-item {
+            border-bottom: 1px solid #444;
+        }
+        body.darkmode .tab-item {
+            color: #888;
+        }
+        body.darkmode .recipe-card {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #eee;
+        }
+        body.darkmode .unlocked-badge {
+            background: linear-gradient(135deg, #0b074d, #0d0944) !important;
+            color: white !important;
+        }
+        body.darkmode .empty-message { color: #bbb; }
+        
+        /* Skeleton Loader Dark Mode Support */
+        .skeleton-card { border: 1px solid #eee; overflow: hidden; height: 260px; }
+        .skeleton-bg { background: #eee; }
+        .skeleton-bg-main { background: #e0e0e0; }
+        body.darkmode .skeleton-card { border-color: #444; background: #2a2a2a; }
+        body.darkmode .skeleton-bg { background: rgba(255, 255, 255, 0.1); }
+        body.darkmode .skeleton-bg-main { background: #333; }
+
+        /* Tooltip Rank Colors */
+        #rank-bronze { background-color: #ffa954; color: black; border-color: #ffa954; }
+        #rank-silver { background-color: #c0c0c0; color: black; border-color: #c0c0c0; }
+        #rank-gold { background-color: #FFD700; color: black; border-color: #FFD700; }
+        #rank-platinum { background-color: #ff25ff; color: white; border-color: #ff25ff; }
+        #rank-diamond { background-color: #34d0ff; color: black; border-color: #34d0ff; }
+        #rank-master { background-color: #0B5091; color: white; border-color: #0B5091; }
+    </style>
 
 </head>
 
@@ -122,6 +187,17 @@
                     <li class="dropdown-item theme-item-container">
                         <i class="fa-solid fa-circle-half-stroke"></i>
                         <span>Theme</span>
+                        <div class="theme-selector-wrapper">
+                            <button class="theme-select-trigger" id="theme-select-trigger">
+                                <span id="current-theme-text">Light</span>
+                                <i class="fa-solid fa-caret-down"></i>
+                            </button>
+
+                            <div class="theme-options hidden" id="theme-options">
+                                <div class="theme-option" data-value="light">Light</div>
+                                <div class="theme-option" data-value="dark">Dark</div>
+                            </div>
+                        </div>
                     </li>
 
                     <li class="dropdown-item logout-item" id="logout-btn">
@@ -172,10 +248,10 @@
             <!-- RANK -->
             <h3 id="profile-rank">Loading...</h3>
 
-            <!-- XP -->
+            <!-- EXP -->
             <span id="profile-xp">...</span>
 
-            <!-- XP PROGRESS BAR -->
+            <!-- EXP PROGRESS BAR -->
             <div class="xp-bar">
                 <div class="xp-bar-fill"></div>
             </div>
@@ -185,23 +261,31 @@
                 <div class="tooltip-content">
                     <div class="tooltip-section">
                         <h4>Rank Progression</h4>
-                        <p>Here is how your XP unlocks each rank.</p>
+                        <p>Here is how your EXP unlocks each rank.</p>
                         <div class="rank-progression">
                             <div class="rank-item">
-                                <span class="rank-badge" id="rank-iron">IRON</span>
-                                <span class="rank-xp">0-500 XP</span>
-                            </div>
-                            <div class="rank-item">
                                 <span class="rank-badge" id="rank-bronze">BRONZE</span>
-                                <span class="rank-xp">501-1500 XP</span>
+                                <span class="rank-xp">0-1500 EXP</span>
                             </div>
                             <div class="rank-item">
                                 <span class="rank-badge" id="rank-silver">SILVER</span>
-                                <span class="rank-xp">1501-3000 XP</span>
+                                <span class="rank-xp">1501-3000 EXP</span>
                             </div>
                             <div class="rank-item">
                                 <span class="rank-badge" id="rank-gold">GOLD</span>
-                                <span class="rank-xp">3001+ XP</span>
+                                <span class="rank-xp">3001-5000 EXP</span>
+                            </div>
+                            <div class="rank-item">
+                                <span class="rank-badge" id="rank-platinum">PLATINUM</span>
+                                <span class="rank-xp">5001-8000 EXP</span>
+                            </div>
+                            <div class="rank-item">
+                                <span class="rank-badge" id="rank-diamond">DIAMOND</span>
+                                <span class="rank-xp">8001-12000 EXP</span>
+                            </div>
+                            <div class="rank-item">
+                                <span class="rank-badge" id="rank-master">MASTER</span>
+                                <span class="rank-xp">12001+ EXP</span>
                             </div>
                         </div>
                     </div>
@@ -271,15 +355,152 @@
 
 <!-- RECIPES CONTAINER -->
 <div class="tab-content active" id="recipes-tab">
-    <div class="recipes-list" id="recipes-container">
+    <div class="recipes-list quest-section" id="recipes-container">
         <!-- Recipe cards will be populated here -->
     </div>
 </div>
 
 <!-- FAVORITES CONTAINER -->
 <div class="tab-content" id="favorites-tab">
-    <div class="favorites-list" id="favorites-container">
+    <div class="favorites-list quest-section" id="favorites-container">
         <!-- Favorite recipe cards will be populated here -->
+    </div>
+</div>
+
+<!-- Modal Overlay -->
+<div id="questModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <button class="close-modal" id="closeModal">&times;</button>
+
+        <!-- Header: ชื่อ + ดาว -->
+        <div class="modal-header">
+            <h2 class="thaipattaya modal-title">สเต็กหมู</h2>
+            <i class="fa-regular fa-star modal-star"></i>
+        </div>
+
+        <!-- รูปหลัก -->
+        <img src="../../assets/img/steak1.png" alt="steak" class="modal-main-img">
+
+        <!-- Tags -->
+        <div class="modal-tags">
+            <span class="modal-tag">เมนูหมู</span>
+            <span class="modal-tag">เมนูเนื้อวัว</span>
+            <span class="modal-tag">เมนูอาหารจานเดียว</span>
+            <span class="modal-tag modal-tag-more">...</span>
+        </div>
+
+        <!-- Info -->
+        <p class="modal-info thai">จำนวน : 1 จาน</p>
+        <p class="modal-info thai">เวลาเตรียม: 30 นาที | เวลาปรุง: 15 นาที</p>
+
+        <!-- Dropdown: วัตถุดิบ -->
+        <details class="modal-dropdown">
+            <summary class="thai">
+                <span>วัตถุดิบและส่วนผสม</span>
+                <i class="fa-solid fa-chevron-down modal-chevron"></i>
+            </summary>
+            <div class="ingredient-list">
+                <div class="ing-item"><span class="thai">สันคอหมู หรือ เนื้อ</span><span>1 ชิ้น</span></div>
+                <div class="ing-item"><span class="thai">โรสแมรี่สด</span><span>1 ก้าน</span></div>
+                <div class="ing-item"><span class="thai">ใบไทม์อบแห้ง</span><span>1 หยิบมือ</span></div>
+                <div class="ing-item"><span class="thai">เกลือ</span><span class="thai">เล็กน้อย</span></div>
+                <div class="ing-item"><span class="thai">เนยสด</span><span>1 ช้อนโต๊ะ</span></div>
+                <div class="ing-item"><span class="thai">น้ำมันมะกอก (สำหรับหมัก)</span><span>1/2 ช้อนชา</span></div>
+                <div class="ing-item"><span class="thai">น้ำมันมะกอก</span><span>1 ช้อนโต๊ะ</span></div>
+                <div class="ing-item"><span class="thai">พริกไทย</span><span class="thai">เล็กน้อย</span></div>
+            </div>
+        </details>
+
+        <!-- Dropdown: ขั้นตอน -->
+        <details class="modal-dropdown">
+            <summary class="thai">
+                <span>ขั้นตอนการทำ</span>
+                <i class="fa-solid fa-chevron-down modal-chevron"></i>
+            </summary>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num-badge">1</div>
+                    <div class="step-body">
+                        <p class="thai">หมักหมูหรือเนื้อด้วยใบไทม์, พริกไทย, น้ำมันมะกอก</p>
+                        <p class="thai">ใส่น้ำมันมะกอกในกระทะ รอให้น้ำมันร้อนแล้วนำหมูลงเชียในกระทะ</p>
+                        <p class="step-tip thai"><strong>Tip:</strong> ก่อนนำหมูลงกระทะให้โรยเกลือ, พริกไทยเล็กน้อย</p>
+                        <img src="../../assets/img/s1.jpg" alt="step 1" class="step-img">
+                    </div>
+                </div>
+            </div>
+        </details>
+
+
+        <!-- Quest Zone -->
+        <div class="modal-quest-zone">
+            <h3 class="thaipattaya modal-quest-title">Quest</h3>
+            <p class="modal-quest-desc thai">ถ่ายรูป 2 นิ้วกับอาหารของคุณ</p>
+
+            <!-- Upload -->
+            <div class="upload-box" id="uploadBox" onclick="document.getElementById('questFileInput').click()">
+                <i class="fa-regular fa-image upload-icon" id="uploadIcon"></i>
+                <span class="thai" id="uploadLabel">เพิ่มไฟล์รูปภาพ</span>
+                <img id="uploadPreview" class="upload-preview hidden" alt="preview">
+                <input type="file" id="questFileInput" accept="image/*" style="display:none;" onchange="previewUpload(event)">
+            </div>
+            <div class="upload-actions hidden" id="uploadActions">
+                <label class="btn-change-img thai" for="questFileInput">
+                    <i class="fa-solid fa-pen"></i> เปลี่ยนรูป
+                </label>
+                <button class="btn-delete-img thai" onclick="removeUpload()">
+                    <i class="fa-solid fa-trash"></i> ลบรูป
+                </button>
+            </div>
+
+            <!-- Taste Rating -->
+            <div class="taste-rating">
+                <span class="taste-label">Taste :</span>
+                <div class="taste-stars" id="tasteStars">
+                    <i class="fa-regular fa-star taste-star" data-val="1"></i>
+                    <i class="fa-regular fa-star taste-star" data-val="2"></i>
+                    <i class="fa-regular fa-star taste-star" data-val="3"></i>
+                    <i class="fa-regular fa-star taste-star" data-val="4"></i>
+                    <i class="fa-regular fa-star taste-star" data-val="5"></i>
+                </div>
+            </div>
+
+            <!-- Taste Tags -->
+            <div class="taste-tags" id="tasteTags">
+                <button class="taste-tag thai" data-taste="หวาน">หวาน</button>
+                <button class="taste-tag thai" data-taste="เค็ม">เค็ม</button>
+                <button class="taste-tag thai" data-taste="เปรี้ยว">เปรี้ยว</button>
+                <button class="taste-tag thai" data-taste="ขม">ขม</button>
+                <button class="taste-tag thai" data-taste="อูมามิ">อูมามิ</button>
+                <button class="taste-tag thai" data-taste="เผ็ด">เผ็ด</button>
+            </div>
+
+            <!-- Review Input -->
+            <textarea class="modal-review thai" placeholder="รสชาติอาหารของคุณเป็นอย่างไรบ้าง" rows="2" id="reviewText"></textarea>
+
+            <!-- Bottom Buttons + EXP -->
+            <div class="modal-submit-row">
+                <button class="btn-history thai">ประวัติการทำ</button>
+                <button class="btn-submit thai">Submit</button>
+            </div>
+            <div class="modal-xp-bar">
+                <i class="fa-solid fa-star xp-star"></i>
+                <span>200 EXP</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── History Modal ─── -->
+<div class="modal-overlay hidden" id="historyModal">
+    <div class="modal-content history-modal-content">
+        <!-- Header -->
+        <div class="history-header">
+            <span class="thaipattaya history-title">ประวัติการทำ</span>
+            <button class="close-modal" id="closeHistoryModal">✕</button>
+        </div>
+        <div class="history-body">
+            <!-- Accordion items loaded dynamically -->
+        </div>
     </div>
 </div>
 

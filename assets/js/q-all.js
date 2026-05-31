@@ -141,9 +141,11 @@ async function loadQuests() {
     }
 
     let userId = 'user123';
+    let token = null;
     try {
         const data = JSON.parse(localStorage.getItem('user_data'));
         if (data?.user?.id) userId = data.user.id;
+        token = localStorage.getItem('authToken');
     } catch (e) {}
     const cacheKey = `cookquest_cache_v2_${userId}`;
     const cachedData = sessionStorage.getItem(cacheKey);
@@ -154,9 +156,13 @@ async function loadQuests() {
             window.allQuestsData = data.quests;
             window.allMenusData = data.menus;
             window.currentMenuStatusMap = data.menuStatusMap;
+            window.currentUserProfile = data.profile;
             
-            if (typeof favState !== 'undefined') Object.assign(favState, data.favState);
-            if (typeof allRelatedMenus !== 'undefined') allRelatedMenus = data.menus;
+            if (typeof favState !== 'undefined') {
+                for (let key in favState) delete favState[key];
+                Object.assign(favState, data.favState);
+            }
+            if (typeof window.allRelatedMenus !== 'undefined') window.allRelatedMenus = data.menus;
             
             // Check current active tab to render correctly from cache
             const activeNav = document.querySelector('.top-nav .nav-link.active');
@@ -171,40 +177,58 @@ async function loadQuests() {
         showSkeletonLoaders();
     }
 
-    const worker = new Worker('../../assets/js/worker.js');
-    worker.postMessage({ userId });
+    let worker;
+    let workerPort;
+    if (typeof SharedWorker !== 'undefined') {
+        worker = new SharedWorker('../../assets/js/worker.js');
+        workerPort = worker.port;
+        workerPort.start();
+    } else {
+        worker = new Worker('../../assets/js/worker.js');
+        workerPort = worker;
+    }
 
-    worker.onmessage = function(e) {
+    workerPort.postMessage({ userId, token });
+
+    workerPort.onmessage = function(e) {
         const data = e.data;
         if (!data.success) {
             console.error('Worker error:', data.error);
             return;
         }
 
-        const { quests, menus, favState: newFavState, menuStatusMap } = data;
+        const { quests, menus, favState: newFavState, menuStatusMap, profile } = data;
         
         window.allQuestsData = quests;
         window.allMenusData = menus;
         window.currentMenuStatusMap = menuStatusMap;
+        window.currentUserProfile = profile;
 
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-            quests, menus, favState: newFavState, menuStatusMap
-        }));
+        try {
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                quests, menus, favState: newFavState, menuStatusMap, profile
+            }));
+        } catch (e) {
+            console.warn('Could not cache data in sessionStorage. Quota might be exceeded:', e);
+        }
 
         // Update global variables
         if (typeof favState !== 'undefined') {
+            for (let key in favState) delete favState[key];
             Object.assign(favState, newFavState);
         }
-        if (typeof allRelatedMenus !== 'undefined') {
-            allRelatedMenus = menus;
+        if (typeof window.allRelatedMenus !== 'undefined') {
+            window.allRelatedMenus = menus;
         }
 
         applyFilters();
     };
 
-    worker.onerror = function(error) {
-        console.error('Worker failed:', error);
-    };
+    if (typeof SharedWorker === 'undefined') {
+        worker.onerror = function(error) {
+            console.error('Worker failed:', error);
+        };
+    }
 }
 
 function renderQuests(quests) {
@@ -222,32 +246,39 @@ function renderQuests(quests) {
         card.setAttribute('data-exp', quest.exp || 0);
         card.setAttribute('data-id', quest._id);
         
-        // Handle lock state based on user's rank if needed, here we just show all
-        const isLocked = false; 
+        const { imageUrls, highestRank } = quest.processedData || { 
+            imageUrls: ['../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg'], 
+            highestRank: 'bronze' 
+        };
+
+        const rankOrder = {
+            'bronze': 1, 'silver': 2, 'gold': 3,
+            'platinum': 4, 'diamond': 5, 'master': 6
+        };
+        
+        let userRankStr = 'bronze';
+        if (window.currentUserProfile && window.currentUserProfile.rank) {
+            const cleanRank = window.currentUserProfile.rank.toLowerCase();
+            if (cleanRank.includes('bronze')) userRankStr = 'bronze';
+            else if (cleanRank.includes('silver')) userRankStr = 'silver';
+            else if (cleanRank.includes('gold')) userRankStr = 'gold';
+            else if (cleanRank.includes('platinum')) userRankStr = 'platinum';
+            else if (cleanRank.includes('diamond')) userRankStr = 'diamond';
+            else if (cleanRank.includes('master')) userRankStr = 'master';
+        }
+        
+        const requiredVal = rankOrder[highestRank.toLowerCase()] || 1;
+        const userVal = rankOrder[userRankStr] || 1;
+        const isLocked = userVal < requiredVal;
         
         if (isLocked) {
             card.classList.add('locked');
             card.removeAttribute('href');
         }
-
-        // Use pre-calculated data from the worker
-        const defaultImageUrls = [
-            { menuId: '', url: '../../assets/img/emptymenu.jpg' },
-            { menuId: '', url: '../../assets/img/emptymenu.jpg' },
-            { menuId: '', url: '../../assets/img/emptymenu.jpg' },
-            { menuId: '', url: '../../assets/img/emptymenu.jpg' }
-        ];
-        const { imageUrls, highestRank } = quest.processedData || {
-            imageUrls: defaultImageUrls,
-            highestRank: 'bronze'
-        };
-
-        const gridImages = imageUrls.map((entry) => {
-            const imageEntry = typeof entry === 'string' ? { menuId: '', url: entry } : entry;
-            const src = imageEntry.url || '../../assets/img/emptymenu.jpg';
-            const lazyAttr = imageEntry.menuId ? ` data-lazy-menu-id="${imageEntry.menuId}"` : '';
-            return `<img src="${src}" alt="food"${lazyAttr}>`;
-        }).join('');
+        
+        if (quest.processedData?.isQuestComplete) {
+            card.classList.add('quest-complete');
+        }
 
         // We use placeholders since there's no multiple image field in DB right now
         card.innerHTML = `
@@ -287,25 +318,41 @@ document.addEventListener('DOMContentLoaded', () => {
 function getRankColor(rank) {
   switch (rank.toLowerCase()) {
     case 'bronze': return '#ffa954ff'; // ทองแดง
-    case 'silver': return '#c0c0c0ff'; // เงิน
+    case 'silver': return '#e3e3e3ff'; // เงิน
     case 'gold': return '#FFD700'; // ทอง
     case 'platinum': return '#ff25ffff'; // แพลตินัม
     case 'diamond': return '#34d0ffff'; // เพชร
-    case 'master': return '#0B5091'; // ปรมาจารย์
+    case 'master': return 'rainbow'; // ปรมาจารย์ (สีรุ้ง)
     default: return '#fff';
   }
 }
 function applyRankColors() {
   const textEls = document.querySelectorAll('.rank-text'); // หรือ class ที่คุณใช้
   textEls.forEach(el => {
-    const rank = el.textContent.trim();
-    const color = getRankColor(rank);
-    el.style.color = color;
+    const rank = el.textContent.trim().toLowerCase();
     
-    // Apply color to the lock icon as well
+    // Reset previous inline styles or rainbow class
+    el.style.color = '';
+    el.classList.remove('rank-rainbow');
+    
     const lockOverlay = el.closest('.lock-overlay');
+    let lockIcon = null;
     if (lockOverlay) {
-        const lockIcon = lockOverlay.querySelector('.fa-lock');
+        lockIcon = lockOverlay.querySelector('.fa-lock');
+        if (lockIcon) {
+            lockIcon.style.color = '';
+            lockIcon.classList.remove('rank-rainbow');
+        }
+    }
+
+    const color = getRankColor(rank);
+    if (color === 'rainbow') {
+        el.classList.add('rank-rainbow');
+        if (lockIcon) {
+            lockIcon.classList.add('rank-rainbow');
+        }
+    } else {
+        el.style.color = color;
         if (lockIcon) {
             lockIcon.style.color = color;
         }

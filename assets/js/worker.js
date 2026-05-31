@@ -1,13 +1,42 @@
-self.onmessage = async function(e) {
-    const { userId } = e.data;
+if ('onconnect' in self) {
+    self.onconnect = function(e) {
+        const port = e.ports[0];
+        port.onmessage = async function(event) {
+            await handleWorkerMessage(event.data, port);
+        };
+    };
+} else {
+    self.onmessage = async function(event) {
+        await handleWorkerMessage(event.data, self);
+    };
+}
+
+async function handleWorkerMessage(data, target) {
+    const { userId, token } = data;
 
     try {
-        const [questsResponse, menusResponse, favResponse, historyResponse] = await Promise.all([
-            fetch('/api/quests'),
-            fetch('/api/menus'),
-            fetch(`/api/favorites?userId=${userId}`),
-            fetch(`/api/history?userId=${userId}&summary=true`)
-        ]);
+        const fetchPromises = [
+            fetch('http://localhost:4000/api/quests'),
+            fetch('http://localhost:4000/api/menus'),
+            fetch(`http://localhost:4000/api/favorites?userId=${userId}`),
+            fetch(`http://localhost:4000/api/history?userId=${userId}&summary=true`)
+        ];
+
+        if (token) {
+            fetchPromises.push(
+                fetch('http://localhost:4000/api/profile', {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+            );
+        }
+
+        const responses = await Promise.all(fetchPromises);
+        
+        const questsResponse = responses[0];
+        const menusResponse = responses[1];
+        const favResponse = responses[2];
+        const historyResponse = responses[3];
+        const profileResponse = responses[4];
 
         if (!questsResponse.ok) throw new Error('Failed to load quests');
         if (!menusResponse.ok) throw new Error('Failed to load menus');
@@ -19,30 +48,50 @@ self.onmessage = async function(e) {
         if (favResponse && favResponse.ok) {
             const favorites = await favResponse.json();
             favorites.forEach(fav => {
-                if (fav.menuId) favState[fav.menuId] = true;
+                const menuIdStr = (fav.menuId && typeof fav.menuId === 'object' && fav.menuId._id)
+                    ? fav.menuId._id.toString()
+                    : (fav.menuId ? fav.menuId.toString() : '');
+                if (menuIdStr) favState[menuIdStr] = true;
             });
         }
 
         let menuStatusMap = {};
+        let history = [];
         if (historyResponse && historyResponse.ok) {
-            const history = await historyResponse.json();
+            history = await historyResponse.json();
+            
+            // Group statuses by menuName
+            const menuStatuses = {};
             history.forEach(sub => {
                 const req = sub.requestId;
                 if (req && req.menuName) {
                     const mName = req.menuName;
-                    const newStatus = sub.status;
-                    const currentStatus = menuStatusMap[mName];
-                    if (!currentStatus) {
-                        menuStatusMap[mName] = newStatus;
-                    } else if (currentStatus !== 'approved') {
-                        if (newStatus === 'approved') {
-                            menuStatusMap[mName] = 'approved';
-                        } else if (newStatus === 'pending' && currentStatus === 'rejected') {
-                            menuStatusMap[mName] = 'pending';
-                        }
+                    if (!menuStatuses[mName]) {
+                        menuStatuses[mName] = new Set();
                     }
+                    menuStatuses[mName].add(sub.status);
                 }
             });
+            
+            // Resolve final status for each menu
+            for (const mName in menuStatuses) {
+                const statuses = menuStatuses[mName];
+                if (statuses.has('pending')) {
+                    // Pending takes highest priority because it means a new submission is waiting review
+                    menuStatusMap[mName] = 'pending';
+                } else if (statuses.has('approved')) {
+                    // If no pending, but has approved, it's approved (even if there is rejected)
+                    menuStatusMap[mName] = 'approved';
+                } else if (statuses.has('rejected')) {
+                    // Only rejected exists
+                    menuStatusMap[mName] = 'rejected';
+                }
+            }
+        }
+
+        let profile = null;
+        if (profileResponse && profileResponse.ok) {
+            profile = await profileResponse.json();
         }
 
         // Optimization: Create a fast lookup for menus by questId and tag
@@ -63,6 +112,10 @@ self.onmessage = async function(e) {
         });
 
         // Pre-calculate related menus for each quest to save UI thread time
+        const rankOrder = {
+            'bronze': 1, 'silver': 2, 'gold': 3,
+            'platinum': 4, 'diamond': 5, 'master': 6
+        };
         const processedQuests = quests.map(quest => {
             const relatedSet = new Set();
             
@@ -84,15 +137,19 @@ self.onmessage = async function(e) {
             const relatedMenus = Array.from(relatedSet);
             
             // Find highest rank
-            const rankOrder = {
-                'bronze': 1, 'silver': 2, 'gold': 3,
-                'platinum': 4, 'diamond': 5, 'master': 6
-            };
             let highestRank = 'bronze';
             let highestRankValue = 0;
             
             relatedMenus.forEach(menu => {
-                const r = (menu.rank || 'bronze').toLowerCase();
+                const menuExp = menu.EXP || 0;
+                let r = 'bronze';
+                if (menuExp >= 100 && menuExp <= 150) r = 'bronze';
+                else if (menuExp >= 151 && menuExp <= 200) r = 'silver';
+                else if (menuExp >= 201 && menuExp <= 250) r = 'gold';
+                else if (menuExp >= 251 && menuExp <= 300) r = 'platinum';
+                else if (menuExp >= 301 && menuExp <= 500) r = 'diamond';
+                else if (menuExp >= 501) r = 'master';
+
                 if (rankOrder[r] && rankOrder[r] > highestRankValue) {
                     highestRankValue = rankOrder[r];
                     highestRank = r;
@@ -117,26 +174,37 @@ self.onmessage = async function(e) {
                 });
             }
 
+            // Check if all related menus are approved by the user
+            let isQuestComplete = relatedMenus.length > 0;
+            relatedMenus.forEach(menu => {
+                if (menuStatusMap[menu.menuName] !== 'approved') {
+                    isQuestComplete = false;
+                }
+            });
+
             return {
                 ...quest,
                 processedData: {
                     imageUrls,
-                    highestRank
+                    highestRank,
+                    isQuestComplete
                 }
             };
         });
 
-        self.postMessage({
+        target.postMessage({
             success: true,
             quests: processedQuests,
             menus,
             favState,
-            menuStatusMap
+            menuStatusMap,
+            history,
+            profile
         });
     } catch (error) {
-        self.postMessage({
+        target.postMessage({
             success: false,
             error: error.message
         });
     }
-};
+}

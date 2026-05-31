@@ -340,7 +340,7 @@
 
 /* เควสที่ล็อคไว้ */
 .quest-card.locked {
-    background-color: var(--dark-grey);
+    background-color: var(--red-main);
     position: relative;
     cursor: default;
 }
@@ -1150,4 +1150,8 @@
     border-radius: 8px;
     width: 40%;
     align-self: flex-end;
+}
+
+.quest-card.quest-complete {
+    border: 4px solid #2ecc71 !important;
 }

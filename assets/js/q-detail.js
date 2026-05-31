@@ -6,10 +6,10 @@ function syncCardStar(idx) {
     cardStars.forEach(cardStar => {
         if (favState[idx]) {
             cardStar.classList.replace('fa-regular', 'fa-solid');
-            cardStar.style.color = '#ffffff';
+            cardStar.style.color = 'white';
         } else {
             cardStar.classList.replace('fa-solid', 'fa-regular');
-            cardStar.style.color = '';
+            cardStar.style.color = 'white';
         }
     });
 }
@@ -20,10 +20,10 @@ function syncModalStar() {
     const idx = document.getElementById('questModal').dataset.currentCard;
     if (favState[idx]) {
         modalStar.classList.replace('fa-regular', 'fa-solid');
-        modalStar.style.color = '#ffffff';
+        modalStar.style.color = 'white';
     } else {
         modalStar.classList.replace('fa-solid', 'fa-regular');
-        modalStar.style.color = '';
+        modalStar.style.color = 'white';
     }
 }
 
@@ -37,15 +37,26 @@ const CURRENT_USER_ID = (() => {
 })();
 
 // Initialize socket.io connection
-const socket = typeof io !== 'undefined' ? io() : null;
+const socket = typeof io !== 'undefined' ? io('http://localhost:4000') : null;
 
 if (socket) {
     socket.on('status_updated', async (data) => {
+        // Clear session storage cache to prevent loading stale cache
+        let userId = 'user123';
+        try {
+            const userData = JSON.parse(localStorage.getItem('user_data'));
+            if (userData?.user?.id) userId = userData.user.id;
+        } catch (e) {}
+        sessionStorage.removeItem(`cookquest_cache_v2_${userId}`);
+        sessionStorage.removeItem(`cookquest_cache_${userId}`);
+
         // Re-load the main quest details
         const urlParams = new URLSearchParams(window.location.search);
         const questId = urlParams.get('id');
         if (questId) {
             await loadQuestDetails(questId);
+        } else if (typeof loadQuests === 'function') {
+            await loadQuests();
         }
 
         // If the modal is currently open for a menu, re-populate it
@@ -73,8 +84,12 @@ document.addEventListener('click', async function (e) {
     if (!card) return;
     const idx = card.dataset.id;
     
+    // Prevent double clicking
+    if (e.target.classList.contains('is-loading')) return;
+    e.target.classList.add('is-loading');
+    
     try {
-        const res = await fetch('/api/favorites/toggle', {
+        const res = await fetch('http://localhost:4000/api/favorites/toggle', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: CURRENT_USER_ID, menuId: idx })
@@ -90,17 +105,22 @@ document.addEventListener('click', async function (e) {
         }
     } catch (err) {
         console.error('Error toggling favorite:', err);
+    } finally {
+        e.target.classList.remove('is-loading');
     }
 });
 
 // Modal star toggle
-document.querySelector('.modal-star').addEventListener('click', async function () {
+document.querySelector('.modal-star').addEventListener('click', async function (e) {
     const modal = document.getElementById('questModal');
     const idx = modal.dataset.currentCard;
     if (idx === undefined) return;
     
+    if (e.target.classList.contains('is-loading')) return;
+    e.target.classList.add('is-loading');
+    
     try {
-        const res = await fetch('/api/favorites/toggle', {
+        const res = await fetch('http://localhost:4000/api/favorites/toggle', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: CURRENT_USER_ID, menuId: idx })
@@ -112,15 +132,17 @@ document.querySelector('.modal-star').addEventListener('click', async function (
         }
     } catch (err) {
         console.error('Error toggling favorite:', err);
+    } finally {
+        e.target.classList.remove('is-loading');
     }
 });
 
-let allRelatedMenus = []; // เก็บข้อมูลเมนูไว้ใช้ใน Modal
+window.allRelatedMenus = window.allRelatedMenus || []; // เก็บข้อมูลเมนูไว้ใช้ใน Modal
 
 // pop-up Menu (Event Delegation for dynamically created cards)
 document.addEventListener('click', async (e) => {
     const card = e.target.closest('.menu-card:not(.locked)');
-    if (card && card.closest('#menuList')) {
+    if (card && (card.closest('#menuList') || card.closest('#recipes-container') || card.closest('#favorites-container'))) {
         // ป้องกันการเปิด modal ถ้ากดโดนดาว Favorite
         if (e.target.classList.contains('fa-star')) return;
         
@@ -133,7 +155,7 @@ document.addEventListener('click', async (e) => {
         modal.classList.remove('hidden');
         syncModalStar();
 
-        let menuData = allRelatedMenus.find(m => String(m._id) === String(menuId));
+        let menuData = window.allRelatedMenus.find(m => String(m._id) === String(menuId));
         if (menuData) {
             populateModal(menuData, modal);
         }
@@ -142,9 +164,9 @@ document.addEventListener('click', async (e) => {
             const res = await fetch(`/api/menus/${menuId}`);
             if (res.ok) {
                 menuData = await res.json();
-                const cacheIdx = allRelatedMenus.findIndex(m => String(m._id) === String(menuId));
+                const cacheIdx = window.allRelatedMenus.findIndex(m => String(m._id) === String(menuId));
                 if (cacheIdx >= 0) {
-                    allRelatedMenus[cacheIdx] = menuData;
+                    window.allRelatedMenus[cacheIdx] = menuData;
                 }
                 populateModal(menuData, modal);
             }
@@ -292,7 +314,7 @@ async function _populateModalAsync(menu, modal) {
     // Fetch history and update button state
     const submitBtn = modal.querySelector('.modal-submit-row .btn-submit');
     try {
-        const res = await fetch(`/api/history?menuName=${encodeURIComponent(menu.menuName)}&userId=${CURRENT_USER_ID}`);
+        const res = await fetch(`http://localhost:4000/api/history?menuName=${encodeURIComponent(menu.menuName)}&userId=${CURRENT_USER_ID}`);
         if (res.ok) {
             const historyData = await res.json();
             
@@ -400,7 +422,7 @@ function renderHistory(historyData) {
                             <button class="btn-edit-history thai" onclick="enterEditMode(${index})">Edit</button>
                         </div>
                         <div class="history-edit-actions hidden" id="historyEditActions${index}">
-                            <button class="btn-submit thai" onclick="saveHistoryEdit(${index}, '${sub._id}')">Save</button>
+                            <button class="btn-submit thai" onclick="saveHistoryEdit(${index}, '${sub._id}', this)">Save</button>
                             <button class="btn-cancel-history thai" onclick="cancelEditMode(${index})">Cancel</button>
                         </div>
                         ` : ''}
@@ -441,19 +463,54 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ─── Submit Quest Logic ───
-    const submitBtn = document.querySelector('.modal-submit-row .btn-submit');
-    if (submitBtn) {
-        submitBtn.addEventListener('click', async () => {
+    // ─── Submit Quest Logic with Bulletproof Event Delegation ───
+    if (!window.hasQuestSubmitListener) {
+        window.hasQuestSubmitListener = true;
+        document.addEventListener('click', async (e) => {
+            const submitBtn = e.target.closest('.modal-submit-row .btn-submit');
+            if (!submitBtn) return;
+
+            e.preventDefault();
+
+            // Check if it's already submitting or disabled
+            if (window.isQuestSubmitting || submitBtn.disabled || submitBtn.getAttribute('data-submitting') === 'true') {
+                return;
+            }
+
+            // Lock submitting state synchronously in the first execution tick
+            window.isQuestSubmitting = true;
+            submitBtn.disabled = true;
+            submitBtn.setAttribute('data-submitting', 'true');
+            submitBtn.style.pointerEvents = 'none';
+
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+
+            const modal = document.getElementById('questModal');
+            if (!modal) {
+                window.isQuestSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.removeAttribute('data-submitting');
+                submitBtn.style.pointerEvents = '';
+                submitBtn.textContent = originalText;
+                return;
+            }
+
             const menuId = modal.dataset.currentCard;
-            const menuData = allRelatedMenus.find(m => m._id === menuId);
-            if (!menuData) return;
+            const menuData = window.allRelatedMenus.find(m => m._id === menuId);
+            if (!menuData) {
+                window.isQuestSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.removeAttribute('data-submitting');
+                submitBtn.style.pointerEvents = '';
+                submitBtn.textContent = originalText;
+                return;
+            }
 
             // Collect data
             const preview = document.getElementById('uploadPreview');
             const imageURL = preview.src && !preview.classList.contains('hidden') ? preview.src : '';
             
-            // หาดาวที่ active โดยนับว่ามีกี่ดวงที่มีคลาส active (หรือเช็คสี)
-            // โค้ดเดิมเวลา click star จะใส่ class .active
             const activeStars = document.querySelectorAll('#tasteStars .taste-star.active');
             let tasteRating = 0;
             if (activeStars.length > 0) {
@@ -467,19 +524,31 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!imageURL || tasteRating === 0 || tasteTags.length === 0 || !review) {
                 alert('กรุณากรอกข้อมูลให้ครบถ้วนก่อนส่ง (รูปถ่าย, รสชาติ, รูปแบบรสชาติ, รีวิว)');
+                window.isQuestSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.removeAttribute('data-submitting');
+                submitBtn.style.pointerEvents = '';
+                submitBtn.textContent = originalText;
                 return;
             }
             
             if (submitBtn.dataset.isResubmit === 'true') {
                 const confirmResubmit = confirm('การส่งใหม่จะไม่ได้ EXP เพิ่มเติม จะถูกบันทึกเป็นประวัติเท่านั้น ยืนยันที่จะส่งหรือไม่?');
-                if (!confirmResubmit) return;
+                if (!confirmResubmit) {
+                    window.isQuestSubmitting = false;
+                    submitBtn.disabled = false;
+                    submitBtn.removeAttribute('data-submitting');
+                    submitBtn.style.pointerEvents = '';
+                    submitBtn.textContent = originalText;
+                    return;
+                }
             }
             
             const randomQuests = modal.querySelector('.modal-quest-desc').textContent;
             const menuName = menuData.menuName;
 
             try {
-                const res = await fetch('/api/submissions', {
+                const res = await fetch('http://localhost:4000/api/submissions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ menuName, randomQuests, imageURL, tasteRating, tasteTags, review, createdBy: CURRENT_USER_ID })
@@ -505,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Update history UI dynamically
                     try {
-                        const historyRes = await fetch(`/api/history?menuName=${encodeURIComponent(menuName)}&userId=${CURRENT_USER_ID}`);
+                        const historyRes = await fetch(`http://localhost:4000/api/history?menuName=${encodeURIComponent(menuName)}&userId=${CURRENT_USER_ID}`);
                         if (historyRes.ok) {
                             const historyData = await historyRes.json();
                             if (typeof renderHistory === 'function') {
@@ -526,10 +595,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('ส่ง Quest สำเร็จ! รอการตรวจสอบจากแอดมิน');
                 } else {
                     alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                 }
             } catch (error) {
                 console.error(error);
                 alert('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            } finally {
+                window.isQuestSubmitting = false;
+                submitBtn.removeAttribute('data-submitting');
+                submitBtn.style.pointerEvents = '';
             }
         });
     }
@@ -558,8 +635,11 @@ function showSkeletonLoadersInDetail() {
 async function loadQuestDetails(questId) {
     const cacheKey = `cookquest_cache_v2_${CURRENT_USER_ID}`;
     const cachedData = sessionStorage.getItem(cacheKey);
+    const token = localStorage.getItem('authToken');
 
-    const renderFromData = (quests, menus, fState, mStatusMap) => {
+    const renderFromData = (quests, menus, fState, mStatusMap, profile) => {
+        window.currentUserProfile = profile;
+        for (let key in favState) delete favState[key];
         Object.assign(favState, fState);
         const currentQuest = quests.find(q => q._id === questId);
         if (!currentQuest) return;
@@ -578,14 +658,14 @@ async function loadQuestDetails(questId) {
             return hasQuestId || hasTagMatch;
         });
 
-        allRelatedMenus = relatedMenus; // เก็บไว้ใช้ใน Modal
+        window.allRelatedMenus = relatedMenus; // เก็บไว้ใช้ใน Modal
         renderMenus(relatedMenus, mStatusMap);
     };
 
     if (cachedData) {
         try {
             const data = JSON.parse(cachedData);
-            renderFromData(data.quests, data.menus, data.favState, data.menuStatusMap);
+            renderFromData(data.quests, data.menus, data.favState, data.menuStatusMap, data.profile);
         } catch (e) {
             console.error('Cache parsing failed', e);
             showSkeletonLoadersInDetail();
@@ -599,27 +679,43 @@ async function loadQuestDetails(questId) {
         return;
     }
 
-    const worker = new Worker('../../assets/js/worker.js');
-    worker.postMessage({ userId: CURRENT_USER_ID });
+    let worker;
+    let workerPort;
+    if (typeof SharedWorker !== 'undefined') {
+        worker = new SharedWorker('../../assets/js/worker.js');
+        workerPort = worker.port;
+        workerPort.start();
+    } else {
+        worker = new Worker('../../assets/js/worker.js');
+        workerPort = worker;
+    }
 
-    worker.onmessage = function(e) {
+    workerPort.postMessage({ userId: CURRENT_USER_ID, token });
+
+    workerPort.onmessage = function(e) {
         const data = e.data;
         if (!data.success) {
             console.error('Worker error:', data.error);
             return;
         }
 
-        const { quests, menus, favState: newFavState, menuStatusMap } = data;
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-            quests, menus, favState: newFavState, menuStatusMap
-        }));
+        const { quests, menus, favState: newFavState, menuStatusMap, profile } = data;
+        try {
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                quests, menus, favState: newFavState, menuStatusMap, profile
+            }));
+        } catch (e) {
+            console.warn('Could not cache data in sessionStorage. Quota might be exceeded:', e);
+        }
         
-        renderFromData(quests, menus, newFavState, menuStatusMap);
+        renderFromData(quests, menus, newFavState, menuStatusMap, profile);
     };
 
-    worker.onerror = function(error) {
-        console.error('Worker failed:', error);
-    };
+    if (typeof SharedWorker === 'undefined') {
+        worker.onerror = function(error) {
+            console.error('Worker failed:', error);
+        };
+    }
 }
 
 function renderMenus(menus, menuStatusMap = {}) {
@@ -640,7 +736,35 @@ function renderMenus(menus, menuStatusMap = {}) {
             card.classList.add(`status-${mStatus}`);
         }
 
-        const isLocked = false; // สามารถปรับเงื่อนไขการล็อคได้ที่นี่
+        const menuExp = menu.EXP || 0;
+        let requiredRank = 'bronze';
+        if (menuExp >= 100 && menuExp <= 150) requiredRank = 'bronze';
+        else if (menuExp >= 151 && menuExp <= 200) requiredRank = 'silver';
+        else if (menuExp >= 201 && menuExp <= 250) requiredRank = 'gold';
+        else if (menuExp >= 251 && menuExp <= 300) requiredRank = 'platinum';
+        else if (menuExp >= 301 && menuExp <= 500) requiredRank = 'diamond';
+        else if (menuExp >= 501) requiredRank = 'master';
+
+        const rankOrder = {
+            'bronze': 1, 'silver': 2, 'gold': 3,
+            'platinum': 4, 'diamond': 5, 'master': 6
+        };
+        
+        let userRankStr = 'bronze';
+        if (window.currentUserProfile && window.currentUserProfile.rank) {
+            const cleanRank = window.currentUserProfile.rank.toLowerCase();
+            if (cleanRank.includes('bronze')) userRankStr = 'bronze';
+            else if (cleanRank.includes('silver')) userRankStr = 'silver';
+            else if (cleanRank.includes('gold')) userRankStr = 'gold';
+            else if (cleanRank.includes('platinum')) userRankStr = 'platinum';
+            else if (cleanRank.includes('diamond')) userRankStr = 'diamond';
+            else if (cleanRank.includes('master')) userRankStr = 'master';
+        }
+        
+        const requiredVal = rankOrder[requiredRank] || 1;
+        const userVal = rankOrder[userRankStr] || 1;
+        const isLocked = userVal < requiredVal;
+
         if (isLocked) {
             card.classList.add('locked');
         }
@@ -658,7 +782,7 @@ function renderMenus(menus, menuStatusMap = {}) {
         card.innerHTML = `
             <span class="quest-title-wrapper">
                 <h2 class="quest-title thaipattaya">${menu.menuName}</h2>
-                <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star" ${isFavorited ? 'style="color: #ffffff;"' : ''}></i>
+                <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star" style="cursor:pointer; color: white;"></i>
             </span>
             <figure class="quest-image">
                 <img src="${imageUrl}" alt="${menu.menuName}"${lazyImageAttr}>
@@ -832,7 +956,14 @@ function cancelEditMode(idx) {
     document.getElementById(`historyPhotoActions${idx}`).classList.add('hidden');
 }
 
-async function saveHistoryEdit(idx, submissionId) {
+async function saveHistoryEdit(idx, submissionId, btn) {
+  if (btn) {
+      if (btn.getAttribute('data-saving') === 'true' || btn.disabled) return;
+      btn.setAttribute('data-saving', 'true');
+      btn.disabled = true;
+      btn.style.pointerEvents = 'none';
+  }
+
   const input = document.getElementById(`historyReviewInput${idx}`);
   const text = document.getElementById(`historyReviewText${idx}`);
   
@@ -849,11 +980,16 @@ async function saveHistoryEdit(idx, submissionId) {
 
   if (tasteRating === 0 || tasteTags.length === 0 || !review) {
       alert('กรุณากรอกข้อมูลดาว รสชาติ และรีวิวให้ครบถ้วน');
+      if (btn) {
+          btn.removeAttribute('data-saving');
+          btn.disabled = false;
+          btn.style.pointerEvents = '';
+      }
       return;
   }
 
   try {
-      const res = await fetch(`/api/submissions/${submissionId}`, {
+      const res = await fetch(`http://localhost:4000/api/submissions/${submissionId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ review, tasteRating, tasteTags, imageURL })
@@ -869,6 +1005,12 @@ async function saveHistoryEdit(idx, submissionId) {
   } catch (err) {
       console.error(err);
       alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+  } finally {
+      if (btn) {
+          btn.removeAttribute('data-saving');
+          btn.disabled = false;
+          btn.style.pointerEvents = '';
+      }
   }
 }
 
@@ -916,11 +1058,11 @@ function removeUpload() {
 function getRankColor(rank) {
   switch (rank.toLowerCase()) {
     case 'bronze': return '#ffa954ff'; // ทองแดง
-    case 'silver': return '#c0c0c0ff'; // เงิน
+    case 'silver': return '#e3e3e3ff'; // เงิน
     case 'gold': return '#FFD700'; // ทอง
     case 'platinum': return '#ff25ffff'; // แพลตินัม
     case 'diamond': return '#34d0ffff'; // เพชร
-    case 'master': return '#0B5091'; // ปรมาจารย์
+    case 'master': return 'rainbow'; // ปรมาจารย์ (สีรุ้ง)
     default: return '#fff';
   }
 }
@@ -928,14 +1070,30 @@ function getRankColor(rank) {
 function applyRankColors() {
   const textEls = document.querySelectorAll('.rank-text'); // หรือ class ที่คุณใช้
   textEls.forEach(el => {
-    const rank = el.textContent.trim();
-    const color = getRankColor(rank);
-    el.style.color = color;
+    const rank = el.textContent.trim().toLowerCase();
     
-    // Apply color to the lock icon as well
+    // Reset previous inline styles or rainbow class
+    el.style.color = '';
+    el.classList.remove('rank-rainbow');
+    
     const lockOverlay = el.closest('.lock-overlay');
+    let lockIcon = null;
     if (lockOverlay) {
-        const lockIcon = lockOverlay.querySelector('.fa-lock');
+        lockIcon = lockOverlay.querySelector('.fa-lock');
+        if (lockIcon) {
+            lockIcon.style.color = '';
+            lockIcon.classList.remove('rank-rainbow');
+        }
+    }
+
+    const color = getRankColor(rank);
+    if (color === 'rainbow') {
+        el.classList.add('rank-rainbow');
+        if (lockIcon) {
+            lockIcon.classList.add('rank-rainbow');
+        }
+    } else {
+        el.style.color = color;
         if (lockIcon) {
             lockIcon.style.color = color;
         }

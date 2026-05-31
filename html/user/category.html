@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- ============== Page Title ============== -->
-    <title>All Quest</title>
+    <title>Category - CookQuest</title>
 
     <!-- ============== Font&Icon ============== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,10 +25,9 @@
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
-    <script src="../../assets/js/menu-images.js" defer></script>
-    <script src="../../assets/js/q-all.js" defer></script>
     <script src="../../assets/js/q-detail.js" defer></script>
     <script src="../../assets/js/sort.js" defer></script>
+    <script src="../../assets/js/category-init.js" defer></script>
 
 </head>
 <body>
@@ -116,125 +115,18 @@
         </div>
 
         <nav class="top-nav">
-            <a href="#" data-filter="all" class="nav-link active"><span class="thai">ทั้งหมด</span></a>
-            <a href="#" data-filter="pending" class="nav-link"><span class="thai">รอดำเนินการ</span></a>
-            <a href="#" data-filter="complete" class="nav-link"><span class="thai">เสร็จสิ้น</span></a>
+            <a href="q-all.html" class="nav-link active"><span class="thai">ทั้งหมด</span></a>
+            <a href="q-pending.html" class="nav-link"><span class="thai">รอดำเนินการ</span></a>
+            <a href="q-complete.html" class="nav-link"><span class="thai">เสร็จสิ้น</span></a>
             <a href="q-self.html" class="nav-link"><span class="thai">บันทึกสูตร</span></a>
         </nav>
 
-        <main class="content-container">
-            <div id="questSectionWrapper">
-                <section class ="category-container">
-                        <span class="category-header">Category</span>
-            </section>
-
-            <section class="category-grid">
-                <details class="dropdown">
-                    <summary class="thai"><span>วัตถุดิบ</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list" name="category">
-                        <li><a href="category.html?type=egg">เมนูไข่</a></li>
-                        <li><a href="category.html?type=chicken">เมนูไก่</a></li>
-                        <li><a href="category.html?type=pork">เมนูหมู</a></li>
-                        <li><a href="category.html?type=duck">เมนูเป็ด</a></li>
-                        <li><a href="category.html?type=beef">เมนูเนื้อวัว</a></li>
-                        <li><a href="category.html?type=sausage">เมนูไส้กรอก</a></li>
-                        <li><a href="category.html?type=bacon">เมนูเบคอน</a></li>
-                        <li><a href="category.html?type=seafood">เมนูอาหารทะเล</a></li>
-                        <li><a href="category.html?type=noodle-material">เมนูเส้น</a></li>
-                        <li><a href="category.html?type=mushroom">เมนูเห็ด</a></li>
-                        <li><a href="category.html?type=tofu">เมนูเต้าหู้</a></li>
-                        <li><a href="category.html?type=rice">เมนูข้าว</a></li>
-                        <li><a href="category.html?type=vegetable">เมนูผัก</a></li>
-                        <li><a href="category.html?type=fruit">เมนูผลไม้</a></li>
-                    </ul>
-                </details>
-
-                <details class="dropdown">
-                    <summary class="thai"><span>ประเภทอาหาร</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list" name="category">
-                        <li><a href="category.html?type=breakfast">เมนูอาหารเช้า</a></li>
-                        <li><a href="category.html?type=single-dish">เมนูอาหารจานเดียว</a></li>
-                        <li><a href="category.html?type=appetizer">เมนูกับแกล้ม/อาหารว่าง</a></li>
-                        <li><a href="category.html?type=vegetarian">เมนูมังสวิรัติ</a></li>
-                        <li><a href="category.html?type=thai">เมนูอาหารไทย</a></li>
-                        <li><a href="category.html?type=north-thai">เมนูอาหารเหนือ</a></li>
-                        <li><a href="category.html?type=isaan">เมนูอาหารอีสาน</a></li>
-                        <li><a href="category.html?type=south-thai">เมนูอาหารใต้</a></li>
-                        <li><a href="category.html?type=japanese">เมนูอาหารญี่ปุ่น</a></li>
-                        <li><a href="category.html?type=chinese">เมนูอาหารจีน</a></li>
-                        <li><a href="category.html?type=korean">เมนูอาหารเกาหลี</a></li>
-                        <li><a href="category.html?type=western">เมนูอาหารฝรั่ง</a></li>
-                        <li><a href="category.html?type=italian">เมนูอาหารอิตาเลียน</a></li>
-                        <li><a href="category.html?type=steak">เมนูสเต๊ก</a></li>
-                        <li><a href="category.html?type=curry">เมนูแกง</a></li>
-                        <li><a href="category.html?type=dipping-sauce">สูตรน้ำจิ้ม</a></li>
-                        <li><a href="category.html?type=fusion">เมนูอาหารฟิวชัน</a></li>
-                        <li><a href="category.html?type=soup">เมนูซุป</a></li>
-                        <li><a href="category.html?type=international">อาหารนานาชาติ</a></li>
-                        <li><a href="category.html?type=sandwich">เมนูแซนด์วิช</a></li>
-                        <li><a href="category.html?type=dinner">เมนูอาหารเย็น</a></li>
-                        <li><a href="category.html?type=chili-paste">เมนูน้ำพริก</a></li>
-                        <li><a href="category.html?type=side-dish">เมนูกับข้าว</a></li>
-                        <li><a href="category.html?type=noodle">เมนูก๋วยเตี๋ยว</a></li>
-                    </ul>
-                </details>
-                <details class="dropdown">
-                    <summary class="thai"><span>วิธีการ</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list" name="category">
-                        <li><a href="category.html?type=microwave">เมนูไมโครเวฟ</a></li>
-                        <li><a href="category.html?type=boil">เมนูต้ม</a></li>
-                        <li><a href="category.html?type=stir-fry">เมนูผัด</a></li>
-                        <li><a href="category.html?type=fry">เมนูทอด</a></li>
-                        <li><a href="category.html?type=bake">เมนูอบ</a></li>
-                        <li><a href="category.html?type=steam">เมนูนึ่ง</a></li>
-                        <li><a href="category.html?type=spicy-salad">เมนูยำ</a></li>
-                        <li><a href="category.html?type=grill">เมนูย่าง</a></li>
-                        <li><a href="category.html?type=air-fryer">เมนูหม้ออบลมร้อน</a></li>
-                        <li><a href="category.html?type=rice-cooker">เมนูหม้อหุงข้าว</a></li>
-                    </ul>
-                </details>
-
-                <details class="dropdown">
-                    <summary class="thai"><span>ของหวาน/เบเกอรี่</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list" name="category">
-                        <li><a href="category.html?type=ice-cream">เมนูไอศกรีม</a></li>
-                        <li><a href="category.html?type=thai-dessert">เมนูขนมไทย</a></li>
-                        <li><a href="category.html?type=bakery">เมนูเบเกอรี</a></li>
-                        <li><a href="category.html?type=cake">เมนูเค้ก</a></li>
-                        <li><a href="category.html?type=dessert">เมนูของหวาน</a></li>
-                        <li><a href="category.html?type=chocolate">เมนูช็อคโกแลต</a></li>
-                    </ul>
-                </details>
-                <details class="dropdown">
-                    <summary class="thai"><span>เมนูพิเศษ</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list" name="category">
-                        <li><a href="category.html?type=quick-meal">เมนูทำง่ายไม่เกิน 15 นาที</a></li>
-                        <li><a href="category.html?type=budget">เมนูประหยัด</a></li>
-                        <li><a href="category.html?type=dorm-life">เมนูเด็กหอ</a></li>
-                        <li><a href="category.html?type=business">เมนูสร้างอาชีพ</a></li>
-                        <li><a href="category.html?type=lunch-box">เมนูข้าวกล่อง</a></li>
-                        <li><a href="category.html?type=valentine">เมนูวาเลนไทน์</a></li>
-                        <li><a href="category.html?type=halloween">เมนูฮาโลวีน</a></li>
-                        <li><a href="category.html?type=christmas">เมนูคริสต์มาส</a></li>
-                    </ul>
-                </details>
-
-                <details class="dropdown">
-                    <summary class="thai"><span>อาหารเพื่อสุขภาพ</span><i class="fa-solid fa-caret-down"></i></summary>
-                    <ul class="dropdown-list" name="category" >
-                        <li><a href="category.html?type=salad-dressing">สูตรน้ำสลัด</a></li>
-                        <li><a href="category.html?type=clean-food">เมนูอาหารคลีน</a></li>
-                        <li><a href="category.html?type=salad">เมนูสลัด</a></li>
-                        <li><a href="category.html?type=weight-loss">เมนูอาหารลดน้ำหนัก</a></li>
-                        <li><a href="category.html?type=low-calorie">เมนูอาหารแคลอรี่ต่ำ</a></li>
-                        <li><a href="category.html?type=low-fat">เมนูอาหารไขมันต่ำ</a></li>
-                        <li><a href="category.html?type=high-fiber">เมนูอาหารไฟเบอร์สูง</a></li>
-                    </ul>
-                </details>
-            </section>
-
+        <main class="content-container" id="detail-main">
             <section class ="category-container">
-                    <span class="category-header">Quest</span>
+                <div>
+                    <span class="category-header">C</span>
+                    <span class ="category-title thai">Loading...</span>
+                </div>
                 <div class="sort-container">
                     <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
                     <div class="sort-dropdown hidden" id="sortDropdown">
@@ -274,52 +166,17 @@
                     </div>
                 </div>
             </section>
-            <section id="questList" class="quest-section"></section>
-            </div>
-            <section class ="category-container">
-                    <span class="category-header">Menu</span>
-                <div class="sort-container">
-                    <button class="sort-btn" id="menu-sortBtn"><i class="fa-solid fa-list"></i></button>
-                    <div class="sort-dropdown hidden" id="menu-sortDropdown">
-                        
-                        <!-- Sort Name -->
-                        <div class="sort-row">
-                            <span class="sort-label">Name</span>
-                            <div class="custom-select-wrapper">
-                                <button class="custom-select-trigger" id="menu-nameTrigger">
-                                    <span id="menu-name-text">เลือก</span>
-                                    <i class="fa-solid fa-caret-down"></i>
-                                </button>
-                                <div class="custom-options hidden" id="menu-nameOptions">
-                                    <div class="custom-option" data-value="none">เลือก</div>
-                                    <div class="custom-option" data-value="asc">ก → ฮ</div>
-                                    <div class="custom-option" data-value="desc">ฮ → ก</div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Sort Exp -->
-                        <div class="sort-row">
-                            <span class="sort-label">Exp</span>
-                            <div class="custom-select-wrapper">
-                                <button class="custom-select-trigger" id="menu-expTrigger">
-                                    <span id="menu-exp-text">เลือก</span>
-                                    <i class="fa-solid fa-caret-down"></i>
-                                </button>
-                                <div class="custom-options hidden" id="menu-expOptions">
-                                    <div class="custom-option" data-value="none">เลือก</div>
-                                    <div class="custom-option" data-value="low">น้อย → มาก</div>
-                                    <div class="custom-option" data-value="high">มาก → น้อย</div>
-                                </div>
-                            </div>
-                        </div>
 
-                    </div>
+            <!-- Question detail content here -->
+            <section id="menuList" class="quest-section">
+                <div class="skeleton-card">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-image"></div>
+                    <div class="skeleton-footer"></div>
                 </div>
             </section>
-            <section id="menuList" class="quest-section"></section>
-
-            <!-- Modal Overlay -->
+             <!-- Modal Overlay -->
             <div id="questModal" class="modal-overlay hidden">
                 <div class="modal-content">
                     <button class="close-modal" id="closeModal">&times;</button>
@@ -489,83 +346,13 @@
                     </div>
 
                     <!-- Accordion: Quest 1 (collapsed by default) -->
-                    <details class="history-item" id="historyItem1">
-                    <summary class="history-summary">
-                        <div class="history-summary-left">
-                        <span class="inria-serif history-quest-name">Quest 1</span>
-                        <span class="history-badge pending">Pending ...</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-down history-chevron"></i>
-                    </summary>
-
-                    <!-- Expanded content -->
                     <div class="history-body">
-                        <p class="thai history-desc">ถ่ายรูป 2 นิ้วกับอาหารของคุณ</p>
-
-                        <!-- History photo: เปลี่ยนได้ตอน edit, ลบไม่ได้ -->
-                        <div class="history-photo-wrap">
-                            <img src="../../assets/img/test.jpg" 
-                                alt="submitted" class="history-photo" id="historyPhoto1">
-                        </div>
-
-                        <!-- ปุ่มเปลี่ยนรูป (ซ่อนตอน view mode) -->
-                        <div class="history-photo-actions hidden" id="historyPhotoActions1">
-                            <label class="btn-change-img thai" for="historyFileInput1">
-                                <i class="fa-solid fa-pen"></i> เปลี่ยนรูป
-                            </label>
-                            <input type="file" id="historyFileInput1" accept="image/*" 
-                                style="display:none"
-                                onchange="changeHistoryPhoto(event, 1)">
-                        </div>
-
-                        <!-- Taste Rating (read-only / editable) -->
-                        <div class="taste-rating">
-                        <span class="taste-label">Taste :</span>
-                        <div class="taste-stars" id="historyTasteStars1">
-                            <i class="fa-solid fa-star taste-star active" data-val="1" style="color:#FFD700; pointer-events:none"></i>
-                            <i class="fa-solid fa-star taste-star active" data-val="2" style="color:#FFD700; pointer-events:none"></i>
-                            <i class="fa-solid fa-star taste-star active" data-val="3" style="color:#FFD700; pointer-events:none"></i>
-                            <i class="fa-regular fa-star taste-star" data-val="4" style="pointer-events:none"></i>
-                            <i class="fa-regular fa-star taste-star" data-val="5" style="pointer-events:none"></i>
-                        </div>
-                        </div>
-
-                        <!-- Taste Tags (read-only / editable) -->
-                        <div class="taste-tags" id="historyTasteTags1">
-                        <button class="taste-tag thai disabled" data-taste="หวาน">หวาน</button>
-                        <button class="taste-tag thai selected disabled" data-taste="เค็ม">เค็ม</button>
-                        <button class="taste-tag thai disabled" data-taste="เปรี้ยว">เปรี้ยว</button>
-                        <button class="taste-tag thai disabled" data-taste="ขม">ขม</button>
-                        <button class="taste-tag thai selected disabled" data-taste="อูมามิ">อูมามิ</button>
-                        <button class="taste-tag thai disabled" data-taste="เผ็ด">เผ็ด</button>
-                        </div>
-
-                        <!-- Review text (read-only mode) -->
-                        <div class="history-review-wrap" id="historyReviewWrap1">
-                        <p class="history-review-text thai" id="historyReviewText1">อร่อยกลมกล่อม หวานนิดนึงจะดีมาก</p>
-                        <textarea class="modal-review thai hidden" id="historyReviewInput1" rows="2">อร่อยกลมกล่อม หวานนิดนึงจะดีมาก</textarea>
-                        </div>
-
-                        <!-- Buttons -->
-                        <div class="history-btn-row" id="historyBtnRow1">
-                        <!-- View mode: Edit button -->
-                        <div class="history-view-actions" id="historyViewActions1">
-                            <button class="btn-edit-history thai" onclick="enterEditMode(1)">Edit</button>
-                        </div>
-                        <!-- Edit mode: Save + Cancel -->
-                        <div class="history-edit-actions hidden" id="historyEditActions1">
-                            <button class="btn-submit thai" onclick="saveHistoryEdit(1, null, this)">Save</button>
-                            <button class="btn-cancel-history thai" onclick="cancelEditMode(1)">Cancel</button>
-                        </div>
-                        </div>
+                        <!-- History elements loaded dynamically -->
                     </div>
-                    </details>
                 </div>
             </div>
         </main>
     </div>
-  
-    <!-- ==============All Quest page content ============== -->
 
 </body>
 </html>
