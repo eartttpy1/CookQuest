@@ -770,7 +770,7 @@ function renderMenus(menus, menuStatusMap = {}) {
         }
 
         const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
-        const lazyImageAttr = menu.hasImage ? ` data-lazy-menu-id="${menu._id}"` : '';
+        const lazyImageAttr = menu._id ? ` data-lazy-menu-id="${menu._id}"` : '';
         const rankValue = (menu.rank || 'bronze').toLowerCase();
         const rankDisplay = rankValue.toUpperCase();
         const prepTimeStr = menu.prepTime || '0';

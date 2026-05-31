@@ -280,6 +280,11 @@ function renderQuests(quests) {
             card.classList.add('quest-complete');
         }
 
+        const gridImages = (imageUrls || []).map(imgData => {
+            const lazyAttr = imgData.menuId ? ` data-lazy-menu-id="${imgData.menuId}"` : '';
+            return `<img src="${imgData.url}" alt="Quest image"${lazyAttr}>`;
+        }).join('');
+
         // We use placeholders since there's no multiple image field in DB right now
         card.innerHTML = `
             <h2 class="quest-title thaipattaya">${quest.name}</h2>

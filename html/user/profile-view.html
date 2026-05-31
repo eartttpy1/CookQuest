@@ -18,10 +18,32 @@
     <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
     
     <!-- ============== Start  Stylesheet ============== -->
-    <link rel="stylesheet" href="../../style.css?v=5">
-    <link rel="stylesheet" href="../../assets/css/profile.css?v=5"> <!-- Re-use profile container styles -->
-    <link rel="stylesheet" href="../../assets/css/profile-view.css?v=5">
+    <link rel="stylesheet" href="../../style.css?v=7">
+    <link rel="stylesheet" href="../../assets/css/profile.css?v=7"> <!-- Re-use profile container styles -->
+    <link rel="stylesheet" href="../../assets/css/profile-view.css?v=7">
+    <style>
+        /* Nuclear Specificity: Force Navbar colors to remain correct in dark mode */
+        body.darkmode .NL {
+            border-bottom: 3px solid #ffffff !important;
+        }
+        body.darkmode .NL, body.darkmode .NL a, 
+        body.darkmode .NL i, body.darkmode .NL span, 
+        body.darkmode .NL div, body.darkmode .NL li {
+            color: #ffffff !important;
+        }
+    </style>
     <!-- ============== Start  Script ============== -->
+    <script>
+        // Force unregister all Service Workers and clear caches to bypass old cached files
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let r of registrations) r.unregister();
+            });
+        }
+        if (window.caches) {
+            caches.keys().then(keys => { for (let key of keys) caches.delete(key); });
+        }
+    </script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

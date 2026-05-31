@@ -166,13 +166,13 @@
             border: 1px solid #eaeaea;
         }
         body.darkmode .level-box {
-        background: linear-gradient(145deg, #0b074d, #0d0944);
+        background: #3d4459;
         border-color: transparent;
         box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
 
         body.darkmode .level-title {
-        background: linear-gradient(145deg, #080446, #110b6e);
+        background: #364e99;
         color: white;
         }
         .level-info {
