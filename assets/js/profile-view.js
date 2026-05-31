@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const maxDisplay = currentLevelData.maxXP === Infinity ? 'MAX' : currentLevelData.maxXP;
 
           document.getElementById('view-level-title').textContent = `Level ${lvl} ${currentLevelData.rank}`;
-          document.getElementById('view-xp-text').textContent = `${xp}/${maxDisplay} XP`;
+          document.getElementById('view-xp-text').textContent = `${xp}/${maxDisplay} EXP`;
           document.querySelector('.xp-fill').style.width = `${xpPercentage}%`;
 
           // 1. Filter only 'approved' dishes and sort them by date (oldest to newest)

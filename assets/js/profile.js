@@ -302,6 +302,7 @@ async function loadCompletedRecipes() {
         recipesContainer.innerHTML = uniqueHistory
             .map(recipe => createRecipeCard(recipe))
             .join('');
+        applyRankColors();
     } catch (err) {
         console.error('Error fetching recipes:', err);
         recipesContainer.innerHTML = '<p class="empty-message thai">เกิดข้อผิดพลาดในการโหลดข้อมูลประวัติการทำอาหาร</p>';
@@ -325,6 +326,7 @@ function loadFavoriteRecipes() {
     favoritesContainer.innerHTML = favorites
         .map(menu => createRecipeCard(menu, true))
         .join('');
+    applyRankColors();
 }
 
 // Global event delegation for favorite icons in profile
@@ -531,6 +533,52 @@ function loadUserBadges() {
     });
 }
 
+function getRankColor(rank) {
+  switch (rank.toLowerCase()) {
+    case 'bronze': return '#ffa954ff'; // ทองแดง
+    case 'silver': return '#e3e3e3ff'; // เงิน
+    case 'gold': return '#FFD700'; // ทอง
+    case 'platinum': return '#ff25ffff'; // แพลตินัม
+    case 'diamond': return '#34d0ffff'; // เพชร
+    case 'master': return 'rainbow'; // ปรมาจารย์ (สีรุ้ง)
+    default: return '#fff';
+  }
+}
+
+function applyRankColors() {
+  const textEls = document.querySelectorAll('.rank-text'); // หรือ class ที่คุณใช้
+  textEls.forEach(el => {
+    const rank = el.textContent.trim().toLowerCase();
+    
+    // Reset previous inline styles or rainbow class
+    el.style.color = '';
+    el.classList.remove('rank-rainbow');
+    
+    const lockOverlay = el.closest('.lock-overlay');
+    let lockIcon = null;
+    if (lockOverlay) {
+        lockIcon = lockOverlay.querySelector('.fa-lock');
+        if (lockIcon) {
+            lockIcon.style.color = '';
+            lockIcon.classList.remove('rank-rainbow');
+        }
+    }
+
+    const color = getRankColor(rank);
+    if (color === 'rainbow') {
+        el.classList.add('rank-rainbow');
+        if (lockIcon) {
+            lockIcon.classList.add('rank-rainbow');
+        }
+    } else {
+        el.style.color = color;
+        if (lockIcon) {
+            lockIcon.style.color = color;
+        }
+    }
+  });
+}
+
 function showProfileSkeleton() {
     const recipesContainer = document.getElementById('recipes-container');
     if (recipesContainer) {
@@ -555,7 +603,7 @@ function updateXPDisplay() {
     const xpElement = document.getElementById('profile-xp');
     if (xpElement) {
         const maxDisplay = levelData.maxXP === Infinity ? 'MAX' : levelData.maxXP;
-        xpElement.textContent = `${levelData.totalXP}/${maxDisplay} XP`;
+        xpElement.textContent = `${levelData.totalXP}/${maxDisplay} EXP`;
     }
     
     // Update XP progress bar if it exists

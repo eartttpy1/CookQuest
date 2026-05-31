@@ -963,7 +963,7 @@ function getRankColor(rank) {
     case 'gold': return '#FFD700'; // ทอง
     case 'platinum': return '#ff25ffff'; // แพลตินัม
     case 'diamond': return '#34d0ffff'; // เพชร
-    case 'master': return '#ff1f1fff'; // ปรมาจารย์
+    case 'master': return 'rainbow'; // ปรมาจารย์ (สีรุ้ง)
     default: return '#fff';
   }
 }
@@ -971,14 +971,30 @@ function getRankColor(rank) {
 function applyRankColors() {
   const textEls = document.querySelectorAll('.rank-text'); // หรือ class ที่คุณใช้
   textEls.forEach(el => {
-    const rank = el.textContent.trim();
-    const color = getRankColor(rank);
-    el.style.color = color;
+    const rank = el.textContent.trim().toLowerCase();
     
-    // Apply color to the lock icon as well
+    // Reset previous inline styles or rainbow class
+    el.style.color = '';
+    el.classList.remove('rank-rainbow');
+    
     const lockOverlay = el.closest('.lock-overlay');
+    let lockIcon = null;
     if (lockOverlay) {
-        const lockIcon = lockOverlay.querySelector('.fa-lock');
+        lockIcon = lockOverlay.querySelector('.fa-lock');
+        if (lockIcon) {
+            lockIcon.style.color = '';
+            lockIcon.classList.remove('rank-rainbow');
+        }
+    }
+
+    const color = getRankColor(rank);
+    if (color === 'rainbow') {
+        el.classList.add('rank-rainbow');
+        if (lockIcon) {
+            lockIcon.classList.add('rank-rainbow');
+        }
+    } else {
+        el.style.color = color;
         if (lockIcon) {
             lockIcon.style.color = color;
         }

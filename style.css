@@ -417,3 +417,22 @@ i, a{
       font-size: 1.5rem;
   }
 }
+
+/* Rainbow Rank Animation */
+.rank-rainbow {
+  background: linear-gradient(to right, #ef5350, #f78400, #ffeb3b, #4caf50, #00bcd4, #2196f3, #9c27b0);
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  display: inline-block;
+  font-weight: 900;
+  text-shadow: none !important;
+  animation: rainbow-animation 3s linear infinite !important;
+  background-size: 400% 100% !important;
+}
+
+@keyframes rainbow-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
