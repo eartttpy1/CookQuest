@@ -205,6 +205,7 @@ function createRecipeCard(data, isMenu = false) {
     const isLocked = userVal < requiredVal;
 
     const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
+    const lazyAttr = menuId ? ` data-lazy-menu-id="${menuId}"` : '';
     const rankValue = requiredRank;
     const rankDisplay = rankValue.toUpperCase();
     const prepTimeStr = menu.prepTime || '0';
@@ -226,7 +227,7 @@ function createRecipeCard(data, isMenu = false) {
                 <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star favorite-icon" style="cursor:pointer; color: white;"></i>
             </span>
             <figure class="quest-image">
-                <img src="${imageUrl}" alt="${menu.menuName}">
+                <img src="${imageUrl}" alt="${menu.menuName}" loading="lazy"${lazyAttr}>
                 ${isLocked ? `
                 <div class="lock-overlay">
                     <i class="fa-solid fa-lock"></i><span class="rank-label rank-text" data-rank="${rankValue}">${rankDisplay}</span>
@@ -303,6 +304,9 @@ async function loadCompletedRecipes() {
             .map(recipe => createRecipeCard(recipe))
             .join('');
         applyRankColors();
+        if (typeof setupLazyMenuImages === 'function') {
+            setupLazyMenuImages(recipesContainer);
+        }
     } catch (err) {
         console.error('Error fetching recipes:', err);
         recipesContainer.innerHTML = '<p class="empty-message thai">เกิดข้อผิดพลาดในการโหลดข้อมูลประวัติการทำอาหาร</p>';
@@ -327,6 +331,9 @@ function loadFavoriteRecipes() {
         .map(menu => createRecipeCard(menu, true))
         .join('');
     applyRankColors();
+    if (typeof setupLazyMenuImages === 'function') {
+        setupLazyMenuImages(favoritesContainer);
+    }
 }
 
 // Global event delegation for favorite icons in profile

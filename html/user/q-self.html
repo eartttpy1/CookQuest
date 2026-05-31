@@ -22,11 +22,23 @@
     <link rel="stylesheet" href="../../assets/css/quest.css">
     <link rel="stylesheet" href="../../assets/css/q-self.css">
     <!-- ============== Start  Script ============== -->
+    <script>
+        // Force unregister all Service Workers and clear caches to bypass old cached files
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let r of registrations) r.unregister();
+            });
+        }
+        if (window.caches) {
+            caches.keys().then(keys => { for (let key of keys) caches.delete(key); });
+        }
+    </script>
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
-    <script src="../../assets/js/q-detail.js" defer></script>
-    <script src="../../assets/js/addmenu.js" defer></script>
+    <script src="../../assets/js/menu-images.js?v=2" defer></script>
+    <script src="../../assets/js/q-detail.js?v=2" defer></script>
+    <script src="../../assets/js/addmenu.js?v=2" defer></script>
 
 </head>
 <body>

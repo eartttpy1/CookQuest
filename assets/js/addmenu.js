@@ -308,10 +308,10 @@ function renderMenuCards() {
   grid.innerHTML = filteredMenus.map((menu) => {
     const idx = menuList.indexOf(menu);
     const totalTime = (parseInt(menu.prepTime) || 0) + (parseInt(menu.cookTime) || 0);
-    const imgHTML   = menu.imageURL
-      ? `<figure class="quest-image"><img src="${menu.imageURL}" alt="${menu.menuName}"></figure>`
-      : `<figure class="quest-image" style="background:#eee; display:flex; align-items:center; justify-content:center;"><i class="fa-regular fa-image fa-3x" style="color:#ccc"></i></figure>`;
-    
+    const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
+    const lazyAttr = menu._id ? ` data-lazy-menu-id="${menu._id}"` : '';
+    const imgHTML = `<figure class="quest-image"><img src="${imageUrl}" alt="${menu.menuName || 'ไม่มีชื่อ'}" loading="lazy"${lazyAttr}></figure>`;
+
     return `
       <div class="quest-card menu-card" onclick="openViewMenu(${idx})" style="cursor: pointer; margin:0; background-color: #5BC8E0; border: 3px solid #3aafca;">
         <div class="menu-card-header">
@@ -324,6 +324,10 @@ function renderMenuCards() {
         </div>
       </div>`;
   }).join('');
+
+  if (typeof setupLazyMenuImages === 'function') {
+      setupLazyMenuImages(grid);
+  }
 }
 
 // ─── Main Image Upload ───────────────────────────────────────
