@@ -47,6 +47,7 @@ if (socket) {
             const userData = JSON.parse(localStorage.getItem('user_data'));
             if (userData?.user?.id) userId = userData.user.id;
         } catch (e) {}
+        sessionStorage.removeItem(`cookquest_cache_v2_${userId}`);
         sessionStorage.removeItem(`cookquest_cache_${userId}`);
 
         // Re-load the main quest details
@@ -62,9 +63,14 @@ if (socket) {
         const modal = document.getElementById('questModal');
         if (modal && !modal.classList.contains('hidden')) {
             const menuId = modal.dataset.currentCard;
-            const menuData = window.allRelatedMenus.find(m => String(m._id) === String(menuId));
-            if (menuData) {
-                populateModal(menuData, modal);
+            try {
+                const res = await fetch(`/api/menus/${menuId}`);
+                if (res.ok) {
+                    const menuData = await res.json();
+                    populateModal(menuData, modal);
+                }
+            } catch (err) {
+                console.error('Error refreshing menu modal:', err);
             }
         }
     });
@@ -134,7 +140,7 @@ document.querySelector('.modal-star').addEventListener('click', async function (
 window.allRelatedMenus = window.allRelatedMenus || []; // เก็บข้อมูลเมนูไว้ใช้ใน Modal
 
 // pop-up Menu (Event Delegation for dynamically created cards)
-document.addEventListener('click', (e) => {
+document.addEventListener('click', async (e) => {
     const card = e.target.closest('.menu-card:not(.locked)');
     if (card && (card.closest('#menuList') || card.closest('#recipes-container') || card.closest('#favorites-container'))) {
         // ป้องกันการเปิด modal ถ้ากดโดนดาว Favorite
@@ -142,14 +148,30 @@ document.addEventListener('click', (e) => {
         
         e.preventDefault();
         const menuId = card.dataset.id;
-        const menuData = window.allRelatedMenus.find(m => m._id === menuId);
-        
         const modal = document.getElementById('questModal');
-        if (modal && menuData) {
-            modal.dataset.currentCard = menuId;
+        if (!modal) return;
+
+        modal.dataset.currentCard = menuId;
+        modal.classList.remove('hidden');
+        syncModalStar();
+
+        let menuData = window.allRelatedMenus.find(m => String(m._id) === String(menuId));
+        if (menuData) {
             populateModal(menuData, modal);
-            modal.classList.remove('hidden');
-            syncModalStar();
+        }
+
+        try {
+            const res = await fetch(`/api/menus/${menuId}`);
+            if (res.ok) {
+                menuData = await res.json();
+                const cacheIdx = window.allRelatedMenus.findIndex(m => String(m._id) === String(menuId));
+                if (cacheIdx >= 0) {
+                    window.allRelatedMenus[cacheIdx] = menuData;
+                }
+                populateModal(menuData, modal);
+            }
+        } catch (err) {
+            console.error('Error loading menu details:', err);
         }
     }
 });
@@ -611,7 +633,7 @@ function showSkeletonLoadersInDetail() {
 }
 
 async function loadQuestDetails(questId) {
-    const cacheKey = `cookquest_cache_${CURRENT_USER_ID}`;
+    const cacheKey = `cookquest_cache_v2_${CURRENT_USER_ID}`;
     const cachedData = sessionStorage.getItem(cacheKey);
     const token = localStorage.getItem('authToken');
 
@@ -748,7 +770,8 @@ function renderMenus(menus, menuStatusMap = {}) {
         }
 
         const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
-        const rankValue = requiredRank;
+        const lazyImageAttr = menu.hasImage ? ` data-lazy-menu-id="${menu._id}"` : '';
+        const rankValue = (menu.rank || 'bronze').toLowerCase();
         const rankDisplay = rankValue.toUpperCase();
         const prepTimeStr = menu.prepTime || '0';
         const cookTimeStr = menu.cookTime || '0';
@@ -762,7 +785,7 @@ function renderMenus(menus, menuStatusMap = {}) {
                 <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star" style="cursor:pointer; color: white;"></i>
             </span>
             <figure class="quest-image">
-                <img src="${imageUrl}" alt="${menu.menuName}">
+                <img src="${imageUrl}" alt="${menu.menuName}"${lazyImageAttr}>
                 ${isLocked ? `
                 <div class="lock-overlay">
                     <i class="fa-solid fa-lock"></i><span class="rank-label rank-text" data-rank="${rankValue}">${rankDisplay}</span>
@@ -776,6 +799,9 @@ function renderMenus(menus, menuStatusMap = {}) {
         menuList.appendChild(card);
     });
 
+    if (typeof setupLazyMenuImages === 'function') {
+        setupLazyMenuImages(menuList);
+    }
     if (typeof applyRankColors === 'function') {
         applyRankColors();
     }

@@ -147,7 +147,7 @@ async function loadQuests() {
         if (data?.user?.id) userId = data.user.id;
         token = localStorage.getItem('authToken');
     } catch (e) {}
-    const cacheKey = `cookquest_cache_${userId}`;
+    const cacheKey = `cookquest_cache_v2_${userId}`;
     const cachedData = sessionStorage.getItem(cacheKey);
 
     if (cachedData) {
@@ -162,7 +162,7 @@ async function loadQuests() {
                 for (let key in favState) delete favState[key];
                 Object.assign(favState, data.favState);
             }
-            if (typeof allRelatedMenus !== 'undefined') allRelatedMenus = data.menus;
+            if (typeof window.allRelatedMenus !== 'undefined') window.allRelatedMenus = data.menus;
             
             // Check current active tab to render correctly from cache
             const activeNav = document.querySelector('.top-nav .nav-link.active');
@@ -217,8 +217,8 @@ async function loadQuests() {
             for (let key in favState) delete favState[key];
             Object.assign(favState, newFavState);
         }
-        if (typeof allRelatedMenus !== 'undefined') {
-            allRelatedMenus = menus;
+        if (typeof window.allRelatedMenus !== 'undefined') {
+            window.allRelatedMenus = menus;
         }
 
         applyFilters();
@@ -284,10 +284,7 @@ function renderQuests(quests) {
         card.innerHTML = `
             <h2 class="quest-title thaipattaya">${quest.name}</h2>
             <figure class="quest-image-grid">
-                <img src="${imageUrls[0]}" alt="food">
-                <img src="${imageUrls[1]}" alt="food">
-                <img src="${imageUrls[2]}" alt="food">
-                <img src="${imageUrls[3]}" alt="food">
+                ${gridImages}
                 ${isLocked ? `
                 <div class="lock-overlay">
                     <i class="fa-solid fa-lock"></i><span class="rank-text">${highestRank.toUpperCase()}</span>
@@ -307,6 +304,10 @@ function renderQuests(quests) {
     
     // Apply colors after rendering is complete
     applyRankColors();
+
+    if (typeof hydrateQuestCardImages === 'function') {
+        hydrateQuestCardImages();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

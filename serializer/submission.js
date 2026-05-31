@@ -53,4 +53,7 @@ const submissionSchema = new mongoose.Schema(
   }
 );
 
+submissionSchema.index({ createdBy: 1, submittedAt: -1 });
+submissionSchema.index({ requestId: 1 });
+
 module.exports = mongoose.model('Submission', submissionSchema);

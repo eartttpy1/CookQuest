@@ -19,7 +19,7 @@ async function handleWorkerMessage(data, target) {
             fetch('http://localhost:4000/api/quests'),
             fetch('http://localhost:4000/api/menus'),
             fetch(`http://localhost:4000/api/favorites?userId=${userId}`),
-            fetch(`http://localhost:4000/api/history?userId=${userId}`)
+            fetch(`http://localhost:4000/api/history?userId=${userId}&summary=true`)
         ];
 
         if (token) {
@@ -156,16 +156,22 @@ async function handleWorkerMessage(data, target) {
                 }
             });
 
-            // Images
-            const imageUrls = relatedMenus.map(m => m.imageURL).filter(url => url).slice(0, 4);
+            // Images — keep menu ids for lazy loading, skip heavy base64 in worker payload
             const defaultPlaceholders = [
                 '../../assets/img/steak1.png',
                 '../../assets/img/steak2.png',
                 '../../assets/img/steak3.png',
                 '../../assets/img/emptymenu.jpg'
             ];
+            const imageUrls = relatedMenus.slice(0, 4).map((menu, index) => ({
+                menuId: menu._id,
+                url: menu.imageURL || defaultPlaceholders[index] || defaultPlaceholders[0]
+            }));
             while (imageUrls.length < 4) {
-                imageUrls.push(defaultPlaceholders[imageUrls.length]);
+                imageUrls.push({
+                    menuId: '',
+                    url: defaultPlaceholders[imageUrls.length]
+                });
             }
 
             // Check if all related menus are approved by the user

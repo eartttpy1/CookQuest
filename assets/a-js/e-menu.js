@@ -111,7 +111,7 @@ function renderRecipes() {
         recipeItem.innerHTML = `
             <button class="item-delete-btn${deleteMode ? '' : ' hidden'}"><i class="fa-solid fa-minus"></i></button>
             <div class="item-img">
-                <img src="${recipe.imageURL || '../../assets/a-img/placeholder-dish.png'}" alt="dish">
+                <img src="${recipe.imageURL || '../../assets/a-img/placeholder-dish.png'}" alt="dish"${recipe.hasImage ? ` data-lazy-menu-id="${recipe._id}"` : ''}>
             </div>
             <div class="item-info">
                 <span class="item-title thai">${recipe.menuName}</span>
@@ -124,6 +124,10 @@ function renderRecipes() {
 
         recipeList.appendChild(recipeItem);
     });
+
+    if (typeof setupLazyMenuImages === 'function') {
+        setupLazyMenuImages(recipeList, { fallback: '../../assets/a-img/placeholder-dish.png' });
+    }
 }
 
 function setupMenuEventListeners() {
@@ -247,7 +251,22 @@ function openAddForm() {
 function openEditForm(button) {
     const item = button.closest('.recipe-item');
     const id = item.getAttribute('data-id');
-    currentEditItem = recipes.find(r => r._id === id);
+    openEditFormById(id);
+}
+
+async function openEditFormById(id) {
+    try {
+        const response = await fetch(`/api/menus/${id}`);
+        if (!response.ok) {
+            throw new Error('Failed to load menu');
+        }
+        currentEditItem = await response.json();
+    } catch (error) {
+        console.error('Error loading menu for edit:', error);
+        showToast('Failed to load menu details', 'error');
+        return;
+    }
+
     selectedImageData = currentEditItem.imageURL || '';
     setImagePreview(selectedImageData);
 

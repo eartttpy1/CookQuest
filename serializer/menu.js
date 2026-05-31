@@ -80,4 +80,55 @@ const menuSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Fields for list/card views — excludes heavy instructions (base64 step images) and ingredients
+menuSchema.statics.LIST_PROJECTION = {
+  menuName: 1,
+  EXP: 1,
+  tags: 1,
+  servings: 1,
+  prepTime: 1,
+  cookTime: 1,
+  rank: 1,
+  questIds: 1,
+  createdBy: 1,
+  createdAt: 1,
+  updatedAt: 1
+};
+
+menuSchema.statics.LIST_AGGREGATION = [
+  {
+    $project: {
+      menuName: 1,
+      EXP: 1,
+      tags: 1,
+      servings: 1,
+      prepTime: 1,
+      cookTime: 1,
+      rank: 1,
+      questIds: 1,
+      createdBy: 1,
+      createdAt: 1,
+      updatedAt: 1,
+      hasImage: {
+        $regexMatch: {
+          input: { $ifNull: ['$imageURL', ''] },
+          regex: /^data:/
+        }
+      },
+      imageURL: {
+        $cond: {
+          if: {
+            $regexMatch: {
+              input: { $ifNull: ['$imageURL', ''] },
+              regex: /^data:/
+            }
+          },
+          then: '',
+          else: { $ifNull: ['$imageURL', ''] }
+        }
+      }
+    }
+  }
+];
+
 module.exports = mongoose.model('Menu', menuSchema);
