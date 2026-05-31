@@ -384,8 +384,8 @@ body.darkmode .badges {
   }
 }
 
-.recipes-list,
-.favorites-list {
+.recipes-list:not(.quest-section),
+.favorites-list:not(.quest-section) {
   display: flex;
   flex-direction: column;
   gap: 12px;

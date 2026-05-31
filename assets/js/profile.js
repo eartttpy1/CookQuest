@@ -119,81 +119,122 @@ function getMenuIdByName(menuName) {
     return menu && menu._id ? menu._id.toString() : '';
 }
 
+/**
+ * Helper to get the resolved status of a menu by name from user history
+ */
+function getResolvedMenuStatus(menuName) {
+    if (typeof userHistoryData === 'undefined' || !userHistoryData || userHistoryData.length === 0) {
+        return '';
+    }
+    const subs = userHistoryData.filter(h => h.requestId && h.requestId.menuName === menuName);
+    if (subs.length === 0) return '';
+    
+    const hasPending = subs.some(s => s.status === 'pending');
+    const hasApproved = subs.some(s => s.status === 'approved');
+    
+    if (hasPending) {
+        return 'pending';
+    } else if (hasApproved) {
+        return 'approved';
+    } else {
+        return 'rejected';
+    }
+}
+
 function createRecipeCard(data, isMenu = false) {
-    let recipeId = '';
-    let menuName = '';
-    let menuId = '';
-    let status = 'Not Started';
-    let timeStr = 'N/A';
-    let imageURL = 'https://via.placeholder.com/300';
+    let menu = null;
+    let status = '';
     
     if (isMenu) {
-        // Data is a Menu object
-        menuId = data._id ? data._id.toString() : '';
-        menuName = data.menuName || 'Unknown Menu';
-        imageURL = data.imageURL || imageURL;
-        
-        // Find if there is history for this menu
-        const history = typeof userHistoryData !== 'undefined' ? userHistoryData.find(h => h.requestId && h.requestId.menuName === menuName) : null;
-        if (history) {
-            status = history.status || 'pending';
-            if (history.createdAt || history.submittedAt) {
-                const date = new Date(history.createdAt || history.submittedAt);
-                timeStr = date.toLocaleDateString();
-            }
-        }
+        menu = data;
+        status = getResolvedMenuStatus(menu.menuName);
     } else {
-        // Data is a Submission (History) object
-        recipeId = data._id ? data._id.toString() : '';
-        menuName = data.requestId ? data.requestId.menuName : 'Unknown Menu';
-        menuId = getMenuIdByName(menuName);
-        status = data.status || 'pending';
-        imageURL = data.imageURL || imageURL;
-        
-        if (data.createdAt || data.submittedAt) {
-            const date = new Date(data.createdAt || data.submittedAt);
-            timeStr = date.toLocaleDateString();
+        const mName = data.requestId ? data.requestId.menuName : 'Unknown Menu';
+        status = getResolvedMenuStatus(mName) || data.status || '';
+        menu = allMenusData.find(m => m.menuName === mName);
+        if (!menu) {
+            menu = {
+                _id: data.requestId?._id || '',
+                menuName: mName,
+                imageURL: data.imageURL || '',
+                EXP: 100,
+                prepTime: '30 นาที',
+                cookTime: '0'
+            };
         }
     }
     
-    const isFavorite = menuId && mockUserData.favorites.includes(menuId);
+    const menuId = menu._id ? menu._id.toString() : '';
+    const menuExp = menu.EXP || 0;
     
-    // Map database status to UI formatting
-    let statusDisplay = status;
-    let statusColor = '#9e9e9e'; // Default grey for Not Started
-    let statusIcon = 'circle';
+    let requiredRank = 'bronze';
+    if (menuExp >= 100 && menuExp <= 150) requiredRank = 'bronze';
+    else if (menuExp >= 151 && menuExp <= 200) requiredRank = 'silver';
+    else if (menuExp >= 201 && menuExp <= 250) requiredRank = 'gold';
+    else if (menuExp >= 251 && menuExp <= 300) requiredRank = 'platinum';
+    else if (menuExp >= 301 && menuExp <= 500) requiredRank = 'diamond';
+    else if (menuExp >= 501) requiredRank = 'master';
+
+    const rankOrder = {
+        'bronze': 1, 'silver': 2, 'gold': 3,
+        'platinum': 4, 'diamond': 5, 'master': 6
+    };
     
-    if (status === 'approved') {
-        statusDisplay = 'Complete';
-        statusColor = '#4CAF50';
-        statusIcon = 'circle-check';
-    } else if (status === 'rejected') {
-        statusDisplay = 'Rejected';
-        statusColor = '#F44336';
-        statusIcon = 'circle-xmark';
-    } else if (status === 'pending') {
-        statusDisplay = 'Pending';
-        statusColor = '#FF9800';
-        statusIcon = 'clock';
+    let userRankStr = 'bronze';
+    if (window.currentUserProfile && window.currentUserProfile.rank) {
+        const cleanRank = window.currentUserProfile.rank.toLowerCase();
+        if (cleanRank.includes('bronze')) userRankStr = 'bronze';
+        else if (cleanRank.includes('silver')) userRankStr = 'silver';
+        else if (cleanRank.includes('gold')) userRankStr = 'gold';
+        else if (cleanRank.includes('platinum')) userRankStr = 'platinum';
+        else if (cleanRank.includes('diamond')) userRankStr = 'diamond';
+        else if (cleanRank.includes('master')) userRankStr = 'master';
     } else {
-        statusDisplay = 'Not Started';
+        const lvlData = getRankByXP(mockUserData.xp);
+        const cleanRank = lvlData.rank.toLowerCase();
+        if (cleanRank.includes('bronze')) userRankStr = 'bronze';
+        else if (cleanRank.includes('silver')) userRankStr = 'silver';
+        else if (cleanRank.includes('gold')) userRankStr = 'gold';
+        else if (cleanRank.includes('platinum')) userRankStr = 'platinum';
+        else if (cleanRank.includes('diamond')) userRankStr = 'diamond';
+        else if (cleanRank.includes('master')) userRankStr = 'master';
     }
+    
+    const requiredVal = rankOrder[requiredRank] || 1;
+    const userVal = rankOrder[userRankStr] || 1;
+    const isLocked = userVal < requiredVal;
+
+    const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
+    const rankValue = requiredRank;
+    const rankDisplay = rankValue.toUpperCase();
+    const prepTimeStr = menu.prepTime || '0';
+    const cookTimeStr = menu.cookTime || '0';
+    const totalTime = (parseInt(prepTimeStr) || 0) + (parseInt(cookTimeStr) || 0);
+    const timeDisplay = totalTime > 0 ? `${totalTime} นาที` : (menu.prepTime || '30 นาที');
+
+    const isFavorited = mockUserData.favorites.includes(menuId);
+    
+    let statusClass = '';
+    if (status === 'pending') statusClass = 'status-pending';
+    else if (status === 'approved') statusClass = 'status-approved';
+    else if (status === 'rejected') statusClass = 'status-rejected';
 
     return `
-        <div class="recipe-card" data-recipe-id="${recipeId}" data-menu-id="${menuId}">
-            <div class="recipe-header">
-                <i class="fa-${isFavorite ? 'solid' : 'regular'} fa-star favorite-icon" style="cursor: pointer; color: ${isFavorite ? '#ff6b6b' : '#ccc'};"></i>
-                <span class="thai">${menuName}</span>
-            </div>
-            <img src="${imageURL}" alt="${menuName}" style="object-fit: cover; height: 150px; width: 100%;">
-            <div class="recipe-footer" style="display: flex; justify-content: space-between; padding-top: 10px;">
-                <span style="color: ${statusColor}; font-weight: bold;">
-                    <i class="fa-solid fa-${statusIcon}" style="margin-right: 4px;"></i>${statusDisplay}
-                </span>
-                <span style="font-size: 0.9rem;">
-                    <i class="fa-regular fa-calendar"></i>
-                    ${timeStr}
-                </span>
+        <div class="quest-card menu-card ${statusClass} ${isLocked ? 'locked' : ''}" data-id="${menuId}" data-name="${menu.menuName}" data-exp="${menuExp}">
+            <span class="quest-title-wrapper">
+                <h2 class="quest-title thaipattaya">${menu.menuName}</h2>
+                <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star favorite-icon" style="cursor:pointer; color: white;"></i>
+            </span>
+            <figure class="quest-image">
+                <img src="${imageUrl}" alt="${menu.menuName}">
+                ${isLocked ? `
+                <div class="lock-overlay">
+                    <i class="fa-solid fa-lock"></i><span class="rank-label rank-text" data-rank="${rankValue}">${rankDisplay}</span>
+                </div>` : ''}
+            </figure>
+            <div class="menu-footer">
+                <span class="time"><i class="fa-solid fa-clock"></i> ${timeDisplay}</span>
+                <span class="exp"><i class="fa-solid fa-star"></i> ${menuExp} EXP</span>
             </div>
         </div>
     `;
@@ -228,7 +269,37 @@ async function loadCompletedRecipes() {
             return;
         }
 
-        recipesContainer.innerHTML = userHistoryData
+        // Group history by menuName to show only one card per menu
+        const uniqueHistoryMap = new Map();
+        userHistoryData.forEach(recipe => {
+            const mName = recipe.requestId ? recipe.requestId.menuName : 'Unknown Menu';
+            const existing = uniqueHistoryMap.get(mName);
+            if (!existing) {
+                uniqueHistoryMap.set(mName, recipe);
+            } else {
+                const statusPriority = { 'approved': 3, 'pending': 2, 'rejected': 1 };
+                const currentPri = statusPriority[recipe.status] || 0;
+                const existingPri = statusPriority[existing.status] || 0;
+                if (currentPri > existingPri) {
+                    uniqueHistoryMap.set(mName, recipe);
+                } else if (currentPri === existingPri) {
+                    const dateA = new Date(recipe.submittedAt || recipe.createdAt);
+                    const dateB = new Date(existing.submittedAt || existing.createdAt);
+                    if (dateA > dateB) {
+                        uniqueHistoryMap.set(mName, recipe);
+                    }
+                }
+            }
+        });
+        
+        // Override status of each card with the resolved status
+        uniqueHistoryMap.forEach((recipe, mName) => {
+            recipe.status = getResolvedMenuStatus(mName);
+        });
+        
+        const uniqueHistory = Array.from(uniqueHistoryMap.values());
+
+        recipesContainer.innerHTML = uniqueHistory
             .map(recipe => createRecipeCard(recipe))
             .join('');
     } catch (err) {
@@ -260,9 +331,9 @@ function loadFavoriteRecipes() {
 document.addEventListener('click', async (e) => {
     if (e.target.classList.contains('favorite-icon')) {
         const icon = e.target;
-        const recipeCard = icon.closest('.recipe-card');
+        const recipeCard = icon.closest('.quest-card.menu-card');
         if (!recipeCard) return;
-        const menuId = recipeCard.dataset.menuId;
+        const menuId = recipeCard.dataset.id;
         
         if (!menuId) {
             alert('ไม่สามารถเพิ่มรายการโปรดได้ เนื่องจากไม่พบข้อมูลเมนู');
@@ -297,15 +368,15 @@ document.addEventListener('click', async (e) => {
             saveFavoritesToStorage(mockUserData.favorites);
             
             // Update ALL matching icons on the page
-            document.querySelectorAll(`.recipe-card[data-menu-id="${menuId}"] .favorite-icon`).forEach(otherIcon => {
+            document.querySelectorAll(`.quest-card.menu-card[data-id="${menuId}"] .favorite-icon`).forEach(otherIcon => {
                 if (isNowFavorite) {
                     otherIcon.classList.remove('fa-regular');
                     otherIcon.classList.add('fa-solid');
-                    otherIcon.style.color = '#ff6b6b';
+                    otherIcon.style.color = 'white';
                 } else {
                     otherIcon.classList.remove('fa-solid');
                     otherIcon.classList.add('fa-regular');
-                    otherIcon.style.color = '#ccc';
+                    otherIcon.style.color = 'white';
                 }
             });
         } catch (err) {
@@ -551,6 +622,7 @@ async function loadUserProfile() {
             try {
                 const parsed = JSON.parse(cachedData);
                 allMenusData = parsed.menus || [];
+                window.allRelatedMenus = parsed.menus || [];
                 userHistoryData = parsed.history || [];
                 Object.assign(mockUserData, parsed.profile || {});
                 mockUserData.favorites = parsed.favorites || [];
@@ -568,17 +640,30 @@ async function loadUserProfile() {
             return;
         }
 
-        const worker = new Worker('../../assets/js/worker.js');
-        worker.postMessage({ userId, token });
+        let worker;
+        let workerPort;
+        if (typeof SharedWorker !== 'undefined') {
+            worker = new SharedWorker('../../assets/js/worker.js');
+            workerPort = worker.port;
+            workerPort.start();
+        } else {
+            worker = new Worker('../../assets/js/worker.js');
+            workerPort = worker;
+        }
 
-        worker.onmessage = function(e) {
+        workerPort.postMessage({ userId, token });
+
+        workerPort.onmessage = function(e) {
             const data = e.data;
             if (!data.success) {
                 console.error('Worker error:', data.error);
                 return;
             }
 
-            if (data.menus) allMenusData = data.menus;
+            if (data.menus) {
+                allMenusData = data.menus;
+                window.allRelatedMenus = data.menus;
+            }
             if (data.history) userHistoryData = data.history;
 
             if (data.profile) {
@@ -587,6 +672,7 @@ async function loadUserProfile() {
                 mockUserData.xp = pData.xp !== undefined ? pData.xp : mockUserData.xp;
                 mockUserData.completedRecipes = pData.completedRecipes !== undefined ? pData.completedRecipes : mockUserData.completedRecipes;
                 mockUserData.badges = pData.badges || [];
+                window.currentUserProfile = pData;
             }
 
             if (data.favState) {
@@ -608,9 +694,26 @@ async function loadUserProfile() {
             renderAll();
         };
 
-        worker.onerror = function(error) {
-            console.error('Worker failed:', error);
-        };
+        // Initialize Socket.io connection on profile page
+        const socket = typeof io !== 'undefined' ? io('http://localhost:4000') : null;
+        if (socket) {
+            socket.on('status_updated', async (data) => {
+                sessionStorage.removeItem(cacheKey);
+                sessionStorage.removeItem(`cookquest_cache_${userId}`);
+                await loadUserProfile();
+            });
+            socket.on('new_submission', async (data) => {
+                sessionStorage.removeItem(cacheKey);
+                sessionStorage.removeItem(`cookquest_cache_${userId}`);
+                await loadUserProfile();
+            });
+        }
+
+        if (typeof SharedWorker === 'undefined') {
+            worker.onerror = function(error) {
+                console.error('Worker failed:', error);
+            };
+        }
         
     } catch (err) {
         console.error('Error loading profile:', err);

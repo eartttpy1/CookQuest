@@ -588,6 +588,58 @@ app.put('/api/requests/:id/status', async (req, res) => {
         user.xp = (user.xp || 0) + xpReward;
         user.completedRecipes = (user.completedRecipes || 0) + 1;
 
+        // Check Quest completion and award Quest EXP
+        try {
+          const allQuests = await Quest.find();
+          const allMenus = await Menu.find();
+          const userSubmissions = await Submission.find({ createdBy: creatorId, status: 'approved' }).populate('requestId');
+          
+          const approvedMenuNames = new Set();
+          userSubmissions.forEach(sub => {
+            if (sub.requestId && sub.requestId.menuName) {
+              approvedMenuNames.add(sub.requestId.menuName.toLowerCase().trim());
+            }
+          });
+          if (request.menuName) {
+            approvedMenuNames.add(request.menuName.toLowerCase().trim());
+          }
+          
+          for (const quest of allQuests) {
+            const questIdStr = quest._id.toString();
+            if (user.completedQuests && user.completedQuests.includes(questIdStr)) {
+              continue;
+            }
+            
+            const relatedMenus = allMenus.filter(m => {
+              const hasQuestId = m.questIds && m.questIds.includes(questIdStr);
+              const hasTagMatch = quest.tags && quest.tags.some(tag => tag.toLowerCase() === (m.menuName || '').toLowerCase());
+              return hasQuestId || hasTagMatch;
+            });
+            
+            if (relatedMenus.length > 0) {
+              let questCompleted = true;
+              for (const m of relatedMenus) {
+                if (!approvedMenuNames.has((m.menuName || '').toLowerCase().trim())) {
+                  questCompleted = false;
+                  break;
+                }
+              }
+              
+              if (questCompleted) {
+                const questExp = quest.exp || 0;
+                user.xp = (user.xp || 0) + questExp;
+                if (!user.completedQuests) {
+                  user.completedQuests = [];
+                }
+                user.completedQuests.push(questIdStr);
+                console.log(`User ${user.username} completed quest: ${quest.name}. Awarded ${questExp} EXP.`);
+              }
+            }
+          }
+        } catch (qErr) {
+          console.error('Error checking quest completions:', qErr);
+        }
+
         // Re-calculate Level and Rank
         const levelSystem = {
             1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
@@ -727,6 +779,19 @@ app.put('/api/submissions/:id', async (req, res) => {
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
     }
+
+    // Also update the corresponding Request in database
+    if (submission.requestId) {
+      const request = await Request.findByIdAndUpdate(
+        submission.requestId,
+        { imageURL, tasteRating, tasteTags, review },
+        { new: true }
+      );
+      
+      // Emit socket event so that admin page reloads immediately
+      io.emit('new_submission', { request, submission });
+    }
+
     res.json(submission);
   } catch (error) {
     console.error('Error updating submission:', error.message);

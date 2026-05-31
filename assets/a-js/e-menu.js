@@ -1,5 +1,68 @@
 // e-menu.js - Handles functionality for e-menu admin page
 
+const CATEGORIES_LIST = [
+    // วัตถุดิบ
+    "เมนูไข่", "เมนูไก่", "เมนูหมู", "เมนูเป็ด", "เมนูเนื้อวัว", "เมนูไส้กรอก", "เมนูเบคอน", "เมนูอาหารทะเล", "เมนูเส้น", "เมนูเห็ด", "เมนูเต้าหู้", "เมนูข้าว", "เมนูผัก", "เมนูผลไม้",
+    // ประเภทอาหาร
+    "เมนูอาหารเช้า", "เมนูอาหารจานเดียว", "เมนูกับแกล้ม/อาหารว่าง", "เมนูมังสวิรัติ", "เมนูอาหารไทย", "เมนูอาหารเหนือ", "เมนูอาหารอีสาน", "เมนูอาหารใต้", "เมนูอาหารญี่ปุ่น", "เมนูอาหารจีน", "เมนูอาหารเกาหลี", "เมนูอาหารฝรั่ง", "เมนูอาหารอิตาเลียน", "เมนูสเต๊ก", "เมนูแกง", "สูตรน้ำจิ้ม", "เมนูอาหารฟิวชัน", "เมนูซุป", "อาหารนานาชาติ", "เมนูแซนด์วิช", "เมนูอาหารเย็น", "เมนูน้ำพริก", "เมนูกับข้าว", "เมนูก๋วยเตี๋ยว",
+    // วิธีการ
+    "เมนูไมโครเวฟ", "เมนูต้ม", "เมนูผัด", "เมนูทอด", "เมนูอบ", "เมนูนึ่ง", "เมนูยำ", "เมนูย่าง", "เมนูหม้ออบลมร้อน", "เมนูหม้อหุงข้าว",
+    // ของหวาน/เบเกอรี่
+    "เมนูไอศกรีม", "เมนูขนมไทย", "เมนูเบเกอรี", "เมนูเค้ก", "เมนูของหวาน", "เมนูช็อคโกแลต",
+    // เมนูพิเศษ
+    "เมนูทำง่ายไม่เกิน 15 นาที", "เมนูประหยัด", "เมนูเด็กหอ", "เมนูสร้างอาชีพ", "เมนูข้าวกล่อง", "เมนูวาเลนไทน์", "เมนูฮาโลวีน", "เมนูคริสต์มาส"
+];
+
+function renderCategoryQuickSelect() {
+    const container = document.getElementById('categoryQuickSelect');
+    if (!container) return;
+    
+    container.innerHTML = CATEGORIES_LIST.map(category => {
+        return `<button type="button" class="category-badge-opt" data-category="${category}" onclick="toggleCategoryTag('${category}')">${category}</button>`;
+    }).join('');
+    
+    syncCategoryBadges();
+}
+
+function syncCategoryBadges() {
+    const tagsArea = document.getElementById('tagsArea');
+    if (!tagsArea) return;
+    
+    const currentTags = Array.from(tagsArea.querySelectorAll('.tag')).map(tag => {
+        return tag.textContent.replace(/\s*X$/, '').trim();
+    });
+    
+    document.querySelectorAll('.category-badge-opt').forEach(btn => {
+        const cat = btn.getAttribute('data-category');
+        if (currentTags.includes(cat)) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+
+function toggleCategoryTag(categoryName) {
+    const tagsArea = document.getElementById('tagsArea');
+    if (!tagsArea) return;
+    
+    const currentTags = Array.from(tagsArea.querySelectorAll('.tag')).map(tag => {
+        return tag.textContent.replace(/\s*X$/, '').trim();
+    });
+    
+    if (currentTags.includes(categoryName)) {
+        const tagElements = Array.from(tagsArea.querySelectorAll('.tag'));
+        const elementToRemove = tagElements.find(tag => tag.textContent.replace(/\s*X$/, '').trim() === categoryName);
+        if (elementToRemove) {
+            elementToRemove.remove();
+        }
+    } else {
+        addTag(categoryName);
+    }
+    
+    syncCategoryBadges();
+}
+
 // Global variables
 let deleteMode = false;
 let currentEditItem = null;
@@ -138,6 +201,9 @@ function openAddForm() {
         tagSearchInput.value = '';
     }
     renderTagSuggestions('');
+    if (typeof renderCategoryQuickSelect === 'function') {
+        renderCategoryQuickSelect();
+    }
     document.getElementById('ingredientsList').innerHTML = `
         <div class="ingredient-row">
             <span class="thai ing-label">วัตถุดิบ</span>
@@ -164,7 +230,7 @@ function openAddForm() {
                     <label>
                         <i class="fa-solid fa-image"></i>
                         <span class="thai">เพิ่มไฟล์รูปภาพ</span>
-                        <input type="file" accept="image/*" class="hidden">
+                        <input type="file" accept="image/*" class="hidden" onchange="previewStepImg(this)">
                     </label>
                 </div>
                 <div class="step-text-row">
@@ -194,6 +260,9 @@ function openEditForm(button) {
     document.getElementById('tagsArea').innerHTML = (currentEditItem.tags || []).map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
     document.getElementById('tagSearchInput').value = '';
     renderTagSuggestions('');
+    if (typeof renderCategoryQuickSelect === 'function') {
+        renderCategoryQuickSelect();
+    }
     document.getElementById('ingredientsList').innerHTML = (currentEditItem.ingredients || []).map(ing => `
         <div class="ingredient-row">
             <span class="thai ing-label">วัตถุดิบ</span>
@@ -204,25 +273,35 @@ function openEditForm(button) {
             <button class="btn-ing-remove" onclick="removeIngredient(this)">−</button>
         </div>
     `).join('');
-    document.getElementById('stepsList').innerHTML = (currentEditItem.instructions || []).map((instr, index) => `
-        <div class="step-row">
-            <span class="step-num">${instr.stepNumber}.</span>
-            <div class="step-content">
-                <div class="step-img-upload">
-                    <label>
-                        <i class="fa-solid fa-image"></i>
-                        <span class="thai">เพิ่มไฟล์รูปภาพ</span>
-                        <input type="file" accept="image/*" class="hidden" onchange="previewImg(this)">
-                    </label>
-                </div>
-                <div class="step-text-row">
-                    <span class="thai step-lbl">วิธีทำ</span>
-                    <textarea class="step-textarea thai">${instr.description}</textarea>
-                </div>
+    document.getElementById('stepsList').innerHTML = (currentEditItem.instructions || []).map((instr, index) => {
+        const stepImageHtml = instr.stepImageURL ? `
+            <div class="step-image-preview-wrapper" style="margin-bottom: 8px; position: relative; display: inline-block;">
+                <img class="step-preview-img" src="${instr.stepImageURL}" style="max-height: 120px; border-radius: 6px; display: block; object-fit: cover;">
+                <button type="button" class="btn-clear-step-img" onclick="clearStepImg(this)" style="position: absolute; top: 4px; right: 4px; background: rgba(255, 0, 0, 0.7); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px;">✕</button>
             </div>
-            <button class="btn-step-remove" onclick="removeStep(this)">−</button>
-        </div>
-    `).join('');
+        ` : '';
+        const labelText = instr.stepImageURL ? 'แก้ไขรูปภาพ' : 'เพิ่มไฟล์รูปภาพ';
+        return `
+            <div class="step-row">
+                <span class="step-num">${instr.stepNumber}.</span>
+                <div class="step-content">
+                    <div class="step-img-upload">
+                        ${stepImageHtml}
+                        <label>
+                            <i class="fa-solid fa-image"></i>
+                            <span class="thai">${labelText}</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="previewStepImg(this)">
+                        </label>
+                    </div>
+                    <div class="step-text-row">
+                        <span class="thai step-lbl">วิธีทำ</span>
+                        <textarea class="step-textarea thai">${instr.description}</textarea>
+                    </div>
+                </div>
+                <button class="btn-step-remove" onclick="removeStep(this)">−</button>
+            </div>
+        `;
+    }).join('');
     document.getElementById('formOverlay').classList.remove('hidden');
 }
 
@@ -341,6 +420,9 @@ async function deleteItem(button) {
 
 function removeTag(button) {
     button.parentElement.remove();
+    if (typeof syncCategoryBadges === 'function') {
+        syncCategoryBadges();
+    }
 }
 
 async function saveRecipe() {
@@ -355,14 +437,71 @@ async function saveRecipe() {
         amount: parseFloat(row.querySelector('.ing-qty').value) || 0,
         unit: row.querySelector('.ing-unit').value
     }));
-    const instructions = Array.from(document.querySelectorAll('.step-row')).map((row, index) => ({
-        stepNumber: index + 1,
-        description: row.querySelector('.step-textarea').value
-    }));
+    const instructions = Array.from(document.querySelectorAll('.step-row')).map((row, index) => {
+        const previewImg = row.querySelector('.step-preview-img');
+        const stepImageURL = previewImg ? previewImg.src : '';
+        return {
+            stepNumber: index + 1,
+            description: row.querySelector('.step-textarea').value,
+            stepImageURL: stepImageURL
+        };
+    });
 
-    if (!menuName) {
-        alert('Please fill in the menu name');
+    if (!menuName.trim()) {
+        alert('กรุณากรอกชื่อเมนูอาหาร');
         return;
+    }
+    if (isNaN(servings) || servings <= 0) {
+        alert('กรุณากรอกจำนวนจานให้ถูกต้อง (มากกว่า 0)');
+        return;
+    }
+    if (isNaN(EXP) || EXP <= 0) {
+        alert('กรุณากรอกค่า EXP ให้ถูกต้อง (มากกว่า 0)');
+        return;
+    }
+    if (!prepTime.trim() || isNaN(parseInt(prepTime)) || parseInt(prepTime) < 0) {
+        alert('กรุณากรอกเวลาเตรียมอาหารให้ถูกต้อง');
+        return;
+    }
+    if (!cookTime.trim() || isNaN(parseInt(cookTime)) || parseInt(cookTime) < 0) {
+        alert('กรุณากรอกเวลาปรุงอาหารให้ถูกต้อง');
+        return;
+    }
+    if (tags.length === 0) {
+        alert('กรุณาเลือกหรือเพิ่มอย่างน้อย 1 หมวดหมู่ (Tag)');
+        return;
+    }
+    
+    const menuImage = selectedImageData || (currentEditItem ? currentEditItem.imageURL : '');
+    if (!menuImage) {
+        alert('กรุณาอัปโหลดรูปภาพเมนูอาหาร');
+        return;
+    }
+
+    if (ingredients.length === 0) {
+        alert('กรุณาเพิ่มวัตถุดิบอย่างน้อย 1 รายการ');
+        return;
+    }
+
+    for (let i = 0; i < ingredients.length; i++) {
+        const ing = ingredients[i];
+        if (!ing.name.trim() || isNaN(ing.amount) || ing.amount <= 0 || !ing.unit.trim()) {
+            alert(`กรุณากรอกข้อมูลวัตถุดิบรายการที่ ${i + 1} ให้ครบถ้วน (ชื่อวัตถุดิบ, จำนวนที่มากกว่า 0, หน่วย)`);
+            return;
+        }
+    }
+
+    if (instructions.length === 0) {
+        alert('กรุณาเพิ่มขั้นตอนการทำอย่างน้อย 1 ขั้นตอน');
+        return;
+    }
+
+    for (let i = 0; i < instructions.length; i++) {
+        const step = instructions[i];
+        if (!step.description.trim()) {
+            alert(`กรุณากรอกวิธีทำของขั้นตอนที่ ${i + 1} ให้เรียบร้อย`);
+            return;
+        }
     }
 
     const recipeData = {
@@ -439,7 +578,7 @@ function addStep() {
                 <label>
                     <i class="fa-solid fa-image"></i>
                     <span class="thai">เพิ่มไฟล์รูปภาพ</span>
-                    <input type="file" accept="image/*" class="hidden">
+                    <input type="file" accept="image/*" class="hidden" onchange="previewStepImg(this)">
                 </label>
             </div>
             <div class="step-text-row">
@@ -482,6 +621,62 @@ function previewImg(input) {
         setImagePreview(selectedImageData);
     };
     reader.readAsDataURL(file);
+}
+
+function previewStepImg(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const dataUrl = event.target.result;
+        const uploadContainer = input.closest('.step-img-upload');
+        if (!uploadContainer) return;
+
+        let previewWrapper = uploadContainer.querySelector('.step-image-preview-wrapper');
+        if (!previewWrapper) {
+            previewWrapper = document.createElement('div');
+            previewWrapper.className = 'step-image-preview-wrapper';
+            previewWrapper.style.cssText = 'margin-bottom: 8px; position: relative; display: inline-block;';
+            previewWrapper.innerHTML = `
+                <img class="step-preview-img" src="" style="max-height: 120px; border-radius: 6px; display: block; object-fit: cover;">
+                <button type="button" class="btn-clear-step-img" onclick="clearStepImg(this)" style="position: absolute; top: 4px; right: 4px; background: rgba(255, 0, 0, 0.7); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px;">✕</button>
+            `;
+            // Insert before the label
+            uploadContainer.insertBefore(previewWrapper, uploadContainer.querySelector('label'));
+        }
+
+        const previewImg = previewWrapper.querySelector('.step-preview-img');
+        if (previewImg) {
+            previewImg.src = dataUrl;
+        }
+
+        const labelSpan = uploadContainer.querySelector('label span');
+        if (labelSpan) {
+            labelSpan.textContent = 'แก้ไขรูปภาพ';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearStepImg(button) {
+    const uploadContainer = button.closest('.step-img-upload');
+    if (!uploadContainer) return;
+
+    const previewWrapper = uploadContainer.querySelector('.step-image-preview-wrapper');
+    if (previewWrapper) {
+        previewWrapper.remove();
+    }
+
+    const fileInput = uploadContainer.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.value = '';
+    }
+
+    const labelSpan = uploadContainer.querySelector('label span');
+    if (labelSpan) {
+        labelSpan.textContent = 'เพิ่มไฟล์รูปภาพ';
+    }
 }
 
 function setImagePreview(imageUrl) {
@@ -601,6 +796,9 @@ function addTag(tagName) {
 
     tagElement.appendChild(removeButton);
     tagsArea.appendChild(tagElement);
+    if (typeof syncCategoryBadges === 'function') {
+        syncCategoryBadges();
+    }
 }
 
 async function createAndAddTag(tagName) {

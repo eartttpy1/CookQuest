@@ -1,5 +1,18 @@
-self.onmessage = async function(e) {
-    const { userId, token } = e.data;
+if ('onconnect' in self) {
+    self.onconnect = function(e) {
+        const port = e.ports[0];
+        port.onmessage = async function(event) {
+            await handleWorkerMessage(event.data, port);
+        };
+    };
+} else {
+    self.onmessage = async function(event) {
+        await handleWorkerMessage(event.data, self);
+    };
+}
+
+async function handleWorkerMessage(data, target) {
+    const { userId, token } = data;
 
     try {
         const fetchPromises = [
@@ -46,23 +59,34 @@ self.onmessage = async function(e) {
         let history = [];
         if (historyResponse && historyResponse.ok) {
             history = await historyResponse.json();
+            
+            // Group statuses by menuName
+            const menuStatuses = {};
             history.forEach(sub => {
                 const req = sub.requestId;
                 if (req && req.menuName) {
                     const mName = req.menuName;
-                    const newStatus = sub.status;
-                    const currentStatus = menuStatusMap[mName];
-                    if (!currentStatus) {
-                        menuStatusMap[mName] = newStatus;
-                    } else if (currentStatus !== 'approved') {
-                        if (newStatus === 'approved') {
-                            menuStatusMap[mName] = 'approved';
-                        } else if (newStatus === 'pending' && currentStatus === 'rejected') {
-                            menuStatusMap[mName] = 'pending';
-                        }
+                    if (!menuStatuses[mName]) {
+                        menuStatuses[mName] = new Set();
                     }
+                    menuStatuses[mName].add(sub.status);
                 }
             });
+            
+            // Resolve final status for each menu
+            for (const mName in menuStatuses) {
+                const statuses = menuStatuses[mName];
+                if (statuses.has('pending')) {
+                    // Pending takes highest priority because it means a new submission is waiting review
+                    menuStatusMap[mName] = 'pending';
+                } else if (statuses.has('approved')) {
+                    // If no pending, but has approved, it's approved (even if there is rejected)
+                    menuStatusMap[mName] = 'approved';
+                } else if (statuses.has('rejected')) {
+                    // Only rejected exists
+                    menuStatusMap[mName] = 'rejected';
+                }
+            }
         }
 
         let profile = null;
@@ -88,6 +112,10 @@ self.onmessage = async function(e) {
         });
 
         // Pre-calculate related menus for each quest to save UI thread time
+        const rankOrder = {
+            'bronze': 1, 'silver': 2, 'gold': 3,
+            'platinum': 4, 'diamond': 5, 'master': 6
+        };
         const processedQuests = quests.map(quest => {
             const relatedSet = new Set();
             
@@ -109,15 +137,19 @@ self.onmessage = async function(e) {
             const relatedMenus = Array.from(relatedSet);
             
             // Find highest rank
-            const rankOrder = {
-                'bronze': 1, 'silver': 2, 'gold': 3,
-                'platinum': 4, 'diamond': 5, 'master': 6
-            };
             let highestRank = 'bronze';
             let highestRankValue = 0;
             
             relatedMenus.forEach(menu => {
-                const r = (menu.rank || 'bronze').toLowerCase();
+                const menuExp = menu.EXP || 0;
+                let r = 'bronze';
+                if (menuExp >= 100 && menuExp <= 150) r = 'bronze';
+                else if (menuExp >= 151 && menuExp <= 200) r = 'silver';
+                else if (menuExp >= 201 && menuExp <= 250) r = 'gold';
+                else if (menuExp >= 251 && menuExp <= 300) r = 'platinum';
+                else if (menuExp >= 301 && menuExp <= 500) r = 'diamond';
+                else if (menuExp >= 501) r = 'master';
+
                 if (rankOrder[r] && rankOrder[r] > highestRankValue) {
                     highestRankValue = rankOrder[r];
                     highestRank = r;
@@ -136,16 +168,25 @@ self.onmessage = async function(e) {
                 imageUrls.push(defaultPlaceholders[imageUrls.length]);
             }
 
+            // Check if all related menus are approved by the user
+            let isQuestComplete = relatedMenus.length > 0;
+            relatedMenus.forEach(menu => {
+                if (menuStatusMap[menu.menuName] !== 'approved') {
+                    isQuestComplete = false;
+                }
+            });
+
             return {
                 ...quest,
                 processedData: {
                     imageUrls,
-                    highestRank
+                    highestRank,
+                    isQuestComplete
                 }
             };
         });
 
-        self.postMessage({
+        target.postMessage({
             success: true,
             quests: processedQuests,
             menus,
@@ -155,9 +196,9 @@ self.onmessage = async function(e) {
             profile
         });
     } catch (error) {
-        self.postMessage({
+        target.postMessage({
             success: false,
             error: error.message
         });
     }
-};
+}

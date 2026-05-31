@@ -6,7 +6,7 @@ function syncCardStar(idx) {
     cardStars.forEach(cardStar => {
         if (favState[idx]) {
             cardStar.classList.replace('fa-regular', 'fa-solid');
-            cardStar.style.color = '#ff6b6b';
+            cardStar.style.color = 'white';
         } else {
             cardStar.classList.replace('fa-solid', 'fa-regular');
             cardStar.style.color = 'white';
@@ -20,7 +20,7 @@ function syncModalStar() {
     const idx = document.getElementById('questModal').dataset.currentCard;
     if (favState[idx]) {
         modalStar.classList.replace('fa-regular', 'fa-solid');
-        modalStar.style.color = '#ff6b6b';
+        modalStar.style.color = 'white';
     } else {
         modalStar.classList.replace('fa-solid', 'fa-regular');
         modalStar.style.color = 'white';
@@ -41,18 +41,28 @@ const socket = typeof io !== 'undefined' ? io('http://localhost:4000') : null;
 
 if (socket) {
     socket.on('status_updated', async (data) => {
+        // Clear session storage cache to prevent loading stale cache
+        let userId = 'user123';
+        try {
+            const userData = JSON.parse(localStorage.getItem('user_data'));
+            if (userData?.user?.id) userId = userData.user.id;
+        } catch (e) {}
+        sessionStorage.removeItem(`cookquest_cache_${userId}`);
+
         // Re-load the main quest details
         const urlParams = new URLSearchParams(window.location.search);
         const questId = urlParams.get('id');
         if (questId) {
             await loadQuestDetails(questId);
+        } else if (typeof loadQuests === 'function') {
+            await loadQuests();
         }
 
         // If the modal is currently open for a menu, re-populate it
         const modal = document.getElementById('questModal');
         if (modal && !modal.classList.contains('hidden')) {
             const menuId = modal.dataset.currentCard;
-            const menuData = allRelatedMenus.find(m => String(m._id) === String(menuId));
+            const menuData = window.allRelatedMenus.find(m => String(m._id) === String(menuId));
             if (menuData) {
                 populateModal(menuData, modal);
             }
@@ -121,18 +131,18 @@ document.querySelector('.modal-star').addEventListener('click', async function (
     }
 });
 
-let allRelatedMenus = []; // เก็บข้อมูลเมนูไว้ใช้ใน Modal
+window.allRelatedMenus = window.allRelatedMenus || []; // เก็บข้อมูลเมนูไว้ใช้ใน Modal
 
 // pop-up Menu (Event Delegation for dynamically created cards)
 document.addEventListener('click', (e) => {
     const card = e.target.closest('.menu-card:not(.locked)');
-    if (card && card.closest('#menuList')) {
+    if (card && (card.closest('#menuList') || card.closest('#recipes-container') || card.closest('#favorites-container'))) {
         // ป้องกันการเปิด modal ถ้ากดโดนดาว Favorite
         if (e.target.classList.contains('fa-star')) return;
         
         e.preventDefault();
         const menuId = card.dataset.id;
-        const menuData = allRelatedMenus.find(m => m._id === menuId);
+        const menuData = window.allRelatedMenus.find(m => m._id === menuId);
         
         const modal = document.getElementById('questModal');
         if (modal && menuData) {
@@ -435,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (submitBtn) {
         submitBtn.addEventListener('click', async () => {
             const menuId = modal.dataset.currentCard;
-            const menuData = allRelatedMenus.find(m => m._id === menuId);
+            const menuData = window.allRelatedMenus.find(m => m._id === menuId);
             if (!menuData) return;
 
             // Collect data
@@ -548,8 +558,10 @@ function showSkeletonLoadersInDetail() {
 async function loadQuestDetails(questId) {
     const cacheKey = `cookquest_cache_${CURRENT_USER_ID}`;
     const cachedData = sessionStorage.getItem(cacheKey);
+    const token = localStorage.getItem('authToken');
 
-    const renderFromData = (quests, menus, fState, mStatusMap) => {
+    const renderFromData = (quests, menus, fState, mStatusMap, profile) => {
+        window.currentUserProfile = profile;
         for (let key in favState) delete favState[key];
         Object.assign(favState, fState);
         const currentQuest = quests.find(q => q._id === questId);
@@ -569,14 +581,14 @@ async function loadQuestDetails(questId) {
             return hasQuestId || hasTagMatch;
         });
 
-        allRelatedMenus = relatedMenus; // เก็บไว้ใช้ใน Modal
+        window.allRelatedMenus = relatedMenus; // เก็บไว้ใช้ใน Modal
         renderMenus(relatedMenus, mStatusMap);
     };
 
     if (cachedData) {
         try {
             const data = JSON.parse(cachedData);
-            renderFromData(data.quests, data.menus, data.favState, data.menuStatusMap);
+            renderFromData(data.quests, data.menus, data.favState, data.menuStatusMap, data.profile);
         } catch (e) {
             console.error('Cache parsing failed', e);
             showSkeletonLoadersInDetail();
@@ -590,31 +602,43 @@ async function loadQuestDetails(questId) {
         return;
     }
 
-    const worker = new Worker('../../assets/js/worker.js');
-    worker.postMessage({ userId: CURRENT_USER_ID });
+    let worker;
+    let workerPort;
+    if (typeof SharedWorker !== 'undefined') {
+        worker = new SharedWorker('../../assets/js/worker.js');
+        workerPort = worker.port;
+        workerPort.start();
+    } else {
+        worker = new Worker('../../assets/js/worker.js');
+        workerPort = worker;
+    }
 
-    worker.onmessage = function(e) {
+    workerPort.postMessage({ userId: CURRENT_USER_ID, token });
+
+    workerPort.onmessage = function(e) {
         const data = e.data;
         if (!data.success) {
             console.error('Worker error:', data.error);
             return;
         }
 
-        const { quests, menus, favState: newFavState, menuStatusMap } = data;
+        const { quests, menus, favState: newFavState, menuStatusMap, profile } = data;
         try {
             sessionStorage.setItem(cacheKey, JSON.stringify({
-                quests, menus, favState: newFavState, menuStatusMap
+                quests, menus, favState: newFavState, menuStatusMap, profile
             }));
         } catch (e) {
             console.warn('Could not cache data in sessionStorage. Quota might be exceeded:', e);
         }
         
-        renderFromData(quests, menus, newFavState, menuStatusMap);
+        renderFromData(quests, menus, newFavState, menuStatusMap, profile);
     };
 
-    worker.onerror = function(error) {
-        console.error('Worker failed:', error);
-    };
+    if (typeof SharedWorker === 'undefined') {
+        worker.onerror = function(error) {
+            console.error('Worker failed:', error);
+        };
+    }
 }
 
 function renderMenus(menus, menuStatusMap = {}) {
@@ -635,13 +659,41 @@ function renderMenus(menus, menuStatusMap = {}) {
             card.classList.add(`status-${mStatus}`);
         }
 
-        const isLocked = false; // สามารถปรับเงื่อนไขการล็อคได้ที่นี่
+        const menuExp = menu.EXP || 0;
+        let requiredRank = 'bronze';
+        if (menuExp >= 100 && menuExp <= 150) requiredRank = 'bronze';
+        else if (menuExp >= 151 && menuExp <= 200) requiredRank = 'silver';
+        else if (menuExp >= 201 && menuExp <= 250) requiredRank = 'gold';
+        else if (menuExp >= 251 && menuExp <= 300) requiredRank = 'platinum';
+        else if (menuExp >= 301 && menuExp <= 500) requiredRank = 'diamond';
+        else if (menuExp >= 501) requiredRank = 'master';
+
+        const rankOrder = {
+            'bronze': 1, 'silver': 2, 'gold': 3,
+            'platinum': 4, 'diamond': 5, 'master': 6
+        };
+        
+        let userRankStr = 'bronze';
+        if (window.currentUserProfile && window.currentUserProfile.rank) {
+            const cleanRank = window.currentUserProfile.rank.toLowerCase();
+            if (cleanRank.includes('bronze')) userRankStr = 'bronze';
+            else if (cleanRank.includes('silver')) userRankStr = 'silver';
+            else if (cleanRank.includes('gold')) userRankStr = 'gold';
+            else if (cleanRank.includes('platinum')) userRankStr = 'platinum';
+            else if (cleanRank.includes('diamond')) userRankStr = 'diamond';
+            else if (cleanRank.includes('master')) userRankStr = 'master';
+        }
+        
+        const requiredVal = rankOrder[requiredRank] || 1;
+        const userVal = rankOrder[userRankStr] || 1;
+        const isLocked = userVal < requiredVal;
+
         if (isLocked) {
             card.classList.add('locked');
         }
 
         const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
-        const rankValue = (menu.rank || 'bronze').toLowerCase();
+        const rankValue = requiredRank;
         const rankDisplay = rankValue.toUpperCase();
         const prepTimeStr = menu.prepTime || '0';
         const cookTimeStr = menu.cookTime || '0';
@@ -652,7 +704,7 @@ function renderMenus(menus, menuStatusMap = {}) {
         card.innerHTML = `
             <span class="quest-title-wrapper">
                 <h2 class="quest-title thaipattaya">${menu.menuName}</h2>
-                <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star" style="cursor:pointer; color: ${isFavorited ? '#ff6b6b' : 'white'};"></i>
+                <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star" style="cursor:pointer; color: white;"></i>
             </span>
             <figure class="quest-image">
                 <img src="${imageUrl}" alt="${menu.menuName}">
@@ -907,11 +959,11 @@ function removeUpload() {
 function getRankColor(rank) {
   switch (rank.toLowerCase()) {
     case 'bronze': return '#ffa954ff'; // ทองแดง
-    case 'silver': return '#c0c0c0ff'; // เงิน
+    case 'silver': return '#e3e3e3ff'; // เงิน
     case 'gold': return '#FFD700'; // ทอง
     case 'platinum': return '#ff25ffff'; // แพลตินัม
     case 'diamond': return '#34d0ffff'; // เพชร
-    case 'master': return '#0B5091'; // ปรมาจารย์
+    case 'master': return '#ff1f1fff'; // ปรมาจารย์
     default: return '#fff';
   }
 }

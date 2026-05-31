@@ -166,10 +166,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Fetch fresh data in the background
       if (window.Worker) {
-          const worker = new Worker('../../assets/js/worker.js');
-          worker.postMessage({ userId, token });
+          let worker;
+          let workerPort;
+          if (typeof SharedWorker !== 'undefined') {
+              worker = new SharedWorker('../../assets/js/worker.js');
+              workerPort = worker.port;
+              workerPort.start();
+          } else {
+              worker = new Worker('../../assets/js/worker.js');
+              workerPort = worker;
+          }
 
-          worker.onmessage = function(e) {
+          workerPort.postMessage({ userId, token });
+
+          workerPort.onmessage = function(e) {
               const data = e.data;
               if (!data.success) {
                   console.error('Worker error:', data.error);
@@ -191,6 +201,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                   renderView(freshProfile, freshHistoryData);
               }
           };
+
+          if (typeof SharedWorker === 'undefined') {
+              worker.onerror = function(error) {
+                  console.error('Worker failed:', error);
+              };
+          }
       }
 
       // Setup Modal Click Events for Badges
@@ -249,6 +265,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                   badgeModal.classList.remove('hidden');
               });
           }
+      }
+
+      // Initialize Socket.io connection on profile-view page
+      const socket = typeof io !== 'undefined' ? io('http://localhost:4000') : null;
+      if (socket) {
+          socket.on('status_updated', () => {
+              sessionStorage.removeItem(cacheKey);
+              sessionStorage.removeItem(`cookquest_cache_${userId}`);
+              location.reload();
+          });
+          socket.on('new_submission', () => {
+              sessionStorage.removeItem(cacheKey);
+              sessionStorage.removeItem(`cookquest_cache_${userId}`);
+              location.reload();
+          });
       }
     } catch (err) {
       console.error('Failed to load progress chart:', err);

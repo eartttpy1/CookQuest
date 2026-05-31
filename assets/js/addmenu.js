@@ -301,7 +301,7 @@ function renderMenuCards() {
   }
   
   if (filteredMenus.length === 0) {
-      grid.innerHTML = '<div style="width: 100%; text-align: center; color: #888; font-family: var(--font-thai); font-size: 1.2rem;">ไม่มีสูตรอาหารของคุณ<br>ลองค้นหาคำอื่น หรือกดปุ่ม + ด้านล่างขวาเพื่อเพิ่มเลย!</div>';
+      grid.innerHTML = '<div style="grid-column: 1 / -1; width: 100%; text-align: center; color: #888; font-family: var(--font-thai); font-size: 1.2rem; padding: 50px 0;">ไม่มีสูตรอาหารของคุณ<br>ลองค้นหาคำอื่น หรือกดปุ่ม + ด้านล่างขวาเพื่อเพิ่มเลย!</div>';
       return;
   }
 

@@ -878,3 +878,52 @@ body.darkmode{
     .emenu-container { padding: 8px; }
     .item-title { font-size: 1rem; }
 }
+
+/* ============== Category Quick Select ============== */
+.category-quick-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    background: white;
+    border: 1px solid #eee;
+    border-top: none;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+body.darkmode .category-quick-select {
+    background: #2a2a2a;
+    border-color: #444;
+}
+
+.category-badge-opt {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    transition: all 0.2s ease;
+}
+
+body.darkmode .category-badge-opt {
+    background: #444;
+    color: #eee;
+    border-color: #555;
+}
+
+.category-badge-opt.active {
+    background: #FFD6D6;
+    border-color: #ffb3b3;
+    color: #800002;
+    font-weight: bold;
+}
+
+body.darkmode .category-badge-opt.active {
+    background: #800002;
+    border-color: #b30003;
+    color: white;
+}
