@@ -10,7 +10,7 @@
 }
 body.darkmode{
   --base-color: #3D4459;
-  --background-color: #2a2f3e;
+  --background-color: #3D4459;
   --text-color: var(--text-color);
   --hover-color: rgba(255,255,255, 0.2);
   --black-color: rgb(0, 0, 0);
@@ -482,24 +482,28 @@ body.darkmode .empty-message {
         body.darkmode .tabs {
             color: #e0e0e0;
         }
-        body.darkmode .card {
+        body.darkmode:not(:has(.profile-page)) .card {
             background: #3d4459 !important;
             border: 1px solid #1a1668 !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-    /* Nuclear Specificity: Force text colors using exact IDs */
-    #profile-level, #profile-xp, div.card.recipe p, div.card.recipe span {
+    /* Legacy overrides — profile-page theme in profile-view.css takes precedence */
+    body.darkmode:not(:has(.profile-page)) #profile-level,
+    body.darkmode:not(:has(.profile-page)) #profile-xp {
             color: #bbb !important;
         }
 
-    #profile-rank, #profile-completed,
-    div.card h1, div.card h3,
+    body.darkmode:not(:has(.profile-page)) #profile-rank,
+    body.darkmode:not(:has(.profile-page)) #profile-completed,
+    body.darkmode:not(:has(.profile-page)) div.card h1,
+    body.darkmode:not(:has(.profile-page)) div.card h3,
         body.darkmode .badges h3 {
             color: #ffffff !important;
         }
-        body.darkmode #profile-username {
-            color: #000000 !important;
+        body.darkmode.profile-page #profile-username,
+        body.darkmode .profile-page #profile-username {
+            color: #f4f6fb !important;
         }
         body.darkmode .tooltip-content {
             background: linear-gradient(145deg, #0b074d, #0d0944) !important;
@@ -513,8 +517,8 @@ body.darkmode .empty-message {
             color: #888;
         }
         body.darkmode .recipe-card {
-            background-color: #2a2a2a;
-            border: 1px solid #444;
+            background-color: #3D4459;
+            border: 1px solid #576082;
             color: #eee;
         }
         body.darkmode .unlocked-badge {
@@ -527,9 +531,9 @@ body.darkmode .empty-message {
         .skeleton-card { border: 1px solid #eee; overflow: hidden; height: 260px; }
         .skeleton-bg { background: #eee; }
         .skeleton-bg-main { background: #e0e0e0; }
-        body.darkmode .skeleton-card { border-color: #444; background: #2a2a2a; }
+        body.darkmode .skeleton-card { border-color: #576082; background: #3D4459; }
         body.darkmode .skeleton-bg { background: rgba(255, 255, 255, 0.1); }
-        body.darkmode .skeleton-bg-main { background: #333; }
+        body.darkmode .skeleton-bg-main { background: #3D4459; }
 
         /* Tooltip Rank Colors */
         #rank-bronze { background-color: #ffa954; color: black; border-color: #ffa954; }

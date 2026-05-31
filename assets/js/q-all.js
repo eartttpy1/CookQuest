@@ -28,6 +28,7 @@ function setupTabNavigation() {
         navLinks.forEach(l => l.classList.remove('active'));
         const targetLink = document.querySelector(`.top-nav .nav-link[data-filter="${initialTab}"]`);
         if (targetLink) targetLink.classList.add('active');
+        applyFilters();
     }
 
     navLinks.forEach(link => {

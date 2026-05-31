@@ -8,11 +8,22 @@
 }
 body.darkmode{
   --base-color: #3D4459;
-  --background-color: #2a2f3e;
+  --background-color: #3D4459;
   --text-color: white;
   --hover-color: rgba(255,255,255, 0.2);
   --black-color: rgb(0, 0, 0);
   --border-color-focus: #ff6a6c;
+}
+
+body.darkmode .card {
+  background: var(--background-color);
+  color: var(--text-color);
+}
+
+body.darkmode .desc,
+body.darkmode .hint,
+body.darkmode .resend {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 

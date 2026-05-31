@@ -20,7 +20,7 @@
     <!-- ============== Start  Stylesheet ============== -->
     <link rel="stylesheet" href="../../style.css?v=7">
     <link rel="stylesheet" href="../../assets/css/profile.css?v=7"> <!-- Re-use profile container styles -->
-    <link rel="stylesheet" href="../../assets/css/profile-view.css?v=7">
+    <link rel="stylesheet" href="../../assets/css/profile-view.css?v=10">
     <style>
         /* Nuclear Specificity: Force Navbar colors to remain correct in dark mode */
         body.darkmode .NL {
@@ -173,53 +173,85 @@
 </nav>
 
     <!-- ==============Profile view all page content ============== -->
-     <div class="profile-container">
+    <main class="profile-container perf-view">
 
-  <!-- Header -->
-  <div class="view-header">
-    <h2 style="display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-chart-pie header-icon"></i> Performance & Badges</h2>
-    <a href="profile.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Profile</a>
-  </div>
+        <header class="view-header">
+            <div class="view-header-text">
+                <p class="view-eyebrow thai">โปรไฟล์ของคุณ</p>
+                <h1 class="view-title">
+                    <i class="fa-solid fa-chart-pie header-icon" aria-hidden="true"></i>
+                    Performance &amp; Badges
+                </h1>
+                <p class="view-subtitle thai">ติดตามเลเวล เควสที่ผ่าน และเหรียญที่ปลดล็อก</p>
+            </div>
+            <a href="profile.html" class="back-link">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                <span>Back to Profile</span>
+            </a>
+        </header>
 
-  <!-- Level -->
-  <div class="level-box">
-    <div class="avatar"><i class="fa-solid fa-circle-user"></i></div>
+        <section class="perf-section" aria-labelledby="level-heading">
+            <h2 id="level-heading" class="visually-hidden">Level progress</h2>
+            <div class="level-box">
+                <div class="level-box-shine" aria-hidden="true"></div>
+                <div class="level-box-ring" aria-hidden="true"></div>
+                <div class="level-avatar" aria-hidden="true">
+                    <i class="fa-solid fa-circle-user"></i>
+                </div>
+                <div class="level-info">
+                    <p class="level-kicker thai">ระดับปัจจุบัน</p>
+                    <h2 class="level-heading" id="view-level-title">Loading...</h2>
+                    <div class="xp-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="xp-progress">
+                        <div class="xp-fill"></div>
+                    </div>
+                    <div class="xp-meta">
+                        <span class="xp-label thai">Experience</span>
+                        <span class="xp-text" id="view-xp-text">...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    <div class="level-info">
-      <div class="level-title" id="view-level-title">Loading...</div>
+        <section class="perf-section" aria-labelledby="activity-heading">
+            <div class="section-intro">
+                <h2 id="activity-heading" class="section-heading">
+                    <i class="fa-solid fa-chart-line header-icon" aria-hidden="true"></i>
+                    Activity History
+                </h2>
+                <p class="section-desc thai">จำนวนเมนูที่อนุมัติแล้วสะสมตามเวลา</p>
+            </div>
+            <div class="chart-box">
+                <canvas id="progressChart" aria-label="Activity history chart"></canvas>
+            </div>
+        </section>
 
-      <div class="xp-bar">
-        <div class="xp-fill"></div>
-      </div>
+        <section class="perf-section badges-section" aria-labelledby="badges-heading">
+            <div class="section-intro section-intro--badges">
+                <div>
+                    <h2 id="badges-heading" class="section-heading">
+                        <i class="fa-solid fa-medal header-icon" aria-hidden="true"></i>
+                        Badge Collection
+                    </h2>
+                    <p class="section-desc thai">แตะเหรียญเพื่อดูรายละเอียด</p>
+                </div>
+                <span class="badge-count-pill" id="badge-count" hidden>0 / 0</span>
+            </div>
+            <div class="badge-grid" id="view-badge-grid">
+                <!-- Badges loaded dynamically -->
+            </div>
+        </section>
 
-      <span class="xp-text" id="view-xp-text">...</span>
+    </main>
+
+    <div id="badgeModal" class="badge-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalBadgeName">
+        <div class="badge-modal-content">
+            <button type="button" id="closeBadgeModal" class="badge-modal-close" aria-label="Close">&times;</button>
+            <div id="modalBadgeIcon" class="badge-modal-icon-slot"></div>
+            <h2 id="modalBadgeName" class="badge-modal-name"></h2>
+            <p id="modalBadgeDesc" class="badge-modal-desc thai"></p>
+            <div id="modalBadgeStatus" class="badge-modal-status"></div>
+        </div>
     </div>
-  </div>
-
-  <!-- Chart -->
-  <h3 class="section-heading"><i class="fa-solid fa-chart-line header-icon"></i> Activity History</h3>
-  <div class="chart-box">
-    <canvas id="progressChart"></canvas>
-  </div>
-
-  <!-- Badge -->
-  <h3 class="section-heading"><i class="fa-solid fa-medal header-icon"></i> Badge Collection</h3>
-
-  <div class="badge-grid" id="view-badge-grid">
-    <!-- Badges will be loaded dynamically from the database -->
-  </div>
-
-</div>
-<!-- Badge Modal Overlay -->
-<div id="badgeModal" class="modal-overlay hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center;">
-    <div class="modal-content badge-modal-content">
-        <button id="closeBadgeModal" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #888;">&times;</button>
-        <div id="modalBadgeIcon" style="font-size: 60px; width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;"></div>
-        <h2 id="modalBadgeName" style="font-family: 'Pattaya', sans-serif;"></h2>
-        <p id="modalBadgeDesc" class="thai"></p>
-        <div id="modalBadgeStatus"></div>
-    </div>
-</div>
 
 
 </body>

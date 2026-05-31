@@ -9,12 +9,51 @@
 }
 body.darkmode{
   --base-color: #3D4459;
+  --box-color: #3D4459;
   --text-color: white;
   --background-theme: #FFF3C9;
   --hover-color: rgba(87, 96, 130, 0.7);
   --box-shadow-color: rgb(0, 0, 0, 0.7);
   --border-bottom-color: rgba(255,255,255,0.2);
   --option-color: #2d3241;
+}
+
+/* Dark mode: unify box/container backgrounds with navbar */
+body.darkmode .chart-box,
+body.darkmode .badge-modal-content,
+body.darkmode .badge-card,
+body.darkmode .recipe-card,
+body.darkmode .skeleton-card,
+body.darkmode .category-quick-select,
+body.darkmode .search-box,
+body.darkmode .infobox,
+body.darkmode .infobox.register {
+  background: var(--box-color) !important;
+  background-color: var(--box-color) !important;
+}
+
+body.darkmode .search-box .search-input,
+body.darkmode .search-label {
+  color: var(--text-color);
+}
+
+body.darkmode .infobox h1,
+body.darkmode .inputbox,
+body.darkmode .infobox input,
+body.darkmode .inputbox label {
+  color: var(--text-color);
+}
+
+body.darkmode .inputbox {
+  border-bottom-color: var(--text-color);
+}
+
+body.darkmode .login-register #Have-an-account {
+  color: var(--text-color);
+}
+
+body.darkmode .sort-btn {
+  background: var(--box-color);
 }
 *{
     margin: 0;

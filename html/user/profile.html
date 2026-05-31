@@ -18,9 +18,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="../../style.css?v=5">
-    <link rel="stylesheet" href="../../assets/css/profile-view.css?v=5">
-    <link rel="stylesheet" href="../../assets/css/profile.css?v=5">
+    <link rel="stylesheet" href="../../style.css?v=6">
+    <link rel="stylesheet" href="../../assets/css/profile.css?v=6">
+    <link rel="stylesheet" href="../../assets/css/profile-view.css?v=11">
     <link rel="stylesheet" href="../../quest-style.css">
     <link rel="stylesheet" href="../../assets/css/quest.css">
 
@@ -166,43 +166,38 @@
 </nav>
 
 <!-- PROFILE -->
+<div class="perf-view profile-page">
 
 <div class="profile-container">
 
-    <!-- PROFILE -->
     <div class="profile-header">
+        <div class="profile-header-shine" aria-hidden="true"></div>
+        <div class="profile-header-ring" aria-hidden="true"></div>
 
-        <div class="avatar"></div>
-
-        <div class="user-info">
-
-            <!-- USERNAME -->
-            <h2 id="profile-username">Loading...</h2>
-
-            <button class="edit-btn" onclick="window.location.href='profile-edit.html'">
-                Edit Profile
-            </button>
-
+        <div class="profile-avatar" aria-hidden="true">
+            <i class="fa-solid fa-circle-user"></i>
         </div>
 
+        <div class="user-info">
+            <h2 id="profile-username">Loading...</h2>
+            <button type="button" class="edit-btn" onclick="window.location.href='profile-edit.html'">
+                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                <span>Edit Profile</span>
+            </button>
+        </div>
     </div>
 
     <!-- STATS -->
     <div class="stats">
 
-        <div class="card level">
+        <div class="card level profile-stat-card profile-stat-card--level">
 
-            <!-- LEVEL -->
-            <p id="profile-level">Loading...</p>
+            <p class="stat-kicker thai">ระดับ</p>
+            <p class="stat-label" id="profile-level">Loading...</p>
+            <h3 class="stat-value" id="profile-rank">Loading...</h3>
+            <span class="stat-xp" id="profile-xp">...</span>
 
-            <!-- RANK -->
-            <h3 id="profile-rank">Loading...</h3>
-
-            <!-- EXP -->
-            <span id="profile-xp">...</span>
-
-            <!-- EXP PROGRESS BAR -->
-            <div class="xp-bar">
+            <div class="xp-bar profile-xp-bar">
                 <div class="xp-bar-fill"></div>
             </div>
 
@@ -243,17 +238,16 @@
             </div>
         </div>
 
-        <div class="card recipe">
+        <div class="card recipe profile-stat-card profile-stat-card--recipe">
 
-            <p>
-                <i class="fa-solid fa-star"></i>
+            <p class="stat-kicker">
+                <i class="fa-solid fa-star" aria-hidden="true"></i>
                 Recipe
             </p>
 
-            <!-- COMPLETED -->
-            <h1 id="profile-completed">0</h1>
+            <h1 class="stat-value stat-value--large" id="profile-completed">0</h1>
 
-            <span>Completed</span>
+            <span class="stat-foot">Completed</span>
 
             <!-- RECIPE INFO TOOLTIP (Shows when hovering over the card) -->
             <div class="recipe-info-tooltip">
@@ -289,33 +283,32 @@
 
 </div>
 
+<div class="profile-page-lower">
+    <div class="tabs profile-tabs">
+        <span class="tab-item active" data-tab="recipes">
+            <i class="fa-solid fa-utensils"></i>
+            Recipes
+        </span>
+        <span class="tab-item" data-tab="favorites">
+            <i class="fa-solid fa-heart"></i>
+            Favorites
+        </span>
+    </div>
 
+    <div class="tab-content active" id="recipes-tab">
+        <div class="recipes-list quest-section" id="recipes-container">
+            <!-- Recipe cards will be populated here -->
+        </div>
+    </div>
 
-<!-- TABS -->
-<div class="tabs">
-    <span class="tab-item active" data-tab="recipes">
-        <i class="fa-solid fa-utensils"></i>
-        Recipes
-    </span>
-    <span class="tab-item" data-tab="favorites">
-        <i class="fa-solid fa-heart"></i>
-        Favorites
-    </span>
-</div>
-
-<!-- RECIPES CONTAINER -->
-<div class="tab-content active" id="recipes-tab">
-    <div class="recipes-list quest-section" id="recipes-container">
-        <!-- Recipe cards will be populated here -->
+    <div class="tab-content" id="favorites-tab">
+        <div class="favorites-list quest-section" id="favorites-container">
+            <!-- Favorite recipe cards will be populated here -->
+        </div>
     </div>
 </div>
 
-<!-- FAVORITES CONTAINER -->
-<div class="tab-content" id="favorites-tab">
-    <div class="favorites-list quest-section" id="favorites-container">
-        <!-- Favorite recipe cards will be populated here -->
-    </div>
-</div>
+</div><!-- /.perf-view.profile-page -->
 
 <!-- Modal Overlay -->
 <div id="questModal" class="modal-overlay hidden">

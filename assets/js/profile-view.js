@@ -34,8 +34,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           const maxDisplay = currentLevelData.maxXP === Infinity ? 'MAX' : currentLevelData.maxXP;
 
           document.getElementById('view-level-title').textContent = `Level ${lvl} ${currentLevelData.rank}`;
-          document.getElementById('view-xp-text').textContent = `${xp}/${maxDisplay} EXP`;
+          document.getElementById('view-xp-text').textContent = `${xp} / ${maxDisplay}`;
           document.querySelector('.xp-fill').style.width = `${xpPercentage}%`;
+          const xpProgress = document.getElementById('xp-progress');
+          if (xpProgress) {
+              xpProgress.setAttribute('aria-valuenow', String(Math.round(xpPercentage)));
+              xpProgress.setAttribute('aria-label', `Experience: ${xp} of ${maxDisplay}`);
+          }
 
           // 1. Filter only 'approved' dishes and sort them by date (oldest to newest)
           const approvedDishes = historyData.filter(item => item.status === 'approved');
@@ -59,12 +64,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
 
           const isDarkMode = document.body.classList.contains('darkmode');
-          const textColor = isDarkMode ? '#bbb' : '#666';
-          const gridColor = isDarkMode ? '#444' : '#eaeaea';
+          const textColor = isDarkMode ? '#b8c2d8' : '#4a4540';
+          const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e0dcd4';
+          const accentColor = isDarkMode ? '#8fa4e8' : '#800002';
+          const fillColor = isDarkMode ? 'rgba(143, 164, 232, 0.2)' : 'rgba(128, 0, 2, 0.12)';
 
           // 4. Render the Chart
           const ctx = document.getElementById('progressChart').getContext('2d');
-          if (chartInstance) chartInstance.destroy(); // destroy old chart if re-rendering
+          if (chartInstance) chartInstance.destroy();
           chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
@@ -72,13 +79,13 @@ document.addEventListener('DOMContentLoaded', async () => {
               datasets: [{
                 label: 'Total Completed Dishes',
                 data: cumulativeData.length ? cumulativeData : [0],
-                borderColor: '#800002',
-                backgroundColor: 'rgba(128, 0, 2, 0.15)',
+                borderColor: accentColor,
+                backgroundColor: fillColor,
                 borderWidth: 3,
                 fill: true,
-                tension: 0.4, 
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#800002',
+                tension: 0.4,
+                pointBackgroundColor: isDarkMode ? '#3D4459' : '#fff',
+                pointBorderColor: accentColor,
                 pointBorderWidth: 2,
                 pointRadius: 5,
                 pointHoverRadius: 7
@@ -86,13 +93,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
             options: {
               responsive: true,
-              scales: { 
-                  x: { ticks: { color: textColor }, grid: { color: gridColor } }, 
-                  y: { beginAtZero: true, ticks: { stepSize: 1, color: textColor }, grid: { color: gridColor } } 
+              maintainAspectRatio: false,
+              scales: {
+                  x: { ticks: { color: textColor, maxRotation: 45, minRotation: 0 }, grid: { color: gridColor } },
+                  y: { beginAtZero: true, ticks: { stepSize: 1, color: textColor }, grid: { color: gridColor } }
               },
               plugins: { legend: { display: false } }
             }
           });
+          window.chartInstance = chartInstance;
 
           // 4. Render All Badges (Locked/Unlocked) from Database
           const badgeGrid = document.getElementById('view-badge-grid');
@@ -132,6 +141,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
           
           badgeGrid.innerHTML = badgeHTML;
+
+          const unlockedCount = evaluatedBadges.filter(b => b.isUnlocked).length;
+          const badgeCountEl = document.getElementById('badge-count');
+          if (badgeCountEl) {
+              badgeCountEl.textContent = `${unlockedCount} / ${evaluatedBadges.length}`;
+              badgeCountEl.hidden = evaluatedBadges.length === 0;
+          }
       };
 
       const showSkeletonLoadersInView = () => {
@@ -293,12 +309,18 @@ document.addEventListener('DOMContentLoaded', async () => {
               // Force Chart.js to recalculate its text colors based on the new theme
               if (window.chartInstance) {
                   const isDarkMode = document.body.classList.contains('darkmode');
-                  const textColor = isDarkMode ? '#bbb' : '#666';
-                  const gridColor = isDarkMode ? '#444' : '#eaeaea';
+                  const textColor = isDarkMode ? '#b8c2d8' : '#4a4540';
+                  const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e0dcd4';
                   window.chartInstance.options.scales.x.ticks.color = textColor;
                   window.chartInstance.options.scales.x.grid.color = gridColor;
                   window.chartInstance.options.scales.y.ticks.color = textColor;
                   window.chartInstance.options.scales.y.grid.color = gridColor;
+                  const accent = isDarkMode ? '#8fa4e8' : '#800002';
+                  const fill = isDarkMode ? 'rgba(143, 164, 232, 0.2)' : 'rgba(128, 0, 2, 0.12)';
+                  window.chartInstance.data.datasets[0].borderColor = accent;
+                  window.chartInstance.data.datasets[0].backgroundColor = fill;
+                  window.chartInstance.data.datasets[0].pointBorderColor = accent;
+                  window.chartInstance.data.datasets[0].pointBackgroundColor = isDarkMode ? '#3D4459' : '#fff';
                   window.chartInstance.update();
               }
           }, 50); 

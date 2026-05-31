@@ -264,3 +264,16 @@ body {
     padding: 20px;
   }
 }
+
+body.darkmode .card.wide,
+body.darkmode .card.outline {
+  background: var(--base-color);
+  color: var(--text-color);
+}
+
+body.darkmode .card.wide .left i,
+body.darkmode .card.outline i,
+body.darkmode .requests,
+body.darkmode .action {
+  color: var(--text-color);
+}
