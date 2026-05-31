@@ -146,7 +146,7 @@ function renderRequests() {
 
         requestItem.innerHTML = `
             <div class="item-img">
-                <img src="${getImageUrl(request)}" alt="dish">
+                <img src="${getImageUrl(request)}" alt="dish"${request.hasImage ? ` data-lazy-request-id="${request._id}"` : ''}>
             </div>
             <div class="item-info">
                 <div class="item-top">
@@ -171,6 +171,8 @@ function renderRequests() {
         requestList.appendChild(requestItem);
     });
 
+    setupLazyRequestImages(requestList);
+
     updateRequestCount(sorted.length);
 }
 
@@ -193,6 +195,53 @@ function updateRequestCount(count) {
 
     const visibleItems = document.querySelectorAll('#requestList .request-item').length;
     requestCount.textContent = String(visibleItems);
+}
+
+function setupLazyRequestImages(root) {
+    const container = root || document;
+    const images = container.querySelectorAll('img[data-lazy-request-id]:not([data-loaded="true"])');
+    if (images.length === 0) {
+        return;
+    }
+
+    const loadImage = async (img) => {
+        const requestId = img.dataset.lazyRequestId;
+        if (!requestId || img.dataset.loaded === 'true') {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/requests/${requestId}/image`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.imageURL) {
+                    img.src = data.imageURL;
+                }
+            }
+            img.dataset.loaded = 'true';
+        } catch (error) {
+            console.error('Failed to load request image:', error);
+            img.dataset.loaded = 'true';
+        }
+    };
+
+    if (!('IntersectionObserver' in window)) {
+        images.forEach((img) => loadImage(img));
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) {
+                return;
+            }
+            const img = entry.target;
+            observer.unobserve(img);
+            loadImage(img);
+        });
+    }, { rootMargin: '200px' });
+
+    images.forEach((img) => observer.observe(img));
 }
 
 function getMenuName(request) {

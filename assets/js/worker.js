@@ -6,7 +6,7 @@ self.onmessage = async function(e) {
             fetch('/api/quests'),
             fetch('/api/menus'),
             fetch(`/api/favorites?userId=${userId}`),
-            fetch(`/api/history?userId=${userId}`)
+            fetch(`/api/history?userId=${userId}&summary=true`)
         ]);
 
         if (!questsResponse.ok) throw new Error('Failed to load quests');
@@ -99,16 +99,22 @@ self.onmessage = async function(e) {
                 }
             });
 
-            // Images
-            const imageUrls = relatedMenus.map(m => m.imageURL).filter(url => url).slice(0, 4);
+            // Images — keep menu ids for lazy loading, skip heavy base64 in worker payload
             const defaultPlaceholders = [
                 '../../assets/img/steak1.png',
                 '../../assets/img/steak2.png',
                 '../../assets/img/steak3.png',
                 '../../assets/img/emptymenu.jpg'
             ];
+            const imageUrls = relatedMenus.slice(0, 4).map((menu, index) => ({
+                menuId: menu._id,
+                url: menu.imageURL || defaultPlaceholders[index] || defaultPlaceholders[0]
+            }));
             while (imageUrls.length < 4) {
-                imageUrls.push(defaultPlaceholders[imageUrls.length]);
+                imageUrls.push({
+                    menuId: '',
+                    url: defaultPlaceholders[imageUrls.length]
+                });
             }
 
             return {

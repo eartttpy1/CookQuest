@@ -145,7 +145,7 @@ async function loadQuests() {
         const data = JSON.parse(localStorage.getItem('user_data'));
         if (data?.user?.id) userId = data.user.id;
     } catch (e) {}
-    const cacheKey = `cookquest_cache_${userId}`;
+    const cacheKey = `cookquest_cache_v2_${userId}`;
     const cachedData = sessionStorage.getItem(cacheKey);
 
     if (cachedData) {
@@ -231,19 +231,29 @@ function renderQuests(quests) {
         }
 
         // Use pre-calculated data from the worker
-        const { imageUrls, highestRank } = quest.processedData || { 
-            imageUrls: ['../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg'], 
-            highestRank: 'bronze' 
+        const defaultImageUrls = [
+            { menuId: '', url: '../../assets/img/emptymenu.jpg' },
+            { menuId: '', url: '../../assets/img/emptymenu.jpg' },
+            { menuId: '', url: '../../assets/img/emptymenu.jpg' },
+            { menuId: '', url: '../../assets/img/emptymenu.jpg' }
+        ];
+        const { imageUrls, highestRank } = quest.processedData || {
+            imageUrls: defaultImageUrls,
+            highestRank: 'bronze'
         };
+
+        const gridImages = imageUrls.map((entry) => {
+            const imageEntry = typeof entry === 'string' ? { menuId: '', url: entry } : entry;
+            const src = imageEntry.url || '../../assets/img/emptymenu.jpg';
+            const lazyAttr = imageEntry.menuId ? ` data-lazy-menu-id="${imageEntry.menuId}"` : '';
+            return `<img src="${src}" alt="food"${lazyAttr}>`;
+        }).join('');
 
         // We use placeholders since there's no multiple image field in DB right now
         card.innerHTML = `
             <h2 class="quest-title thaipattaya">${quest.name}</h2>
             <figure class="quest-image-grid">
-                <img src="${imageUrls[0]}" alt="food">
-                <img src="${imageUrls[1]}" alt="food">
-                <img src="${imageUrls[2]}" alt="food">
-                <img src="${imageUrls[3]}" alt="food">
+                ${gridImages}
                 ${isLocked ? `
                 <div class="lock-overlay">
                     <i class="fa-solid fa-lock"></i><span class="rank-text">${highestRank.toUpperCase()}</span>
@@ -263,6 +273,10 @@ function renderQuests(quests) {
     
     // Apply colors after rendering is complete
     applyRankColors();
+
+    if (typeof hydrateQuestCardImages === 'function') {
+        hydrateQuestCardImages();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -36,6 +36,26 @@ const Submission = require('./serializer/submission');
 const Favorite = require('./serializer/favorite');
 const UserMenu = require('./serializer/usermenu');
 const User = require('./serializer/user');
+
+function isBase64DataUrl(value) {
+  return typeof value === 'string' && value.startsWith('data:');
+}
+
+function toMenuListItem(menu) {
+  if (!menu) return menu;
+  if (isBase64DataUrl(menu.imageURL)) {
+    return { ...menu, hasImage: true, imageURL: '' };
+  }
+  return menu;
+}
+
+function toRequestListItem(request) {
+  if (!request) return request;
+  if (isBase64DataUrl(request.imageURL)) {
+    return { ...request, hasImage: true, imageURL: '' };
+  }
+  return request;
+}
 // MongoDB connection
 const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
 
@@ -45,6 +65,12 @@ mongoose.connect(mongoURI, {
 })
 .then(async () => {
   console.log('✓ MongoDB connected successfully');
+  await Promise.all([
+    Request.syncIndexes(),
+    Submission.syncIndexes(),
+    Favorite.syncIndexes(),
+  ]);
+  console.log('✓ Database indexes synced');
 })
 .catch(err => {
   console.error('✗ MongoDB connection error:', err.message);
@@ -401,11 +427,66 @@ app.post('/api/profile/add-badge', authMiddleware, async (req, res) => {
 
 app.get('/api/menus', async (req, res) => {
   try {
-    const menus = await Menu.find();
+    const full = req.query.full === 'true';
+    if (full) {
+      const menus = await Menu.find().lean();
+      return res.json(menus);
+    }
+
+    const menus = await Menu.aggregate(Menu.LIST_AGGREGATION);
     res.json(menus);
   } catch (error) {
     console.error('Error fetching menus:', error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/menus/images', async (req, res) => {
+  try {
+    const ids = String(req.query.ids || '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    if (ids.length === 0) {
+      return res.json({});
+    }
+
+    const menus = await Menu.find({ _id: { $in: ids } }).select('imageURL').lean();
+    const images = {};
+    menus.forEach((menu) => {
+      images[String(menu._id)] = menu.imageURL || '';
+    });
+    res.json(images);
+  } catch (error) {
+    console.error('Error fetching menu images:', error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/api/menus/:id/image', async (req, res) => {
+  try {
+    const menu = await Menu.findById(req.params.id).select('imageURL').lean();
+    if (!menu) {
+      return res.status(404).json({ error: 'Menu not found' });
+    }
+    res.json({ imageURL: menu.imageURL || '' });
+  } catch (error) {
+    console.error('Error fetching menu image:', error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/api/menus/:id', async (req, res) => {
+  try {
+    const menu = await Menu.findById(req.params.id);
+    if (!menu) {
+      return res.status(404).json({ error: 'Menu not found' });
+    }
+    res.json(menu);
+  } catch (error) {
+    console.error('Error fetching menu:', error.message);
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -522,12 +603,62 @@ app.get('/api/requests', async (req, res) => {
       return res.status(400).json({ error: 'Invalid status filter' });
     }
 
-    const query = status === 'all' ? {} : { status };
-    const requests = await Request.find(query).sort({ createdAt: -1 });
+    const pipeline = [];
+    if (status !== 'all') {
+      pipeline.push({ $match: { status } });
+    }
+
+    pipeline.push(
+      { $sort: { createdAt: -1 } },
+      {
+        $project: {
+          menuName: 1,
+          createdBy: 1,
+          randomQuests: 1,
+          status: 1,
+          submittedAt: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          hasImage: {
+            $regexMatch: {
+              input: { $ifNull: ['$imageURL', ''] },
+              regex: /^data:/
+            }
+          },
+          imageURL: {
+            $cond: {
+              if: {
+                $regexMatch: {
+                  input: { $ifNull: ['$imageURL', ''] },
+                  regex: /^data:/
+                }
+              },
+              then: '',
+              else: { $ifNull: ['$imageURL', ''] }
+            }
+          }
+        }
+      }
+    );
+
+    const requests = await Request.aggregate(pipeline);
     res.json(requests);
   } catch (error) {
     console.error('Error fetching requests:', error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/requests/:id/image', async (req, res) => {
+  try {
+    const request = await Request.findById(req.params.id).select('imageURL').lean();
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+    res.json({ imageURL: request.imageURL || '' });
+  } catch (error) {
+    console.error('Error fetching request image:', error.message);
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -628,7 +759,7 @@ app.put('/api/requests/:id/status', async (req, res) => {
 
 app.get('/api/quests', async (req, res) => {
   try {
-    const quests = await Quest.find();
+    const quests = await Quest.find().lean();
     res.json(quests);
   } catch (error) {
     console.error('Error fetching quests:', error.message);
@@ -731,27 +862,39 @@ app.put('/api/submissions/:id', async (req, res) => {
 
 app.get('/api/history', async (req, res) => {
   try {
-    const { requestId, menuName, userId } = req.query;
+    const { requestId, menuName, userId, summary } = req.query;
     const query = {};
     if (requestId) query.requestId = requestId;
     if (userId) query.createdBy = userId;
-    
+
+    const useSummary = summary === 'true' || (userId && !menuName && !requestId);
+
     let matchQuery = {};
     if (menuName) {
-        matchQuery.menuName = menuName;
+      matchQuery.menuName = menuName;
     }
-    
-    const history = await Submission.find(query)
-      .populate({
+
+    let historyQuery = Submission.find(query);
+
+    if (useSummary) {
+      historyQuery = historyQuery
+        .select('status requestId submittedAt')
+        .populate({
           path: 'requestId',
-          select: 'menuName randomQuests status',
+          select: 'menuName status',
           match: matchQuery
-      })
-      .sort({ submittedAt: -1 });
-      
-    // Filter out submissions where requestId didn't match (if we filtered by menuName)
+        });
+    } else {
+      historyQuery = historyQuery.populate({
+        path: 'requestId',
+        select: 'menuName randomQuests status',
+        match: matchQuery
+      });
+    }
+
+    const history = await historyQuery.sort({ submittedAt: -1 }).lean();
     const filteredHistory = menuName ? history.filter(sub => sub.requestId != null) : history;
-      
+
     res.json(filteredHistory);
   } catch (error) {
     console.error('Error fetching history:', error.message);
@@ -787,7 +930,7 @@ app.get('/api/favorites', async (req, res) => {
     if (!userId) {
       return res.status(400).json({ error: 'Missing userId' });
     }
-    const favorites = await Favorite.find({ userId });
+    const favorites = await Favorite.find({ userId }).select('userId menuId createdAt').lean();
     res.json(favorites);
   } catch (error) {
     console.error('Error fetching favorites:', error.message);

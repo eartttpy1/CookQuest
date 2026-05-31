@@ -53,4 +53,8 @@ const requestSchema = new mongoose.Schema(
   }
 );
 
+requestSchema.index({ createdAt: -1 });
+requestSchema.index({ status: 1, createdAt: -1 });
+requestSchema.index({ createdBy: 1 });
+
 module.exports = mongoose.model('Request', requestSchema);
