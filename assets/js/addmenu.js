@@ -334,13 +334,36 @@ function previewMainImg(event) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
-    mainImgSrc = e.target.result;
-    document.getElementById('amMainPreview').src = mainImgSrc;
-    document.getElementById('amMainPreview').classList.remove('hidden');
-    document.getElementById('amMainIcon').classList.add('hidden');
-    document.getElementById('amMainLabel').classList.add('hidden');
-    document.getElementById('amMainActions').classList.remove('hidden');
-    document.getElementById('amMainBox').style.minHeight = 'auto';
+    const img = new Image();
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+        } else if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        mainImgSrc = canvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('amMainPreview').src = mainImgSrc;
+        document.getElementById('amMainPreview').classList.remove('hidden');
+        document.getElementById('amMainIcon').classList.add('hidden');
+        document.getElementById('amMainLabel').classList.add('hidden');
+        document.getElementById('amMainActions').classList.remove('hidden');
+        document.getElementById('amMainBox').style.minHeight = 'auto';
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -449,13 +472,36 @@ function amPreviewStep(event, n) {
   const reader  = new FileReader();
   const fileId  = 'amStepFile_' + n;
   reader.onload = function(e) {
-    stepImgSrcs[n] = e.target.result;
-    const box = document.getElementById('amStepBox_' + n);
-    box.innerHTML = `
-      <img src="${e.target.result}" alt="step">
-      <input type="file" id="${fileId}" accept="image/*" style="display:none"
-             onchange="amPreviewStep(event, ${n})">
-    `;
+    const img = new Image();
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+        } else if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        stepImgSrcs[n] = canvas.toDataURL('image/jpeg', 0.8);
+        const box = document.getElementById('amStepBox_' + n);
+        box.innerHTML = `
+          <img src="${stepImgSrcs[n]}" alt="step">
+          <input type="file" id="${fileId}" accept="image/*" style="display:none"
+                 onchange="amPreviewStep(event, ${n})">
+        `;
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }

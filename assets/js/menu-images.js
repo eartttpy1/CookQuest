@@ -90,20 +90,39 @@ function setupLazyMenuImages(root, options = {}) {
     images.forEach((img) => observer.observe(img));
 }
 
-async function hydrateQuestCardImages() {
-    const images = document.querySelectorAll('.quest-image-grid img[data-lazy-menu-id]:not([data-loaded="true"])');
-    if (images.length === 0) {
+function hydrateQuestCardImages() {
+    const grids = document.querySelectorAll('.quest-image-grid:not([data-loaded="true"])');
+    if (grids.length === 0) {
         return;
     }
 
-    const menuIds = [...new Set([...images].map((img) => img.dataset.lazyMenuId).filter(Boolean))];
-    try {
-        const imageMap = await fetchMenuImagesBatch(menuIds);
-        images.forEach((img) => {
-            const imageURL = imageMap[img.dataset.lazyMenuId] || '';
-            applyMenuImage(img, imageURL, MENU_IMAGE_PLACEHOLDER);
+    if (!('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        const visibleGrids = entries.filter(entry => entry.isIntersecting).map(entry => entry.target);
+        if (visibleGrids.length === 0) return;
+
+        const menuIds = new Set();
+        const imagesToLoad = [];
+
+        visibleGrids.forEach(grid => {
+            observer.unobserve(grid);
+            grid.dataset.loaded = 'true';
+            const images = grid.querySelectorAll('img[data-lazy-menu-id]:not([data-loaded="true"])');
+            images.forEach(img => {
+                if (img.dataset.lazyMenuId) menuIds.add(img.dataset.lazyMenuId);
+                imagesToLoad.push(img);
+            });
         });
-    } catch (error) {
-        console.error('Failed to batch load quest images:', error);
-    }
+
+        if (menuIds.size > 0) {
+            fetchMenuImagesBatch([...menuIds]).then(imageMap => {
+                imagesToLoad.forEach(img => {
+                    applyMenuImage(img, imageMap[img.dataset.lazyMenuId] || '', MENU_IMAGE_PLACEHOLDER);
+                });
+            }).catch(err => console.error('Failed to batch load quest images:', err));
+        }
+    }, { rootMargin: '200px' });
+
+    grids.forEach(grid => observer.observe(grid));
 }

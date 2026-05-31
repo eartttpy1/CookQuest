@@ -785,7 +785,7 @@ function renderMenus(menus, menuStatusMap = {}) {
                 <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star" style="cursor:pointer; color: white;"></i>
             </span>
             <figure class="quest-image">
-                <img src="${imageUrl}" alt="${menu.menuName}"${lazyImageAttr}>
+                <img src="${imageUrl}" alt="${menu.menuName}" loading="lazy"${lazyImageAttr}>
                 ${isLocked ? `
                 <div class="lock-overlay">
                     <i class="fa-solid fa-lock"></i><span class="rank-label rank-text" data-rank="${rankValue}">${rankDisplay}</span>

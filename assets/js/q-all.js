@@ -282,7 +282,7 @@ function renderQuests(quests) {
 
         const gridImages = (imageUrls || []).map(imgData => {
             const lazyAttr = imgData.menuId ? ` data-lazy-menu-id="${imgData.menuId}"` : '';
-            return `<img src="${imgData.url}" alt="Quest image"${lazyAttr}>`;
+            return `<img src="${imgData.url}" alt="Quest image" loading="lazy"${lazyAttr}>`;
         }).join('');
 
         // We use placeholders since there's no multiple image field in DB right now
