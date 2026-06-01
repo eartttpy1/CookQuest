@@ -272,8 +272,12 @@ body.darkmode {
 
 .quest-title {
     margin-top: 0;
-    padding-bottom: 15px;
+    padding: 0 32px 15px;
     font-size: 24px;
+    width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .quest-image {
@@ -839,10 +843,23 @@ body.darkmode {
     .dropdown summary span {
         font-size: 1.2rem;
     }
-
 }
 
-@media(max-width: 768px) {}
+@media(max-width: 768px) {
+    .quest-section {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .quest-title {
+        font-size: 20px;
+        padding: 0 28px 10px;
+    }
+    .quest-card {
+        padding: 15px;
+        border-radius: 16px;
+        margin-bottom: 15px;
+    }
+}
 
 @media(max-width: 500px) {
     .category-header {
@@ -856,9 +873,19 @@ body.darkmode {
     .quest-section {
         display: flex;
         flex-direction: column;
-
+        gap: 12px;
     }
 
+    .quest-title {
+        font-size: 18px;
+        padding: 0 24px 8px;
+    }
+
+    .quest-card {
+        padding: 12px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+    }
 }
 
 @media(max-width: 320px) {
