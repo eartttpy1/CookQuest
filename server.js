@@ -929,13 +929,17 @@ app.get('/api/history', async (req, res) => {
     if (requestId) query.requestId = requestId;
     if (userId) query.createdBy = userId;
 
+    // Filter by menuName at database level rather than populating and filtering in memory
+    if (menuName) {
+      const reqQuery = { menuName };
+      if (userId) reqQuery.createdBy = userId;
+      const requests = await Request.find(reqQuery).select('_id').lean();
+      const requestIds = requests.map(r => r._id);
+      query.requestId = { $in: requestIds };
+    }
+
     const useSummary = summary === 'true' || (userId && !menuName && !requestId);
 
-    let matchQuery = {};
-    if (menuName) {
-      matchQuery.menuName = menuName;
-    }
-    
     let historyQuery = Submission.find(query);
     if (useSummary) {
       historyQuery = historyQuery.select('-imageURL');
@@ -944,13 +948,12 @@ app.get('/api/history', async (req, res) => {
     const history = await historyQuery
       .populate({
           path: 'requestId',
-          select: 'menuName randomQuests status',
-          match: matchQuery
+          select: 'menuName randomQuests status'
       })
       .sort({ _id: -1 });
       
-    // Filter out submissions where requestId didn't match (if we filtered by menuName)
-    const filteredHistory = menuName ? history.filter(sub => sub.requestId != null) : history;
+    // Filter out submissions where requestId didn't match
+    const filteredHistory = history.filter(sub => sub.requestId != null);
 
     res.json(filteredHistory);
   } catch (error) {

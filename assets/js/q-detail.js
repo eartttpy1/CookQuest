@@ -169,9 +169,30 @@ document.addEventListener('click', async (e) => {
                     window.allRelatedMenus[cacheIdx] = menuData;
                 }
                 populateModal(menuData, modal);
+            } else {
+                // Fallback for custom menus/usermenus where the API returns 404
+                const fallbackMenu = {
+                    _id: menuId,
+                    menuName: card.getAttribute('data-name') || 'เมนูคัสตอม',
+                    EXP: parseInt(card.getAttribute('data-exp')) || 100,
+                    imageURL: card.querySelector('img')?.src || '',
+                    ingredients: [],
+                    instructions: []
+                };
+                populateModal(fallbackMenu, modal);
             }
         } catch (err) {
             console.error('Error loading menu details:', err);
+            // Fallback on network/fetch error
+            const fallbackMenu = {
+                _id: menuId,
+                menuName: card.getAttribute('data-name') || 'เมนูคัสตอม',
+                EXP: parseInt(card.getAttribute('data-exp')) || 100,
+                imageURL: card.querySelector('img')?.src || '',
+                ingredients: [],
+                instructions: []
+            };
+            populateModal(fallbackMenu, modal);
         }
     }
 });
