@@ -1088,6 +1088,28 @@ body.darkmode {
     background: #1976d2;
 }
 
+.history-view-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-delete-history {
+    background: #c0392b;
+    border: none;
+    color: white;
+    border-radius: 24px;
+    padding: 8px 28px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease;
+}
+
+.btn-delete-history:hover {
+    background: #a93226;
+}
+
 .btn-cancel-history {
     background: #c0392b;
     border: none;
@@ -1157,7 +1179,7 @@ body.darkmode {
 }
 
 .quest-card.quest-complete {
-    border: 4px solid #2ecc71 !important;
+    background-color: #2ecc71 !important;
 }
 
 /* ─── q-all / quest pages: red boxes → navbar color in dark mode ─── */

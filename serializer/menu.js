@@ -5,11 +5,6 @@ const menuSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  rank:{
-    type: String,
-    enum: ['bronze','silver','gold','platinum','diamond','master'],
-    default: 'bronze'
-  },
   servings: {
     type: Number,
     default: 1
@@ -88,7 +83,6 @@ menuSchema.statics.LIST_PROJECTION = {
   servings: 1,
   prepTime: 1,
   cookTime: 1,
-  rank: 1,
   questIds: 1,
   createdBy: 1,
   createdAt: 1,
@@ -104,7 +98,6 @@ menuSchema.statics.LIST_AGGREGATION = [
       servings: 1,
       prepTime: 1,
       cookTime: 1,
-      rank: 1,
       questIds: 1,
       createdBy: 1,
       createdAt: 1,

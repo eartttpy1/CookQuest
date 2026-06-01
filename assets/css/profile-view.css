@@ -931,6 +931,7 @@ body.darkmode .profile-page .circle {
 
 .profile-page .profile-tabs {
   margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
   border: 1px solid var(--perf-border);
   border-bottom: none;
   border-radius: 12px 12px 0 0;

@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
 
     rank: {
         type: String,
-        default: 'IRON Chef'
+        default: 'BRONZE Chef'
     },
 
     xp: {

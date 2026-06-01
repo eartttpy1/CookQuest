@@ -893,6 +893,35 @@ app.put('/api/submissions/:id', async (req, res) => {
   }
 });
 
+app.delete('/api/submissions/:id', async (req, res) => {
+  try {
+    const submission = await Submission.findById(req.params.id);
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    if (submission.status !== 'pending') {
+      return res.status(400).json({ error: 'Only pending submissions can be deleted' });
+    }
+
+    const requestId = submission.requestId;
+
+    // Delete submission and request
+    await Submission.findByIdAndDelete(req.params.id);
+    if (requestId) {
+      await Request.findByIdAndDelete(requestId);
+    }
+
+    // Emit socket event to notify other clients (e.g. admin page)
+    io.emit('status_updated', { requestId: requestId, status: 'deleted' });
+
+    res.json({ message: 'Submission deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting submission:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/history', async (req, res) => {
   try {
     const { requestId, menuName, userId, summary } = req.query;

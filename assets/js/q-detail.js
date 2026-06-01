@@ -420,6 +420,7 @@ function renderHistory(historyData) {
                         ${sub.status === 'pending' ? `
                         <div class="history-view-actions" id="historyViewActions${index}">
                             <button class="btn-edit-history thai" onclick="enterEditMode(${index})">Edit</button>
+                            <button class="btn-delete-history thai" onclick="deleteHistorySubmission('${sub._id}')">Delete</button>
                         </div>
                         <div class="history-edit-actions hidden" id="historyEditActions${index}">
                             <button class="btn-submit thai" onclick="saveHistoryEdit(${index}, '${sub._id}', this)">Save</button>
@@ -771,7 +772,7 @@ function renderMenus(menus, menuStatusMap = {}) {
 
         const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
         const lazyImageAttr = menu._id ? ` data-lazy-menu-id="${menu._id}"` : '';
-        const rankValue = (menu.rank || 'bronze').toLowerCase();
+        const rankValue = requiredRank.toLowerCase();
         const rankDisplay = rankValue.toUpperCase();
         const prepTimeStr = menu.prepTime || '0';
         const cookTimeStr = menu.cookTime || '0';
@@ -1022,6 +1023,32 @@ function changeHistoryPhoto(event, idx) {
         document.getElementById(`historyPhoto${idx}`).src = e.target.result;
     };
     reader.readAsDataURL(file);
+}
+
+async function deleteHistorySubmission(submissionId) {
+    const confirmDelete = confirm('คุณต้องการลบการส่งเควสนี้ใช่หรือไม่?');
+    if (!confirmDelete) return;
+
+    try {
+        const res = await fetch(`http://localhost:4000/api/submissions/${submissionId}`, {
+            method: 'DELETE'
+        });
+        if (res.ok) {
+            alert('ลบการส่งสำเร็จแล้ว!');
+            // Clear session cache to force re-fetch
+            const cacheKey = `cookquest_cache_v2_${CURRENT_USER_ID}`;
+            sessionStorage.removeItem(cacheKey);
+            
+            // Reload page to refresh UI
+            window.location.reload();
+        } else {
+            const errData = await res.json();
+            alert(`เกิดข้อผิดพลาด: ${errData.error || 'ไม่สามารถลบได้'}`);
+        }
+    } catch (error) {
+        console.error(error);
+        alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
 }
 // ─── Upload preview ───
 function previewUpload(event) {
