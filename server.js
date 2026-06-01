@@ -936,7 +936,12 @@ app.get('/api/history', async (req, res) => {
       matchQuery.menuName = menuName;
     }
     
-    const history = await Submission.find(query)
+    let historyQuery = Submission.find(query);
+    if (useSummary) {
+      historyQuery = historyQuery.select('-imageURL');
+    }
+
+    const history = await historyQuery
       .populate({
           path: 'requestId',
           select: 'menuName randomQuests status',
