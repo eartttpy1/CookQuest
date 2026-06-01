@@ -21,12 +21,23 @@
     <link rel="stylesheet" href="../../quest-style.css">
     <link rel="stylesheet" href="../../assets/css/quest.css">
     <!-- ============== Start  Script ============== -->
+    <script>
+        // Force unregister all Service Workers and clear caches to bypass old cached files
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let r of registrations) r.unregister();
+            });
+        }
+        if (window.caches) {
+            caches.keys().then(keys => { for (let key of keys) caches.delete(key); });
+        }
+    </script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
     <script src="../../assets/js/menu-images.js" defer></script>
-    <script src="../../assets/js/q-detail.js" defer></script>
+    <script src="../../assets/js/q-detail.js?v=12" defer></script>
     <script src="../../assets/js/sort.js" defer></script>
     <script src="../../assets/js/category-init.js" defer></script>
 
@@ -347,9 +358,77 @@
                     </div>
 
                     <!-- Accordion: Quest 1 (collapsed by default) -->
+                    <details class="history-item" id="historyItem1">
+                    <summary class="history-summary">
+                        <div class="history-summary-left">
+                        <span class="inria-serif history-quest-name">Quest 1</span>
+                        <span class="history-badge pending">Pending ...</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down history-chevron"></i>
+                    </summary>
+
+                    <!-- Expanded content -->
                     <div class="history-body">
-                        <!-- History elements loaded dynamically -->
+                        <p class="thai history-desc">ถ่ายรูป 2 นิ้วกับอาหารของคุณ</p>
+
+                        <!-- History photo: เปลี่ยนได้ตอน edit, ลบไม่ได้ -->
+                        <div class="history-photo-wrap">
+                            <img src="../../assets/img/test.jpg" 
+                                alt="submitted" class="history-photo" id="historyPhoto1">
+                        </div>
+
+                        <!-- ปุ่มเปลี่ยนรูป (ซ่อนตอน view mode) -->
+                        <div class="history-photo-actions hidden" id="historyPhotoActions1">
+                            <label class="btn-change-img thai" for="historyFileInput1">
+                                <i class="fa-solid fa-pen"></i> เปลี่ยนรูป
+                            </label>
+                            <input type="file" id="historyFileInput1" accept="image/*" 
+                                style="display:none"
+                                onchange="changeHistoryPhoto(event, 1)">
+                        </div>
+
+                        <!-- Taste Rating (read-only / editable) -->
+                        <div class="taste-rating">
+                        <span class="taste-label">Taste :</span>
+                        <div class="taste-stars" id="historyTasteStars1">
+                            <i class="fa-solid fa-star taste-star active" data-val="1" style="color:#FFD700; pointer-events:none"></i>
+                            <i class="fa-solid fa-star taste-star active" data-val="2" style="color:#FFD700; pointer-events:none"></i>
+                            <i class="fa-solid fa-star taste-star active" data-val="3" style="color:#FFD700; pointer-events:none"></i>
+                            <i class="fa-regular fa-star taste-star" data-val="4" style="pointer-events:none"></i>
+                            <i class="fa-regular fa-star taste-star" data-val="5" style="pointer-events:none"></i>
+                        </div>
+                        </div>
+
+                        <!-- Taste Tags (read-only / editable) -->
+                        <div class="taste-tags" id="historyTasteTags1">
+                        <button class="taste-tag thai disabled" data-taste="หวาน">หวาน</button>
+                        <button class="taste-tag thai selected disabled" data-taste="เค็ม">เค็ม</button>
+                        <button class="taste-tag thai disabled" data-taste="เปรี้ยว">เปรี้ยว</button>
+                        <button class="taste-tag thai disabled" data-taste="ขม">ขม</button>
+                        <button class="taste-tag thai selected disabled" data-taste="อูมามิ">อูมามิ</button>
+                        <button class="taste-tag thai disabled" data-taste="เผ็ด">เผ็ด</button>
+                        </div>
+
+                        <!-- Review text (read-only mode) -->
+                        <div class="history-review-wrap" id="historyReviewWrap1">
+                        <p class="history-review-text thai" id="historyReviewText1">อร่อยกลมกล่อม หวานนิดนึงจะดีมาก</p>
+                        <textarea class="modal-review thai hidden" id="historyReviewInput1" rows="2">อร่อยกลมกล่อม หวานนิดนึงจะดีมาก</textarea>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="history-btn-row" id="historyBtnRow1">
+                        <!-- View mode: Edit button -->
+                        <div class="history-view-actions" id="historyViewActions1">
+                            <button class="btn-edit-history thai" onclick="enterEditMode(1)">Edit</button>
+                        </div>
+                        <!-- Edit mode: Save + Cancel -->
+                        <div class="history-edit-actions hidden" id="historyEditActions1">
+                            <button class="btn-submit thai" onclick="saveHistoryEdit(1, null, this)">Save</button>
+                            <button class="btn-cancel-history thai" onclick="cancelEditMode(1)">Cancel</button>
+                        </div>
+                        </div>
                     </div>
+                    </details>
                 </div>
             </div>
         </main>
