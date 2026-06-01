@@ -281,8 +281,46 @@ async function _populateModalAsync(menu, modal) {
             "ถ่ายรูปเงาของมือที่กำลังเอื้อมไปหยิบอาหาร (เล่นกับแสงแดดหรือโคมไฟ)",
             "ถ่ายรูปมือขณะถือจานอาหารยื่นมาข้างหน้า (เหมือนกำลังจะเสิร์ฟให้คนดู)"
         ];
-        const randomIndex = Math.floor(Math.random() * randomQuests.length);
-        questDesc.textContent = randomQuests[randomIndex];
+
+        const cacheKey = `cookquest_random_quest_${menu._id}`;
+        let assignedQuest = localStorage.getItem(cacheKey);
+        if (!assignedQuest) {
+            const randomIndex = Math.floor(Math.random() * randomQuests.length);
+            assignedQuest = randomQuests[randomIndex];
+            localStorage.setItem(cacheKey, assignedQuest);
+        }
+        questDesc.textContent = assignedQuest;
+
+        // Add Reroll option button dynamically
+        let rerollBtn = modal.querySelector('.btn-reroll-quest');
+        if (!rerollBtn) {
+            const questTitle = modal.querySelector('.modal-quest-title');
+            if (questTitle) {
+                questTitle.style.display = 'flex';
+                questTitle.style.justifyContent = 'space-between';
+                questTitle.style.alignItems = 'center';
+                questTitle.style.width = '100%';
+                
+
+                rerollBtn = document.createElement('button');
+                rerollBtn.type = 'button';
+                rerollBtn.className = 'btn-reroll-quest thai';
+                rerollBtn.style.cssText = 'background: transparent; border: none; color: rgba(255, 255, 255, 0.85); cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 4px; font-family: "IBM Plex Sans Thai Looped", "Nunito", sans-serif; font-weight: normal; transition: color 0.2s ease; margin-left: auto; padding: 0;';
+                rerollBtn.innerHTML = '<i class="fa-solid fa-rotate"></i>';
+                
+                rerollBtn.addEventListener('mouseenter', () => { rerollBtn.style.color = '#ffffff'; });
+                rerollBtn.addEventListener('mouseleave', () => { rerollBtn.style.color = 'rgba(255, 255, 255, 0.85)'; });
+                
+                rerollBtn.addEventListener('click', () => {
+                    const randomIndex = Math.floor(Math.random() * randomQuests.length);
+                    const newQuest = randomQuests[randomIndex];
+                    localStorage.setItem(cacheKey, newQuest);
+                    questDesc.textContent = newQuest;
+                });
+                
+                questTitle.appendChild(rerollBtn);
+            }
+        }
     }
 
     const isLoggedIn = !!localStorage.getItem('authToken');
@@ -556,6 +594,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 
                 if (res.ok) {
+                    // Clear the persisted random quest for this menu so a new one gets rolled next time
+                    localStorage.removeItem(`cookquest_random_quest_${menuId}`);
+
                     // Clear form
                     removeUpload();
                     document.querySelectorAll('#tasteStars .taste-star').forEach(s => {

@@ -42,7 +42,7 @@ function renderQuests() {
 
     quests.forEach(quest => {
         const questItem = document.createElement('div');
-        questItem.className = `quest-item bg-${quest.level}`;
+        questItem.className = 'quest-item';
         questItem.setAttribute('data-id', quest._id);
 
         questItem.innerHTML = `
@@ -134,11 +134,18 @@ function toggleSortDropdown() {
 }
 
 function sortQuests(sortType) {
+    document.querySelectorAll('.sort-option').forEach(opt => {
+        if (opt.getAttribute('data-sort') === sortType) {
+            opt.classList.add('active');
+        } else {
+            opt.classList.remove('active');
+        }
+    });
+
     if (sortType === 'az') {
         quests.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortType === 'level') {
-        const levelOrder = { bronze: 1, silver: 2, gold: 3 };
-        quests.sort((a, b) => levelOrder[a.level] - levelOrder[b.level]);
+    } else if (sortType === 'exp') {
+        quests.sort((a, b) => a.exp - b.exp);
     }
 
     renderQuests();
@@ -151,7 +158,6 @@ function openAddForm() {
     clearImagePreview();
     document.getElementById('formTitle').textContent = 'เพิ่มเควส';
     document.getElementById('questName').value = '';
-    document.getElementById('questLevel').value = 'bronze';
     document.getElementById('questExp').value = '';
     document.getElementById('menuTagsArea').innerHTML = '';
     const tagSearchInput = document.getElementById('menuTagSearchInput');
@@ -171,7 +177,6 @@ function openEditForm(button) {
 
     document.getElementById('formTitle').textContent = 'แก้ไขเควส';
     document.getElementById('questName').value = currentEditItem.name;
-    document.getElementById('questLevel').value = currentEditItem.level;
     document.getElementById('questExp').value = currentEditItem.exp;
     document.getElementById('menuTagsArea').innerHTML = (currentEditItem.tags || []).map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
     const tagSearchInput = document.getElementById('menuTagSearchInput');
@@ -386,7 +391,6 @@ async function saveQuest() {
     }
 
     const name = document.getElementById('questName').value;
-    const level = document.getElementById('questLevel').value;
     const exp = parseInt(document.getElementById('questExp').value);
     const tags = Array.from(document.querySelectorAll('#menuTagsArea .tag')).map(tag => tag.textContent.replace(/\s*X$/, '').trim());
 
@@ -401,7 +405,7 @@ async function saveQuest() {
         return;
     }
 
-    const questData = { name, level, exp, tags };
+    const questData = { name, exp, tags };
 
     try {
         if (currentEditItem) {

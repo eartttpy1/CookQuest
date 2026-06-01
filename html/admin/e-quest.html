@@ -115,7 +115,7 @@
                         <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
                         <div class="sort-dropdown hidden" id="sortDropdown">
                             <div class="sort-option" data-sort="az">↑ A-Z ก-ฮ</div>
-                            <div class="sort-option active" data-sort="level">↑ ระดับ</div>
+                            <div class="sort-option active" data-sort="exp">↑ EXP</div>
                         </div>
                     </div>
                     <button class="btn-add" id="addBtn" onclick="openAddForm()"><i class="fa-solid fa-plus"></i></button>
@@ -165,18 +165,9 @@
                     <input type="text" class="form-input thai" id="questName" placeholder="ชื่อเควส">
                 </div>
  
-                <!-- Level + EXP -->
+                <!-- EXP -->
                 <div class="form-row">
-                    <label class="form-label thai">ระดับ</label>
-                    <div class="select-wrapper">
-                        <select class="form-select thai" id="questLevel">
-                            <option value="bronze">Bronze</option>
-                            <option value="silver">Silver</option>
-                            <option value="gold">Gold</option>
-                        </select>
-                        <i class="fa-solid fa-caret-down select-arrow"></i>
-                    </div>
-                    <label class="form-label thai" style="margin-left:16px;">EXP ที่ได้</label>
+                    <label class="form-label thai">EXP ที่ได้</label>
                     <input type="number" class="form-input small thai" id="questExp" placeholder="200">
                 </div>
  
