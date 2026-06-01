@@ -47,11 +47,6 @@ function renderQuests() {
 
         questItem.innerHTML = `
             <button class="item-delete-btn${deleteMode ? '' : ' hidden'}"><i class="fa-solid fa-minus"></i></button>
-            <div class="quest-icon-area">
-                <div class="quest-icon-placeholder">
-                    <img src="../../assets/a-img/placeholder-quest.png" alt="quest">
-                </div>
-            </div>
             <div class="quest-info">
                 <div class="quest-title-row">
                     <span class="quest-title thai">${quest.name}</span>
@@ -278,6 +273,9 @@ async function deleteItem(button) {
 
 function removeTag(button) {
     button.parentElement.remove();
+    const searchInput = document.getElementById('menuTagSearchInput');
+    const query = searchInput ? searchInput.value : '';
+    renderMenuTagSuggestions(query);
 }
 
 async function loadMenus(search = '') {
@@ -303,20 +301,43 @@ function renderMenuTagSuggestions(query) {
     const resultsContainer = document.getElementById('menuTagSearchResults');
     if (!resultsContainer) return;
 
-    const normalizedQuery = query.toLowerCase();
+    const selectedTags = Array.from(document.querySelectorAll('#menuTagsArea .tag'))
+        .map(tag => tag.textContent.replace(/\s*X$/, '').trim());
+
+    const normalizedQuery = (query || '').toLowerCase();
     const matchingMenus = availableTags
-        .filter(menu => menu.name.toLowerCase().includes(normalizedQuery))
-        .slice(0, 10);
+        .filter(menu => menu.name.toLowerCase().includes(normalizedQuery));
 
     resultsContainer.innerHTML = '';
     matchingMenus.forEach(menu => {
+        const isSelected = selectedTags.includes(menu.name);
+        
         const item = document.createElement('div');
-        item.className = 'tag-search-result';
-        item.textContent = menu.name;
-        item.addEventListener('click', () => addMenuTag(menu.name));
+        item.className = `menu-select-item${isSelected ? ' selected' : ''}`;
+        item.innerHTML = `
+            <span class="thai">${menu.name}</span>
+            <i class="fa-solid ${isSelected ? 'fa-square-check' : 'fa-square'}"></i>
+        `;
+        
+        item.addEventListener('click', () => {
+            if (isSelected) {
+                // Remove tag
+                const tags = Array.from(document.querySelectorAll('#menuTagsArea .tag'));
+                const targetTag = tags.find(t => t.textContent.replace(/\s*X$/, '').trim() === menu.name);
+                if (targetTag) targetTag.remove();
+            } else {
+                // Add tag
+                addMenuTag(menu.name);
+            }
+            // Re-render suggestions to update state
+            const searchInput = document.getElementById('menuTagSearchInput');
+            renderMenuTagSuggestions(searchInput ? searchInput.value : '');
+        });
+        
         resultsContainer.appendChild(item);
     });
 }
+
 
 function addMenuTag(tagName) {
     const tagsArea = document.getElementById('menuTagsArea');

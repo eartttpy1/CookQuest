@@ -274,8 +274,8 @@ async function openEditFormById(id) {
     document.getElementById('menuName').value = currentEditItem.menuName;
     document.getElementById('menuServings').value = currentEditItem.servings || 1;
     document.getElementById('menuExp').value = currentEditItem.EXP ?? 0;
-    document.getElementById('prepTime').value = currentEditItem.prepTime || '';
-    document.getElementById('cookTime').value = currentEditItem.cookTime || '';
+    document.getElementById('prepTime').value = parseInt(currentEditItem.prepTime) || '';
+    document.getElementById('cookTime').value = parseInt(currentEditItem.cookTime) || '';
     document.getElementById('tagsArea').innerHTML = (currentEditItem.tags || []).map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
     document.getElementById('tagSearchInput').value = '';
     renderTagSuggestions('');
@@ -405,8 +405,14 @@ async function deleteItem(button) {
     openDeleteModal(deleteMessage, async () => {
         console.log('Attempting to delete menu with id:', id);
         try {
+            const token = localStorage.getItem('authToken');
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
             const response = await fetch(`/api/menus/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: headers
             });
             console.log('Fetch response status:', response.status);
             const data = await response.json();

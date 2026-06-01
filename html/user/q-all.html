@@ -135,9 +135,34 @@
 
         <main class="content-container">
             <div id="questSectionWrapper">
-                <section class ="category-container">
-                        <span class="category-header">Category</span>
-            </section>
+                <section class="category-container">
+                    <span class="category-header">Category</span>
+                    <!-- Status Color Legend Tooltip -->
+                    <div class="status-info-trigger-wrapper">
+                        <button class="status-info-btn">
+                            <i class="fa-regular fa-circle-question"></i>
+                            <span class="thai">คำอธิบายสีการ์ด</span>
+                        </button>
+                        <div class="status-tooltip">
+                            <div class="status-legend-item">
+                                <span class="status-color-dot status-dot-plain"></span>
+                                <span class="status-text-label thai">ยังไม่ส่ง (สีธีมหลัก)</span>
+                            </div>
+                            <div class="status-legend-item">
+                                <span class="status-color-dot status-dot-pending"></span>
+                                <span class="status-text-label thai">รอดำเนินการ (สีเหลือง)</span>
+                            </div>
+                            <div class="status-legend-item">
+                                <span class="status-color-dot status-dot-approved"></span>
+                                <span class="status-text-label thai">เสร็จสิ้น (สีเขียว)</span>
+                            </div>
+                            <div class="status-legend-item">
+                                <span class="status-color-dot status-dot-rejected"></span>
+                                <span class="status-text-label thai">ปฏิเสธ (สีดำ)</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
             <section class="category-grid">
                 <details class="dropdown">

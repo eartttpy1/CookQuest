@@ -191,6 +191,7 @@ body.darkmode {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
     position: relative;
     width: 100%;
 }
@@ -1282,4 +1283,129 @@ body.darkmode .btn-change-img {
 body.darkmode .skeleton-card {
     background-color: #3D4459;
     animation: skeleton-loading-dark 1.5s infinite ease-in-out;
+}
+
+.status-info-trigger-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+.status-info-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1.5px solid var(--red-main, #800002);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--red-main, #800002);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.status-info-btn i {
+    color: var(--red-main, #800002);
+}
+
+.status-info-btn:hover i {
+    color: white;
+}
+
+.status-info-btn:hover {
+    background: var(--red-main, #800002);
+    color: white;
+}
+
+body.darkmode .status-info-btn {
+    background: rgba(61, 68, 89, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+body.darkmode .status-info-btn:hover {
+    background: #3D4459;
+    border-color: #3D4459;
+}
+
+.status-tooltip {
+    position: absolute;
+    top: 130%;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 0, 2, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    padding: 12px 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: max-content;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.status-info-trigger-wrapper:hover .status-tooltip {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+body.darkmode .status-tooltip {
+    background: rgba(45, 50, 65, 0.98);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.status-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 1.5px 3px rgba(0,0,0,0.15);
+}
+
+/* Theme - plain */
+.status-color-dot.status-dot-plain {
+    background-color: var(--red-main, #800002);
+}
+
+/* Yellow - pending */
+.status-color-dot.status-dot-pending {
+    background-color: #f1c40f;
+}
+
+/* Green - success */
+.status-color-dot.status-dot-approved {
+    background-color: #2ecc71;
+}
+
+/* Black - reject */
+.status-color-dot.status-dot-rejected {
+    background-color: #333333;
+}
+
+.status-text-label {
+    font-family: 'IBM Plex Sans Thai Looped', 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333333;
+}
+
+body.darkmode .status-text-label {
+    color: #ffffff;
 }
