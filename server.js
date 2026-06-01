@@ -526,6 +526,16 @@ app.delete('/api/menus/:id', authMiddleware, adminMiddleware,async (req, res) =>
     }
 
     const menuName = (menu.menuName || '').trim();
+
+    // Also delete requests and submissions with this menuName
+    const requestsToDelete = await Request.find({ menuName: menuName }).select('_id').lean();
+    const reqIdsToDelete = requestsToDelete.map(r => r._id);
+    await Submission.deleteMany({ requestId: { $in: reqIdsToDelete } });
+    await Request.deleteMany({ _id: { $in: reqIdsToDelete } });
+
+    // Also delete favorites pointing to this menu
+    await Favorite.deleteMany({ menuId: req.params.id });
+
     const escapedName = menuName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const questQuery = {
       tags: { $elemMatch: { $regex: `^${escapedName}$`, $options: 'i' } }
