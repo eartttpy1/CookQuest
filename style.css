@@ -250,11 +250,12 @@ i, a{
     transform: translateY(-2px);
     box-shadow: 0 5px 10px var(--hover-color);
 }
-.NL .logo{
+.NL .logo, .NL .logo a{
   cursor: default;
-  font-weight: bold;
+  font-weight: 600;
   text-decoration: none;
   color: var(--text-color);
+  font-family: "Pattaya", sans-serif;
 }
 
 
