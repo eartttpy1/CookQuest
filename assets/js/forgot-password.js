@@ -6,6 +6,14 @@ async function requestResetOtp() {
         return;
     }
 
+    if (identity.includes('@')) {
+        const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+        if (!gmailRegex.test(identity)) {
+            alert('กรุณากรอก Gmail ที่ถูกต้อง (เช่น user@gmail.com)');
+            return;
+        }
+    }
+
     try {
         const response = await axios.post('http://localhost:4000/api/forgot-password', { identity });
         alert(response.data.msg || 'If this account exists, reset OTP has been sent.');

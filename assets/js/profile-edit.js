@@ -74,7 +74,14 @@ editButtons.forEach(btn => {
             btn.textContent = "Save";
         } else {
             if (target === "email") {
-                const result = await updateProfile(target, input.value);
+                const emailVal = input.value.trim();
+                const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+                if (!gmailRegex.test(emailVal)) {
+                    alert("กรุณากรอก Gmail ที่ถูกต้อง (เช่น user@gmail.com)");
+                    input.focus();
+                    return;
+                }
+                const result = await updateProfile(target, emailVal);
                 if (result === 'OTP_SENT') {
                     // Keep input editable, show inline OTP container
                     const otpContainer = document.getElementById("email-otp-container");
