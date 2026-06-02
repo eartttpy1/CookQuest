@@ -1077,14 +1077,49 @@ async function saveHistoryEdit(idx, submissionId, btn) {
   }
 }
 
+// Helper เพื่อลดขนาดและบีบอัดรูปภาพก่อนส่งขึ้น Server
+function compressImage(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const MAX_WIDTH = 1000;
+            const MAX_HEIGHT = 1000;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height = Math.round(height * (MAX_WIDTH / width));
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width = Math.round(width * (MAX_HEIGHT / height));
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // บีบอัดเป็น JPEG ที่คุณภาพ 80% (ลดขนาดไฟล์ได้มหาศาล)
+            callback(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
 function changeHistoryPhoto(event, idx) {
     const file = event.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById(`historyPhoto${idx}`).src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    compressImage(file, (compressedDataUrl) => {
+        document.getElementById(`historyPhoto${idx}`).src = compressedDataUrl;
+    });
 }
 
 async function deleteHistorySubmission(submissionId) {
@@ -1120,15 +1155,14 @@ function previewUpload(event) {
     const icon = document.getElementById('uploadIcon');
     const label = document.getElementById('uploadLabel');
     const actions = document.getElementById('uploadActions');
-    const reader = new FileReader();
-    reader.onload = e => {
-        preview.src = e.target.result;
+    
+    compressImage(file, (compressedDataUrl) => {
+        preview.src = compressedDataUrl;
         preview.classList.remove('hidden');
         icon.classList.add('hidden');
         label.classList.add('hidden');
         actions.classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
+    });
 }
 
 function removeUpload() {

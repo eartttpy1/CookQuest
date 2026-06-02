@@ -25,6 +25,15 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+// Prevent API caching middleware
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 app.use(express.static('.'));
 
 // Import models at the top
@@ -713,7 +722,7 @@ app.get('/api/requests', async (req, res) => {
     }
 
     const query = status === 'all' ? {} : { status };
-    const requests = await Request.find(query).sort({ _id: -1 });
+    const requests = await Request.find(query).select('-imageURL').sort({ _id: -1 }).lean();
     res.json(requests);
   } catch (error) {
     console.error('Error fetching requests:', error.message);
@@ -768,20 +777,29 @@ app.put('/api/requests/:id/status', async (req, res) => {
 
     // Give XP and increment completed recipes if approved
     if (normalizedStatus === 'approved' && creatorId) {
-      const user = await User.findById(creatorId);
+      // Fetch all required database items in parallel
+      const [user, menu, questModel, userMenu, allQuests, allMenus, userSubmissions] = await Promise.all([
+        User.findById(creatorId),
+        Menu.findOne({ menuName: request.menuName }).select('EXP').lean(),
+        Quest.findOne({ name: request.menuName }).select('exp').lean(),
+        UserMenu.findOne({ menuName: request.menuName }).select('EXP').lean(),
+        Quest.find().select('_id name exp tags').lean(),
+        Menu.find().select('menuName questIds').lean(),
+        Submission.find({ createdBy: creatorId, status: 'approved' })
+          .select('requestId')
+          .populate({ path: 'requestId', select: 'menuName' }).lean()
+      ]);
+
       if (user) {
         let expReward = 100; // Default EXP fallback
 
-        // Try to find the exact EXP from the database models
-        const menu = await Menu.findOne({ menuName: request.menuName });
-        if (menu && menu.EXP) { expReward = menu.EXP; }
-        else {
-          const quest = await Quest.findOne({ name: request.menuName });
-          if (quest && quest.exp) { expReward = quest.exp; }
-          else {
-            const userMenu = await UserMenu.findOne({ menuName: request.menuName });
-            if (userMenu && userMenu.EXP) { expReward = userMenu.EXP; }
-          }
+        // Determine the EXP reward from parallel fetches
+        if (menu && menu.EXP) {
+          expReward = menu.EXP;
+        } else if (questModel && questModel.exp) {
+          expReward = questModel.exp;
+        } else if (userMenu && userMenu.EXP) {
+          expReward = userMenu.EXP;
         }
 
         const currentExp = Number(user.exp || 0);
@@ -790,10 +808,6 @@ app.put('/api/requests/:id/status', async (req, res) => {
 
         // Check Quest completion and award Quest EXP
         try {
-          const allQuests = await Quest.find();
-          const allMenus = await Menu.find();
-          const userSubmissions = await Submission.find({ createdBy: creatorId, status: 'approved' }).populate('requestId');
-          
           const approvedMenuNames = new Set();
           userSubmissions.forEach(sub => {
             if (sub.requestId && sub.requestId.menuName) {
@@ -832,6 +846,7 @@ app.put('/api/requests/:id/status', async (req, res) => {
                   user.completedQuests = [];
                 }
                 user.completedQuests.push(questIdStr);
+                user.markModified('completedQuests');
                 console.log(`User ${user.username} completed quest: ${quest.name}. Awarded ${questExp} EXP.`);
               }
             }

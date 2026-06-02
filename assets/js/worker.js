@@ -16,15 +16,15 @@ async function handleWorkerMessage(data, target) {
 
     try {
         const fetchPromises = [
-            fetch('http://localhost:4000/api/quests'),
-            fetch('http://localhost:4000/api/menus'),
-            fetch(`http://localhost:4000/api/favorites?userId=${userId}`),
-            fetch(`http://localhost:4000/api/history?userId=${userId}&summary=true`)
+            fetch(`http://localhost:4000/api/quests?_t=${Date.now()}`),
+            fetch(`http://localhost:4000/api/menus?_t=${Date.now()}`),
+            fetch(`http://localhost:4000/api/favorites?userId=${userId}&_t=${Date.now()}`),
+            fetch(`http://localhost:4000/api/history?userId=${userId}&summary=true&_t=${Date.now()}`)
         ];
 
         if (token) {
             fetchPromises.push(
-                fetch('http://localhost:4000/api/profile', {
+                fetch(`http://localhost:4000/api/profile?_t=${Date.now()}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             );
