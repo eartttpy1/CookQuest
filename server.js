@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,7 +8,7 @@ const { Server } = require('socket.io');
 const dns = require("dns");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'cookquest_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET || 'cookquest_secret_key';
 const nodemailer = require('nodemailer');
 
 // ผมไม่สามารถเข้าปกติได้ ต้องset dns ไว้
@@ -66,7 +67,7 @@ function toRequestListItem(request) {
   return request;
 }
 // MongoDB connection
-const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
+const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
 
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
@@ -106,8 +107,8 @@ mongoose.connection.on('error', (err) => {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'theripper754@gmail.com',
-    pass: 'vbfjgtqzlbidhmhx'
+    user: process.env.EMAIL_USER || 'theripper754@gmail.com',
+    pass: process.env.EMAIL_PASS || 'vbfjgtqzlbidhmhx'
   }
 });
 
