@@ -50,120 +50,76 @@
 <body>
 
 <!-- ==============nav bar all pages(responsive) ============== -->
-<nav class="NL">
-
-    <ul class="sidebar">
-        <li class="head">
-            <a class="linkhref" href="#">
-                <i width="26" height="26" class="fa-solid fa-xmark"></i>
-            </a>
-        </li>
-
-        <ul class="link">
-            <li>
-                <a class="linkhref" href="../../index.html">
-                    <i class="fa-solid fa-house icon"></i>
-                    <span>Home</span>
-                </a>
-            </li>
-
-            <li>
-                <a class="linkhref" href="q-all.html">
-                    <i class="fa-solid fa-flag icon"></i>
-                    <span>quest</span>
-                </a>
-            </li>
-        </ul>
-
-        <ul class="about">
-            <li>
-                <a class="linkhref" href="about.html">
-                    <i class="fa-solid fa-circle-info"></i>
-                </a>
-            </li>
-
-            <li>
-                <a class="linkhref" href="#">
+    <nav class="NL">
+        <ul class="sidebar">
+            <li class="head"><a class="linkhref" href="#"><i width="26" height="26" class="fa-solid fa-xmark"></i></a></li>
+            <ul class="link">
+                <li><a class="linkhref" href="../../index.html"><i class="fa-solid fa-house icon"></i><span>Home</span></a></li>
+                <li><a class="linkhref" href="q-all.html"><i class="fa-solid fa-flag icon"></i><span>quest</span></a></li>
+            </ul>
+            <ul class="about">
+                <li><a class="linkhref" href="about.html"><i class="fa-solid fa-circle-info"></i></a></li>
+                <li><a class="linkhref" href="#">
                     <button id="theme-switch">
                         <i class="fa-solid fa-sun"></i>
                         <i class="fa-solid fa-moon"></i>
-                    </button>
-                </a>
-            </li>
-        </ul>
-    </ul>
-
-    <ul>
-
-        <ul class="mainIcon">
-            <li class="menu-button">
-                <i width="26" height="26" class="fa-solid fa-bars"></i>
-            </li>
+                    </button></a>
+                </li>
+            </ul>
         </ul>
 
-        <li class="logo">
-            <a class="linkhref thaipattaya">CookQuest</a>
-        </li>
+        <ul>
+            
+            <ul class="mainIcon">
+                <li class="menu-button"><i width="26" height="26" class="fa-solid fa-bars"></i></a></li>     
+            </ul>
+            <li class="logo"><a class="linkhref thaipattaya">CookQuest</a></li>
+            <ul class="titlebar">
+                <li class="hideOnMobile"><a class="linkhref" href="../../index.html">Home</a></li>
+                <li class="hideOnMobile"><a class="linkhref" href="q-all.html">quest</a></li>
+            </ul>
 
-        <ul class="titlebar">
-            <li class="hideOnMobile">
-                <a class="linkhref" href="../../index.html">Home</a>
-            </li>
+            <div class="auth-section" id="auth-section">    
+                <a class="linkhref login-btn" href="login.html" id="login-btn">Login</a>
 
-            <li class="hideOnMobile">
-                <a class="linkhref" href="q-all.html">quest</a>
-            </li>
-        </ul>
+                <div class="user-profile hidden" id="user-profile">
+                    <i class="fa-solid fa-circle-user user-icon" id="user-icon-trigger"></i>
+                    
+                    <ul class="profile-dropdown hidden" id="profile-dropdown">
+                        <a class="profilehref" href="profile.html">
+                            <li class="dropdown-item">
+                                    <i class="fa-solid fa-user"></i>
+                                    <span>Profile</span>
+                            </li>
+                        </a>
 
-        <div class="auth-section" id="auth-section">
+                        <li class="dropdown-item theme-item-container">
+                            <i class="fa-solid fa-circle-half-stroke"></i>
+                            <span>Theme</span>
+                            <div class="theme-selector-wrapper">
+                                <button class="theme-select-trigger" id="theme-select-trigger">
+                                    <span id="current-theme-text">Light</span>
+                                    <i class="fa-solid fa-caret-down"></i>
+                                </button>
 
-            <a class="linkhref login-btn" href="login.html" id="login-btn">
-                Login
-            </a>
-
-            <div class="user-profile hidden" id="user-profile">
-
-                <i class="fa-solid fa-circle-user user-icon" id="user-icon-trigger"></i>
-
-                <ul class="profile-dropdown hidden" id="profile-dropdown">
-
-                    <a class="profilehref" href="profile.html">
-                        <li class="dropdown-item">
-                            <i class="fa-solid fa-user"></i>
-                            <span>Profile</span>
+                                <div class="theme-options hidden" id="theme-options">
+                                    <div class="theme-option" data-value="light">Light</div>
+                                    <div class="theme-option" data-value="dark">Dark</div>
+                                </div>
+                             </div>
+                            
                         </li>
-                    </a>
-
-                    <li class="dropdown-item theme-item-container">
-                        <i class="fa-solid fa-circle-half-stroke"></i>
-                        <span>Theme</span>
-                        <div class="theme-selector-wrapper">
-                            <button class="theme-select-trigger" id="theme-select-trigger">
-                                <span id="current-theme-text">Light</span>
-                                <i class="fa-solid fa-caret-down"></i>
-                            </button>
-
-                            <div class="theme-options hidden" id="theme-options">
-                                <div class="theme-option" data-value="light">Light</div>
-                                <div class="theme-option" data-value="dark">Dark</div>
-                            </div>
-                        </div>
-                    </li>
-
-                    <li class="dropdown-item logout-item" id="logout-btn">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        <span>Log out</span>
-                    </li>
-
-                </ul>
-
+                        <li class="dropdown-item logout-item" id="logout-btn">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Log out</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
+        
 
-        </div>
-
-    </ul>
-
-</nav>
+        </ul>
+    </nav>
 
 <!-- PROFILE -->
 <div class="perf-view profile-page">

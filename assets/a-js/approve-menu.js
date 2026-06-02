@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadRequests() {
     try {
-        const response = await fetch(`/api/requests?status=${currentStatus}`);
+        const response = await fetch(`/api/requests?status=${currentStatus}&_t=${Date.now()}`);
         if (!response.ok) {
             throw new Error('Failed to fetch requests');
         }
