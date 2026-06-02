@@ -1,0 +1,1712 @@
+openapi: 3.0.3
+info:
+  title: CookQuest API
+  description: |
+    REST API สำหรับแอปพลิเคชัน CookQuest — ระบบทำอาหารแบบ Gamification
+    ที่มีระบบ Quest, EXP, Level, Badge และการ Submit ผลงาน
+  version: 1.0.0
+  contact:
+    name: CookQuest Team
+
+servers:
+  - url: http://localhost:4000
+    description: Local Development Server
+
+tags:
+  - name: Auth
+    description: สมัครสมาชิก / เข้าสู่ระบบ / OTP
+  - name: Profile
+    description: จัดการโปรไฟล์ผู้ใช้ EXP และ Badge
+  - name: Menus
+    description: รายการเมนูอาหาร
+  - name: Tags
+    description: แท็กสำหรับเมนูและ Quest
+  - name: Requests
+    description: คำขอ Submission (มุมมอง Admin)
+  - name: Submissions
+    description: การส่งผลงานการทำอาหาร (มุมมอง User)
+  - name: History
+    description: ประวัติการส่งผลงาน
+  - name: Favorites
+    description: รายการโปรด
+  - name: UserMenus
+    description: สูตรอาหารที่ผู้ใช้สร้างเอง
+  - name: Quests
+    description: ระบบ Quest และภารกิจ
+
+# ─────────────────────────────────────────
+# Security Schemes
+# ─────────────────────────────────────────
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token ที่ได้จาก `/api/login`
+
+  # ─────────────────────────────────────────
+  # Reusable Schemas
+  # ─────────────────────────────────────────
+  schemas:
+
+    # ── User ──────────────────────────────
+    UserPublic:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "64abc123def456"
+        username:
+          type: string
+          example: "chef_john"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        role:
+          type: string
+          enum: [user, admin]
+          example: user
+        level:
+          type: integer
+          example: 3
+        rank:
+          type: string
+          example: "GOLD Chef"
+        exp:
+          type: integer
+          example: 3500
+        completedRecipes:
+          type: integer
+          example: 12
+        completedQuests:
+          type: array
+          items:
+            type: string
+          example: ["64abc001", "64abc002"]
+        badges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Badge'
+        isVerified:
+          type: boolean
+          example: true
+
+    Badge:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "First Dish"
+        icon:
+          type: string
+          example: "👨‍🍳"
+        earnedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    # ── Menu ──────────────────────────────
+    Menu:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "64abc456def789"
+        menuName:
+          type: string
+          example: "ผัดกะเพราหมูสับ"
+        description:
+          type: string
+          example: "เมนูผัดกะเพราคลาสสิค"
+        ingredients:
+          type: array
+          items:
+            type: string
+          example: ["หมูสับ 200g", "กะเพรา", "พริก", "กระเทียม"]
+        steps:
+          type: array
+          items:
+            type: string
+          example: ["ตั้งกระทะ", "ใส่น้ำมัน", "ผัดกระเทียมพริก"]
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["ผัด", "เผ็ด", "ไทย"]
+        EXP:
+          type: integer
+          example: 150
+        imageURL:
+          type: string
+          example: "data:image/jpeg;base64,..."
+        questIds:
+          type: array
+          items:
+            type: string
+          example: ["64abc001"]
+
+    MenuListItem:
+      type: object
+      description: Menu object ที่ไม่มี imageURL (ใช้ใน list view)
+      properties:
+        _id:
+          type: string
+        menuName:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        EXP:
+          type: integer
+        hasImage:
+          type: boolean
+          description: true ถ้าเมนูมีรูป (imageURL ถูก strip ออก)
+
+    # ── Tag ───────────────────────────────
+    Tag:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "64abc789def012"
+        name:
+          type: string
+          example: "ผัด"
+
+    # ── Quest ─────────────────────────────
+    Quest:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "64abc001def111"
+        name:
+          type: string
+          example: "Thai Street Food Master"
+        description:
+          type: string
+          example: "ทำอาหารข้างทางไทยให้ครบ 5 เมนู"
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["ผัดไทย", "ต้มยำ", "ส้มตำ"]
+        exp:
+          type: integer
+          example: 500
+
+    # ── Request ───────────────────────────
+    Request:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "64abcR01def222"
+        menuName:
+          type: string
+          example: "ผัดกะเพราหมูสับ"
+        randomQuests:
+          type: array
+          items:
+            type: string
+          example: ["Quest A", "Quest B"]
+        tasteRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        tasteTags:
+          type: array
+          items:
+            type: string
+          example: ["เผ็ด", "เค็ม"]
+        review:
+          type: string
+          example: "อร่อยมาก หอมกะเพรา"
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+          example: pending
+        submittedAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          example: "64abc123def456"
+
+    # ── Submission ────────────────────────
+    Submission:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "64abcS01def333"
+        requestId:
+          oneOf:
+            - type: string
+              description: ObjectId reference
+            - $ref: '#/components/schemas/Request'
+        imageURL:
+          type: string
+          example: "data:image/jpeg;base64,..."
+        tasteRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        tasteTags:
+          type: array
+          items:
+            type: string
+          example: ["เผ็ด", "หอม"]
+        review:
+          type: string
+          example: "ทำได้ดีมาก"
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+          example: pending
+        createdBy:
+          type: string
+          example: "64abc123def456"
+        editedAt:
+          type: string
+          format: date-time
+
+    # ── Favorite ──────────────────────────
+    Favorite:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+          example: "64abc123def456"
+        menuId:
+          type: string
+          example: "64abc456def789"
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── UserMenu ──────────────────────────
+    UserMenu:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "64abcU01def444"
+        menuName:
+          type: string
+          example: "สูตรข้าวผัดพิเศษของฉัน"
+        description:
+          type: string
+          example: "สูตรส่วนตัวที่พัฒนาเอง"
+        ingredients:
+          type: array
+          items:
+            type: string
+          example: ["ข้าวสวย 2 ถ้วย", "ไข่ไก่ 2 ฟอง"]
+        steps:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        EXP:
+          type: integer
+          example: 100
+        imageURL:
+          type: string
+        createdBy:
+          type: string
+          example: "64abc123def456"
+
+    # ── Common Responses ─────────────────
+    MessageResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Success"
+
+    ErrorResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Error message"
+        error:
+          type: string
+          example: "Detailed error"
+
+  # ─────────────────────────────────────────
+  # Reusable Responses
+  # ─────────────────────────────────────────
+  responses:
+    Unauthorized:
+      description: ไม่มี token หรือ token ไม่ถูกต้อง
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+          example:
+            msg: "Invalid token"
+    Forbidden:
+      description: ไม่มีสิทธิ์ (ต้องเป็น Admin)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+          example:
+            msg: "Admin only"
+    NotFound:
+      description: ไม่พบข้อมูล
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+# ─────────────────────────────────────────
+# Paths
+# ─────────────────────────────────────────
+paths:
+
+  # ══════════════════════════════════════
+  # AUTH
+  # ══════════════════════════════════════
+  /register:
+    post:
+      tags: [Auth]
+      summary: สมัครสมาชิก
+      description: |
+        สร้างบัญชีผู้ใช้ใหม่ และส่ง OTP 6 หลักไปยัง email
+        (OTP หมดอายุใน 5 นาที)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username:
+                  type: string
+                  example: "chef_john"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: "secret123"
+      responses:
+        '200':
+          description: สมัครสำเร็จ รอยืนยัน OTP
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: "Register success"
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      email:
+                        type: string
+        '400':
+          description: Username หรือ Email ซ้ำ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                msg: "User already exists"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /verify-otp:
+    post:
+      tags: [Auth]
+      summary: ยืนยัน OTP หลังสมัครสมาชิก
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otp]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                otp:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+                  example: "123456"
+      responses:
+        '200':
+          description: ยืนยันสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                msg: "Verify success"
+        '400':
+          description: OTP ไม่ถูกต้องหรือหมดอายุ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                incorrect:
+                  value:
+                    msg: "OTP incorrect"
+                expired:
+                  value:
+                    msg: "OTP expired"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /login:
+    post:
+      tags: [Auth]
+      summary: เข้าสู่ระบบ
+      description: |
+        รับ username หรือ email พร้อม password
+        คืนค่า JWT token (อายุ 7 วัน)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  description: username หรือ email ก็ได้
+                  example: "chef_john"
+                password:
+                  type: string
+                  format: password
+                  example: "secret123"
+      responses:
+        '200':
+          description: เข้าสู่ระบบสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: "Login success"
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                        enum: [user, admin]
+        '400':
+          description: ข้อมูลไม่ถูกต้อง หรือยังไม่ยืนยัน OTP
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                  needsOtp:
+                    type: boolean
+                    description: true ถ้ายังไม่ verify OTP
+                  email:
+                    type: string
+                    description: email สำหรับ redirect ไปหน้า verify-otp
+              examples:
+                wrongCredentials:
+                  value:
+                    msg: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"
+                needsOtp:
+                  value:
+                    msg: "Please verify OTP first"
+                    needsOtp: true
+                    email: "john@example.com"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /forgot-password:
+    post:
+      tags: [Auth]
+      summary: ขอ OTP สำหรับรีเซ็ตรหัสผ่าน
+      description: |
+        ส่ง OTP ไปยัง email ที่ลงทะเบียน (OTP หมดอายุใน 10 นาที)
+        หากไม่พบ account จะตอบกลับ message เดิมเพื่อป้องกัน account enumeration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identity]
+              properties:
+                identity:
+                  type: string
+                  description: username หรือ email
+                  example: "chef_john"
+      responses:
+        '200':
+          description: ส่ง OTP (หรือ account ไม่มีอยู่ — ตอบ message เดิมทั้งคู่)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                msg: "If this account exists, we sent a reset OTP to the registered email."
+        '400':
+          description: ไม่ได้ส่ง identity มา
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /reset-password:
+    post:
+      tags: [Auth]
+      summary: รีเซ็ตรหัสผ่านด้วย OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identity, otp, newPassword]
+              properties:
+                identity:
+                  type: string
+                  description: username หรือ email
+                  example: "chef_john"
+                otp:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+                  example: "654321"
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: "newSecret456"
+      responses:
+        '200':
+          description: รีเซ็ตรหัสผ่านสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                msg: "Password reset successful"
+        '400':
+          description: OTP ไม่ถูกต้อง หมดอายุ หรือข้อมูลไม่ครบ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                invalidOtp:
+                  value:
+                    msg: "Invalid OTP"
+                expiredOtp:
+                  value:
+                    msg: "OTP expired"
+                shortPassword:
+                  value:
+                    msg: "New password must be at least 6 characters"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ══════════════════════════════════════
+  # PROFILE
+  # ══════════════════════════════════════
+  /profile:
+    get:
+      tags: [Profile]
+      summary: ดูโปรไฟล์ตัวเอง
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: ข้อมูลโปรไฟล์ (ไม่รวม password)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      tags: [Profile]
+      summary: แก้ไข username และ email
+      description: |
+        ถ้า email เปลี่ยน → ระบบจะส่ง OTP ไปยัง email ใหม่ก่อน
+        และต้อง call ซ้ำพร้อม `otp` เพื่อยืนยัน
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email]
+              properties:
+                username:
+                  type: string
+                  example: "chef_john_updated"
+                email:
+                  type: string
+                  format: email
+                  example: "newemail@example.com"
+                otp:
+                  type: string
+                  description: ใส่เฉพาะเมื่อยืนยันการเปลี่ยน email
+                  example: "123456"
+      responses:
+        '200':
+          description: |
+            อัปเดตสำเร็จ หรือ ส่ง OTP แล้ว (ถ้าเปลี่ยน email)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    description: อัปเดตสำเร็จ
+                    properties:
+                      msg:
+                        type: string
+                        example: "Profile updated successfully"
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          username:
+                            type: string
+                          email:
+                            type: string
+                          role:
+                            type: string
+                  - type: object
+                    description: ส่ง OTP ไปยัง email ใหม่แล้ว รอยืนยัน
+                    properties:
+                      status:
+                        type: string
+                        example: "OTP_SENT"
+                      msg:
+                        type: string
+                        example: "Verification OTP has been sent to your new email address."
+        '400':
+          description: ข้อมูลซ้ำหรือ OTP ไม่ถูกต้อง
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /profile/add-exp:
+    post:
+      tags: [Profile]
+      summary: เพิ่ม EXP และคำนวณ Level / Rank ใหม่
+      description: |
+        Level System:
+        - Level 1 — BRONZE Chef (0–1500 XP)
+        - Level 2 — SILVER Chef (1501–3000 XP)
+        - Level 3 — GOLD Chef (3001–5000 XP)
+        - Level 4 — PLATINUM Chef (5001–8000 XP)
+        - Level 5 — DIAMOND Chef (8001–12000 XP)
+        - Level 6 — MASTER Chef (12001+ XP)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [expToAdd]
+              properties:
+                expToAdd:
+                  type: integer
+                  minimum: 0
+                  example: 150
+      responses:
+        '200':
+          description: อัปเดต EXP และ Level สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: "EXP & Level updated successfully"
+                  user:
+                    $ref: '#/components/schemas/UserPublic'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /profile/add-badge:
+    post:
+      tags: [Profile]
+      summary: เพิ่ม Badge ให้ผู้ใช้
+      description: |
+        Badge ที่ระบบมีให้:
+        - 👨‍🍳 First Dish — ทำอาหารสำเร็จครั้งแรก
+        - 🔥 5 Dishes — ทำอาหารสำเร็จ 5 เมนู
+        - 👑 10 Dishes — ทำอาหารสำเร็จ 10 เมนู
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [badgeName, badgeIcon]
+              properties:
+                badgeName:
+                  type: string
+                  example: "First Dish"
+                badgeIcon:
+                  type: string
+                  example: "👨‍🍳"
+      responses:
+        '200':
+          description: เพิ่ม Badge สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: "Badge added successfully"
+                  user:
+                    $ref: '#/components/schemas/UserPublic'
+        '400':
+          description: มี Badge นี้แล้ว
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                msg: "Badge already collected"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ══════════════════════════════════════
+  # MENUS
+  # ══════════════════════════════════════
+  /menus:
+    get:
+      tags: [Menus]
+      summary: ดูรายการเมนูทั้งหมด
+      description: |
+        ค่าเริ่มต้นจะ strip imageURL ออกและคืน `hasImage: true` แทน
+        ใช้ `?full=true` เพื่อรับข้อมูลเต็มรวมถึง imageURL
+      parameters:
+        - name: full
+          in: query
+          description: ถ้า true จะคืนข้อมูลเต็มรวม imageURL
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: รายการเมนู
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MenuListItem'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      tags: [Menus]
+      summary: สร้างเมนูใหม่
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Menu'
+      responses:
+        '201':
+          description: สร้างเมนูสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        '400':
+          description: ข้อมูลไม่ถูกต้อง
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /menus/images:
+    get:
+      tags: [Menus]
+      summary: ดึง imageURL ของหลายเมนูพร้อมกัน
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          description: comma-separated list ของ menu IDs
+          schema:
+            type: string
+          example: "64abc456,64abc789,64abcdef"
+      responses:
+        '200':
+          description: Map ของ menuId → imageURL
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+              example:
+                "64abc456": "data:image/jpeg;base64,..."
+                "64abc789": ""
+        '400':
+          $ref: '#/components/responses/NotFound'
+
+  /menus/{id}:
+    get:
+      tags: [Menus]
+      summary: ดูเมนูตาม ID (ข้อมูลเต็ม)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "64abc456def789"
+      responses:
+        '200':
+          description: ข้อมูลเมนูเต็ม
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Menus]
+      summary: แก้ไขเมนู
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Menu'
+      responses:
+        '200':
+          description: แก้ไขสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Menus]
+      summary: ลบเมนู (Admin only)
+      description: |
+        ลบเมนูพร้อมกับ cascade delete:
+        - Requests ที่มี menuName ตรงกัน
+        - Submissions ที่อยู่ใน Requests เหล่านั้น
+        - Favorites ที่ชี้ไปยังเมนูนี้
+        - Quest tags ที่อ้างถึงชื่อเมนู (ถ้า tags หมด → ลบ Quest)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ลบสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Menu deleted successfully"
+                  menuName:
+                    type: string
+                  affectedQuests:
+                    type: array
+                    items:
+                      type: string
+                    description: Quests ที่ถูกอัปเดต (tag ถูกลบ)
+                  deletedQuests:
+                    type: array
+                    items:
+                      type: string
+                    description: Quests ที่ถูกลบเพราะไม่มี tag เหลือ
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /menus/{id}/image:
+    get:
+      tags: [Menus]
+      summary: ดึง imageURL ของเมนูเดียว
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: imageURL ของเมนู
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imageURL:
+                    type: string
+                    example: "data:image/jpeg;base64,..."
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/NotFound'
+
+  # ══════════════════════════════════════
+  # TAGS
+  # ══════════════════════════════════════
+  /tags:
+    get:
+      tags: [Tags]
+      summary: ดูแท็กทั้งหมด
+      parameters:
+        - name: search
+          in: query
+          description: กรองแท็กด้วย keyword (case-insensitive)
+          schema:
+            type: string
+          example: "ผัด"
+      responses:
+        '200':
+          description: รายการแท็ก
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      tags: [Tags]
+      summary: สร้างแท็ก (รองรับทั้ง string เดียวและ array)
+      description: |
+        ถ้าแท็กมีอยู่แล้วจะ upsert (ไม่ duplicate)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  oneOf:
+                    - type: string
+                      example: "ผัด"
+                    - type: array
+                      items:
+                        type: string
+                      example: ["ผัด", "ต้ม", "ทอด"]
+      responses:
+        '201':
+          description: แท็กที่สร้าง (ถ้าส่ง array จะได้ array กลับมา)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Tag'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: '#/components/responses/NotFound'
+
+  # ══════════════════════════════════════
+  # REQUESTS (Admin View)
+  # ══════════════════════════════════════
+  /requests:
+    get:
+      tags: [Requests]
+      summary: ดู requests ทั้งหมด (Admin view)
+      description: ไม่รวม imageURL เพื่อลด payload
+      parameters:
+        - name: status
+          in: query
+          description: กรองตามสถานะ
+          schema:
+            type: string
+            enum: [all, pending, approved, rejected]
+            default: all
+      responses:
+        '200':
+          description: รายการ requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Request'
+        '400':
+          description: status ไม่ถูกต้อง
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /requests/{id}/image:
+    get:
+      tags: [Requests]
+      summary: ดึงรูปของ request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: imageURL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imageURL:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/NotFound'
+
+  /requests/{id}/status:
+    put:
+      tags: [Requests]
+      summary: อัปเดตสถานะ request (approved / rejected)
+      description: |
+        เมื่อ approved ระบบจะ:
+        1. อัปเดตสถานะ Submission ที่เกี่ยวข้อง
+        2. ให้ EXP ผู้ส่ง (ตาม Menu.EXP หรือ Quest.exp หรือ default 100)
+        3. เพิ่ม completedRecipes +1
+        4. ตรวจสอบและ complete Quest อัตโนมัติ
+        5. คำนวณ Level/Rank ใหม่
+        6. ให้ Badge milestone (First Dish, 5 Dishes, 10 Dishes)
+        7. Emit Socket.io event `status_updated`
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [approved, rejected]
+                  example: approved
+      responses:
+        '200':
+          description: อัปเดตสถานะสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request'
+        '400':
+          description: status ไม่ถูกต้อง หรือเปลี่ยนหลัง decision แล้ว
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidStatus:
+                  value:
+                    error: "Invalid status update"
+                alreadyDecided:
+                  value:
+                    error: "Status cannot be changed after decision"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ══════════════════════════════════════
+  # SUBMISSIONS
+  # ══════════════════════════════════════
+  /submissions:
+    post:
+      tags: [Submissions]
+      summary: ส่งผลงานการทำอาหาร
+      description: |
+        สร้างทั้ง Request และ Submission พร้อมกัน
+        และ emit Socket.io event `new_submission`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [menuName, createdBy]
+              properties:
+                menuName:
+                  type: string
+                  example: "ผัดกะเพราหมูสับ"
+                randomQuests:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Quest A"]
+                imageURL:
+                  type: string
+                  description: Base64 data URL ของรูปภาพ
+                  example: "data:image/jpeg;base64,..."
+                tasteRating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 4
+                tasteTags:
+                  type: array
+                  items:
+                    type: string
+                  example: ["เผ็ด", "หอม"]
+                review:
+                  type: string
+                  example: "อร่อยมาก"
+                createdBy:
+                  type: string
+                  description: User ID ของผู้ส่ง
+                  example: "64abc123def456"
+      responses:
+        '201':
+          description: ส่งผลงานสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  request:
+                    $ref: '#/components/schemas/Request'
+                  submission:
+                    $ref: '#/components/schemas/Submission'
+        '400':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /submissions/{id}:
+    put:
+      tags: [Submissions]
+      summary: แก้ไข submission (เฉพาะ pending)
+      description: อัปเดตทั้ง Submission และ Request ที่เกี่ยวข้อง
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                imageURL:
+                  type: string
+                tasteRating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                tasteTags:
+                  type: array
+                  items:
+                    type: string
+                review:
+                  type: string
+      responses:
+        '200':
+          description: แก้ไขสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      tags: [Submissions]
+      summary: ลบ submission (เฉพาะ pending)
+      description: |
+        ลบทั้ง Submission และ Request ที่เกี่ยวข้อง
+        และ emit Socket.io event `status_updated` พร้อม status `deleted`
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ลบสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Submission deleted successfully"
+        '400':
+          description: ลบได้เฉพาะ pending เท่านั้น
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Only pending submissions can be deleted"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ══════════════════════════════════════
+  # HISTORY
+  # ══════════════════════════════════════
+  /history:
+    get:
+      tags: [History]
+      summary: ดูประวัติการส่งผลงาน
+      description: |
+        สามารถกรองได้หลายแบบ:
+        - `userId` — ประวัติของ user คนนั้น (auto-summary mode)
+        - `menuName` — กรองตามชื่อเมนู
+        - `requestId` — ดู submission ของ request นั้น
+        - `summary=true` — ไม่รวม imageURL เพื่อลด payload
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: string
+          example: "64abc123def456"
+        - name: menuName
+          in: query
+          schema:
+            type: string
+          example: "ผัดกะเพราหมูสับ"
+        - name: requestId
+          in: query
+          schema:
+            type: string
+          example: "64abcR01def222"
+        - name: summary
+          in: query
+          schema:
+            type: boolean
+          description: ถ้า true จะไม่รวม imageURL
+      responses:
+        '200':
+          description: รายการ submission history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Submission'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ══════════════════════════════════════
+  # FAVORITES
+  # ══════════════════════════════════════
+  /favorites:
+    get:
+      tags: [Favorites]
+      summary: ดูรายการโปรดของ user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "64abc123def456"
+      responses:
+        '200':
+          description: รายการ favorites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Favorite'
+        '400':
+          description: ไม่ได้ส่ง userId มา
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /favorites/toggle:
+    post:
+      tags: [Favorites]
+      summary: Toggle favorite (เพิ่ม / ลบ)
+      description: |
+        ถ้ายังไม่ได้ favorite → เพิ่ม (201)
+        ถ้า favorite แล้ว → ลบ (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, menuId]
+              properties:
+                userId:
+                  type: string
+                  example: "64abc123def456"
+                menuId:
+                  type: string
+                  example: "64abc456def789"
+      responses:
+        '201':
+          description: เพิ่ม favorite สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "favorited"
+                  menuId:
+                    type: string
+        '200':
+          description: ลบ favorite สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "unfavorited"
+                  menuId:
+                    type: string
+        '400':
+          description: ไม่ได้ส่ง userId หรือ menuId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ══════════════════════════════════════
+  # USER MENUS (Custom Recipes)
+  # ══════════════════════════════════════
+  /usermenus:
+    get:
+      tags: [UserMenus]
+      summary: ดูสูตรอาหาร custom ทั้งหมด
+      parameters:
+        - name: userId
+          in: query
+          description: กรองตาม userId (ถ้าไม่ส่งจะดูทั้งหมด)
+          schema:
+            type: string
+          example: "64abc123def456"
+      responses:
+        '200':
+          description: รายการ custom recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserMenu'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      tags: [UserMenus]
+      summary: สร้าง custom recipe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserMenu'
+      responses:
+        '201':
+          description: สร้างสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMenu'
+        '400':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /usermenus/{id}:
+    put:
+      tags: [UserMenus]
+      summary: แก้ไข custom recipe
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserMenu'
+      responses:
+        '200':
+          description: แก้ไขสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMenu'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      tags: [UserMenus]
+      summary: ลบ custom recipe
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ลบสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "UserMenu deleted successfully"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ══════════════════════════════════════
+  # QUESTS
+  # ══════════════════════════════════════
+  /quests:
+    get:
+      tags: [Quests]
+      summary: ดู quests ทั้งหมด
+      responses:
+        '200':
+          description: รายการ quests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Quest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      tags: [Quests]
+      summary: สร้าง quest ใหม่
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Quest'
+      responses:
+        '201':
+          description: สร้าง quest สำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quest'
+        '400':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /quests/{id}:
+    put:
+      tags: [Quests]
+      summary: แก้ไข quest
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Quest'
+      responses:
+        '200':
+          description: แก้ไขสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      tags: [Quests]
+      summary: ลบ quest
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ลบสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Quest deleted successfully"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'

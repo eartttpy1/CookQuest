@@ -10,6 +10,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 const nodemailer = require('nodemailer');
+const setupSwagger = require('./swagger');
 
 // ผมไม่สามารถเข้าปกติได้ ต้องset dns ไว้
 dns.setServers([
@@ -36,6 +37,9 @@ app.use('/api', (req, res, next) => {
 });
 
 app.use(express.static('.'));
+
+// Setup Swagger Documentation
+setupSwagger(app, PORT);
 
 // Import models at the top
 const Menu = require('./serializer/menu');
