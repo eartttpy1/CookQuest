@@ -158,10 +158,10 @@ async function handleWorkerMessage(data, target) {
 
             // Images — keep menu ids for lazy loading, skip heavy base64 in worker payload
             const defaultPlaceholders = [
-                '../../assets/img/steak1.png',
-                '../../assets/img/steak2.png',
-                '../../assets/img/steak3.png',
-                '../../assets/img/emptymenu.jpg'
+                '../../assets/img/emptyfood.jpg',
+                '../../assets/img/emptyfood.jpg',
+                '../../assets/img/emptyfood.jpg',
+                '../../assets/img/emptyfood.jpg'
             ];
             const imageUrls = relatedMenus.slice(0, 4).map((menu, index) => ({
                 menuId: menu._id,
@@ -181,6 +181,14 @@ async function handleWorkerMessage(data, target) {
                     isQuestComplete = false;
                 }
             });
+
+            // If this quest has already been completed before, keep it completed (green)
+            if (profile && profile.completedQuests) {
+                const completedQuestsStrings = profile.completedQuests.map(id => id.toString());
+                if (completedQuestsStrings.includes(quest._id.toString())) {
+                    isQuestComplete = true;
+                }
+            }
 
             return {
                 ...quest,

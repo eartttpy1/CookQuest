@@ -210,7 +210,7 @@ async function _populateModalAsync(menu, modal) {
 
     // Image
     const imgEl = modal.querySelector('.modal-main-img');
-    if (imgEl) imgEl.src = menu.imageURL || '../../assets/img/emptymenu.jpg';
+    if (imgEl) imgEl.src = menu.imageURL || '../../assets/img/emptyfood.jpg';
 
     // Tags
     const tagsContainer = modal.querySelector('.modal-tags');
@@ -454,7 +454,7 @@ function renderHistory(historyData) {
                 <div class="history-body">
                     <p class="thai history-desc">${req.randomQuests || ''}</p>
                     <div class="history-photo-wrap">
-                        <img src="${sub.imageURL || '../../assets/img/emptymenu.jpg'}" alt="submitted" class="history-photo" id="historyPhoto${index}">
+                        <img src="${sub.imageURL || '../../assets/img/emptyfood.jpg'}" alt="submitted" class="history-photo" id="historyPhoto${index}">
                     </div>
                     <div class="history-photo-actions hidden" id="historyPhotoActions${index}">
                         <label class="btn-change-img thai" for="historyFileInput${index}">
@@ -835,7 +835,7 @@ function renderMenus(menus, menuStatusMap = {}) {
             card.classList.add('locked');
         }
 
-        const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
+        const imageUrl = menu.imageURL || '../../assets/img/emptyfood.jpg';
         const lazyImageAttr = menu._id ? ` data-lazy-menu-id="${menu._id}"` : '';
         const rankValue = requiredRank.toLowerCase();
         const rankDisplay = rankValue.toUpperCase();

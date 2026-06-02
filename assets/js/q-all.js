@@ -248,7 +248,7 @@ function renderQuests(quests) {
         card.setAttribute('data-id', quest._id);
         
         const { imageUrls, highestRank } = quest.processedData || { 
-            imageUrls: ['../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg', '../../assets/img/emptymenu.jpg'], 
+            imageUrls: ['../../assets/img/emptyfood.jpg', '../../assets/img/emptyfood.jpg', '../../assets/img/emptyfood.jpg', '../../assets/img/emptyfood.jpg'], 
             highestRank: 'bronze' 
         };
 
