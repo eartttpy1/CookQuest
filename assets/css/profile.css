@@ -4,19 +4,59 @@
   --text-color: white;
   --hover-color: rgba(255,255,255, 0.2);
   --black-color: rgb(0, 0, 0);
-  --boxshadow-color: rgb(0, 0, 0, 0.2);
+  --text-main: rgb(0, 0, 0);
+  --boxshadow-color: rgba(0, 0, 0, 0.2);
   --border-color-focus: #ff6a6c;
   --bg-badge-color: rgba(0, 0, 0, 0.05);
+
+  --tab-bg: rgba(255, 0, 0, 0.08);
+  --tab-text: #444;
+  --tab-bg-hover: rgba(0, 0, 0, 0.15);
+  --tab-text-hover: #0B5091;
+  --tab-bg-active: #800002;
+  --tab-text-active: #ffffff;
+
+  --tooltip-bg: linear-gradient(135deg, var(--background-color) 0%, rgba(128, 0, 2, 0.932) 100%);
+  --tooltip-border: var(--hover-color);
+  
+  --recipe-card-bg: var(--background-color);
+  --recipe-card-border: transparent;
+  
+  --empty-msg-color: #999;
+  
+  --skeleton-card-border: #eee;
+  --skeleton-bg: #eee;
+  --skeleton-bg-main: #ffffff;
 }
 body.darkmode{
   --base-color: #3D4459;
   --background-color: #3D4459;
-  --text-color: var(--text-color);
+  --text-color: white;
   --hover-color: rgba(255,255,255, 0.2);
   --black-color: rgb(0, 0, 0);
-  --boxshadow-color: rgb(0, 0, 0, 0.2);
+  --text-main: #ffffff;
+  --boxshadow-color: rgba(0, 0, 0, 0.3);
   --border-color-focus: #ff6a6c;
   --bg-badge-color: rgba(255, 255, 255, 0.05);
+
+  --tab-bg: rgba(0, 0, 0, 0.3);
+  --tab-text: rgba(255, 255, 255, 0.7);
+  --tab-bg-hover: rgba(0, 0, 0, 0.5);
+  --tab-text-hover: #ffffff;
+  --tab-bg-active: #3D4459;
+  --tab-text-active: #ffffff;
+
+  --tooltip-bg: linear-gradient(135deg, #0b074d 0%, #0d0944 100%);
+  --tooltip-border: #1a1668;
+  
+  --recipe-card-bg: #3D4459;
+  --recipe-card-border: #576082;
+  
+  --empty-msg-color: #bbb;
+  
+  --skeleton-card-border: #576082;
+  --skeleton-bg: rgba(255, 255, 255, 0.1);
+  --skeleton-bg-main: #3D4459;
 }
 
 /* CONTAINER */
@@ -41,12 +81,12 @@ body.darkmode{
 .user-info h2 {
   margin: 0;
   font-family: "Inria Serif";
-  color: var(--black-color);
+  color: var(--text-main);
 }
 a {
     margin: 0;
   font-family: "Inria Serif";
-  color: var(--black-color);
+  color: var(--text-main);
   font-size: 1.17em;
     text-decoration: none;
 
@@ -72,7 +112,7 @@ a {
 .card {
   flex: 1;
   background: var(--background-color);
-  color: --text-color;
+  color: var(--text-color);
   padding: 12px;
   border-radius: 12px;
 }
@@ -121,12 +161,12 @@ a {
   top: 100%;
   left: 50%;
   transform: translateX(-50%) translateY(8px);
-  background: linear-gradient(135deg, var(--background-color) 0%, rgba(128, 0, 2, 0.932) 100%);
-  color: --text-color;
+  background: var(--tooltip-bg);
+  color: var(--text-color);
   padding: 20px;
   margin-left: 40px;
   border-radius: 12px;
-  border: 2px solid var(--hover-color);
+  border: 2px solid var(--tooltip-border);
   z-index: 1000;
   min-width: 320px;
   max-width: 500px;
@@ -156,7 +196,7 @@ a {
 .tooltip-section p { margin: 0 0 12px 0; font-size: 11px; opacity: 0.9; }
 .rank-progression { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; }
 .rank-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.rank-badge { background: var(--hover-color); color: --text-color; padding: 6px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; text-align: center; min-width: 70px; transition: all 0.3s ease; }
+.rank-badge { background: var(--hover-color); color: var(--text-color); padding: 6px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; text-align: center; min-width: 70px; transition: all 0.3s ease; }
 .rank-badge:hover { background: var(--hover-color); transform: translateY(-2px); }
 .rank-xp { font-size: 9px; opacity: 0.8; text-align: center; }
 
@@ -245,18 +285,10 @@ body.darkmode .badge-list::-webkit-scrollbar-thumb {
   margin: 0;
   font-size: 12px;
   font-weight: 500;
-  color: var(--black-color);
+  color: var(--text-main);
   max-width: 70px;
   word-wrap: break-word;
   line-height: 1.3;
-}
-
-body.darkmode .badge p {
-  color: var(--black-color);
-}
-
-body.darkmode .badges {
-  background: var(--bg-badge-color);
 }
 
 /* TABS */
@@ -276,8 +308,8 @@ body.darkmode .badges {
   cursor: pointer;
   text-align: center;
   border: none;
-  background: rgba(255, 0, 0, 0.08); /* Makes unclicked tabs darker. Try 'red' here! */
-  color: #444; /* Darker text for readability */
+  background: var(--tab-bg);
+  color: var(--tab-text);
   font-weight: 500;
   transition: all 0.3s ease;
   display: flex;
@@ -288,16 +320,13 @@ body.darkmode .badges {
 }
 
 .tab-item:hover {
-  background: rgba(0, 0, 0, 0.15); /* Slightly darker when hovered */
-  color: var(--background-color);
-  color: #0B5091;
+  background: var(--tab-bg-hover);
+  color: var(--tab-text-hover);
 }
 
 .tab-item.active {
-  color: --text-color;
-  background: var(--background-color);
-  color: #ffffff !important;
-  background: #800002 !important; /* Dark Blue */
+  color: var(--tab-text-active) !important;
+  background: var(--tab-bg-active) !important;
   border-bottom: none;
   border-radius: 8px 8px 0 0;
 }
@@ -305,8 +334,9 @@ body.darkmode .badges {
 /* RECIPE */
 .recipe-card {
   margin-top: 16px;
-  background: var(--background-color);;
-  color: --text-color;
+  background: var(--recipe-card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--recipe-card-border);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -400,15 +430,16 @@ body.darkmode .badges {
 .empty-message {
   text-align: center;
   padding: 32px 16px;
-  color: #999;
+  color: var(--empty-msg-color);
   font-size: 14px;
 }
 
 /* RECIPE CARD IMPROVEMENTS */
 .recipe-card {
   margin-top: 0;
-  background: var(--background-color);
-  color: --text-color;
+  background: var(--recipe-card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--recipe-card-border);
   border-radius: 12px;
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -449,92 +480,13 @@ body.darkmode .badges {
   font-size: 12px;
 }
 
-/* DARK MODE ADJUSTMENTS */
-body.darkmode .level-info-tooltip,
-body.darkmode .recipe-info-tooltip {
-  background: linear-gradient(135deg, #0b074d 0%, #0d0944 100%) !important;
-}
-
-body.darkmode .tabs {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-body.darkmode .tab-item {
-  background: rgba(0, 0, 0, 0.3); /* Darker unclicked tab for dark mode */
-  color: rgba(255, 255, 255, 0.7);
-}
-
-body.darkmode .tab-item:hover {
-  color: #ffffff;
-  background: rgba(0, 0, 0, 0.5); /* Darker hover for dark mode */
-}
-
-body.darkmode .tab-item.active {
-  background: #3d4459 !important; /* Theme-matching dark blue in dark mode */
-  color: #ffffff !important;
-}
-
-body.darkmode .empty-message {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-        /* Dark Mode fixes for Profile Page Elements */
-        body.darkmode .profile-container,
-        body.darkmode .tabs {
-            color: #e0e0e0;
-        }
-        body.darkmode:not(:has(.profile-page)) .card {
-            background: #3d4459 !important;
-            border: 1px solid #1a1668 !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-    /* Legacy overrides — profile-page theme in profile-view.css takes precedence */
-    body.darkmode:not(:has(.profile-page)) #profile-level,
-    body.darkmode:not(:has(.profile-page)) #profile-xp {
-            color: #bbb !important;
-        }
-
-    body.darkmode:not(:has(.profile-page)) #profile-rank,
-    body.darkmode:not(:has(.profile-page)) #profile-completed,
-    body.darkmode:not(:has(.profile-page)) div.card h1,
-    body.darkmode:not(:has(.profile-page)) div.card h3,
-        body.darkmode .badges h3 {
-            color: #ffffff !important;
-        }
-        body.darkmode.profile-page #profile-username,
-        body.darkmode .profile-page #profile-username {
-            color: #f4f6fb !important;
-        }
-        body.darkmode .tooltip-content {
-            background: linear-gradient(145deg, #0b074d, #0d0944) !important;
-            color: #e0e0e0;
-            border: 1px solid #1a1668;
-        }
-        body.darkmode .rank-item {
-            border-bottom: 1px solid #444;
-        }
-        body.darkmode .tab-item {
-            color: #888;
-        }
-        body.darkmode .recipe-card {
-            background-color: #3D4459;
-            border: 1px solid #576082;
-            color: #eee;
-        }
-        body.darkmode .unlocked-badge {
-            background: linear-gradient(135deg, #0b074d, #0d0944) !important;
-            color: white !important;
-        }
-        body.darkmode .empty-message { color: #bbb; }
-        
-        /* Skeleton Loader Dark Mode Support */
-        .skeleton-card { border: 1px solid #eee; overflow: hidden; height: 260px; }
-        .skeleton-bg { background: #eee; }
-        .skeleton-bg-main { background: #e0e0e0; }
-        body.darkmode .skeleton-card { border-color: #576082; background: #3D4459; }
-        body.darkmode .skeleton-bg { background: rgba(255, 255, 255, 0.1); }
-        body.darkmode .skeleton-bg-main { background: #3D4459; }
+/* Tooltip Rank Colors */
+#rank-bronze { background-color: #ffa954; color: black; border-color: #ffa954; }
+#rank-silver { background-color: #c0c0c0; color: black; border-color: #c0c0c0; }
+#rank-gold { background-color: #FFD700; color: black; border-color: #FFD700; }
+#rank-platinum { background-color: #ff25ff; color: white; border-color: #ff25ff; }
+#rank-diamond { background-color: #34d0ff; color: black; border-color: #34d0ff; }
+#rank-master { background-color: #0B5091; color: white; border-color: #0B5091; }
 
         /* Tooltip Rank Colors */
         #rank-bronze { background-color: #ffa954; color: black; border-color: #ffa954; }
