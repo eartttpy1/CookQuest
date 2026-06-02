@@ -486,8 +486,10 @@ function loadUserBadges() {
         });
 
         const healthyCount = approvedDishes.filter(d => {
-            const name = d.requestId?.menuName || '';
-            return name.includes('สลัด') || name.includes('ผัก') || name.includes('คลีน');
+            const menuName = d.requestId?.menuName || '';
+            const menu = allMenusData.find(m => m.menuName === menuName);
+            const tags = menu?.tags || [];
+            return tags.some(t => typeof t === 'string' && (t.includes('สลัด') || t.includes('ผัก') || t.includes('คลีน')));
         }).length;
 
         const ALL_BADGES = [
