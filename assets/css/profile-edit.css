@@ -168,3 +168,108 @@ input:focus {
     }
   
 }
+
+/* Password Change Form Styles */
+.password-fields {
+    background-color: var(--hover-color);
+    border: 1px solid var(--text-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.password-fields.hidden {
+    display: none !important;
+}
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: 40px;
+    width: 100%;
+}
+
+.toggle-password-icon {
+    position: absolute;
+    right: 15px;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1.1rem;
+    user-select: none;
+}
+
+.btn-action {
+    background-color: var(--text-color);
+    color: var(--black-color);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-action:hover {
+    background-color: var(--border-color-focus);
+    color: white;
+}
+
+.btn-action:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.btn-submit {
+    background-color: #ff6a6c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-submit:hover {
+    background-color: #e05355;
+}
+
+.btn-cancel {
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-cancel:hover {
+    background-color: var(--hover-color);
+}
+
+/* Hide browser-native password reveal and auto-fill clear buttons */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none !important;
+}
+
+input::-webkit-credentials-auto-fill-button {
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
