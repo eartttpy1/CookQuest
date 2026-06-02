@@ -921,8 +921,8 @@ body.darkmode .profile-page .tab-item.active {
 }
 
 .profile-page .tab-content {
-  max-width: 920px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 0 0 1rem;
 }
 

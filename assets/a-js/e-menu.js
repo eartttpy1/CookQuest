@@ -110,7 +110,10 @@ function renderRecipes() {
                 <img src="${recipe.imageURL || '../../assets/a-img/placeholder-dish.png'}" alt="dish"${recipe.hasImage ? ` data-lazy-menu-id="${recipe._id}"` : ''}>
             </div>
             <div class="item-info">
-                <span class="item-title thai">${recipe.menuName}</span>
+                <div class="recipe-title-row">
+                    <span class="item-title thai">${recipe.menuName}</span>
+                    <span class="recipe-exp">${recipe.EXP ?? 0} EXP</span>
+                </div>
                 <div class="tag-list">
                     ${(recipe.tags || []).map(tag => `<span class="tag thai">${tag}</span>`).join('')}
                 </div>
@@ -124,23 +127,73 @@ function renderRecipes() {
     if (typeof setupLazyMenuImages === 'function') {
         setupLazyMenuImages(recipeList, { fallback: '../../assets/a-img/placeholder-dish.png' });
     }
+    filterRecipes();
 }
+
+let currentSortName = 'none';
+let currentSortExp = 'none';
 
 function setupMenuEventListeners() {
     // Search
     document.getElementById('searchInput').addEventListener('input', filterRecipes);
 
-    // Sort
-    document.getElementById('sortBtn').addEventListener('click', toggleSortDropdown);
-    document.querySelectorAll('.sort-option').forEach(option => {
-        option.addEventListener('click', () => sortRecipes(option.getAttribute('data-sort')));
-    });
+    // Sort Dropdown Toggle
+    const sortBtn = document.getElementById('sortBtn');
+    const sortDropdown = document.getElementById('sortDropdown');
+    if (sortBtn && sortDropdown) {
+        sortBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sortDropdown.classList.toggle('hidden');
+        });
+    }
+
+    // Helper to setup custom selects for Name and Exp
+    function setupCustomSelect(triggerId, optionsId, textId, type) {
+        const trigger = document.getElementById(triggerId);
+        const optionsContainer = document.getElementById(optionsId);
+        const textSpan = document.getElementById(textId);
+
+        if (!trigger || !optionsContainer) return;
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Close other options
+            document.querySelectorAll('.custom-options').forEach(opt => {
+                if (opt !== optionsContainer) opt.classList.add('hidden');
+            });
+            optionsContainer.classList.toggle('hidden');
+        });
+
+        optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const value = option.getAttribute('data-value');
+                textSpan.innerText = option.innerText;
+                optionsContainer.classList.add('hidden');
+
+                if (type === 'name') {
+                    currentSortName = value;
+                    currentSortExp = 'none';
+                    const expText = document.getElementById('current-exp-text');
+                    if (expText) expText.innerText = "เลือก";
+                } else if (type === 'exp') {
+                    currentSortExp = value;
+                    currentSortName = 'none';
+                    const nameText = document.getElementById('current-name-text');
+                    if (nameText) nameText.innerText = "เลือก";
+                }
+
+                sortRecipes();
+            });
+        });
+    }
+
+    setupCustomSelect('nameTrigger', 'nameOptions', 'current-name-text', 'name');
+    setupCustomSelect('expTrigger', 'expOptions', 'current-exp-text', 'exp');
 
     // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.sort-wrapper')) {
-            document.getElementById('sortDropdown').classList.add('hidden');
-        }
+    document.addEventListener('click', () => {
+        if (sortDropdown) sortDropdown.classList.add('hidden');
+        document.querySelectorAll('.custom-options').forEach(opt => opt.classList.add('hidden'));
     });
 
     // Delete buttons inside recipe list
@@ -157,7 +210,9 @@ function setupMenuEventListeners() {
 }
 
 function filterRecipes() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+    const searchTerm = searchInput.value.toLowerCase();
     const recipeItems = document.querySelectorAll('.recipe-item');
 
     recipeItems.forEach(item => {
@@ -169,20 +224,26 @@ function filterRecipes() {
     });
 }
 
-function toggleSortDropdown() {
-    document.getElementById('sortDropdown').classList.add('hidden');
-    document.getElementById('sortDropdown').classList.toggle('hidden');
-}
+function sortRecipes() {
+    recipes.sort((a, b) => {
+        if (currentSortName !== 'none') {
+            const nameA = a.menuName || "";
+            const nameB = b.menuName || "";
+            if (currentSortName === 'asc') return nameA.localeCompare(nameB, 'th');
+            if (currentSortName === 'desc') return nameB.localeCompare(nameA, 'th');
+        }
 
-function sortRecipes(sortType) {
-    if (sortType === 'az') {
-        recipes.sort((a, b) => a.menuName.localeCompare(b.menuName));
-    } else if (sortType === 'za') {
-        recipes.sort((a, b) => b.menuName.localeCompare(a.menuName));
-    }
+        if (currentSortExp !== 'none') {
+            const expA = parseInt(a.EXP) || 0;
+            const expB = parseInt(b.EXP) || 0;
+            if (currentSortExp === 'low') return expA - expB;
+            if (currentSortExp === 'high') return expB - expA;
+        }
+
+        return 0;
+    });
 
     renderRecipes();
-    toggleSortDropdown();
 }
 
 function openAddForm() {

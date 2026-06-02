@@ -301,7 +301,7 @@ function renderMenuCards() {
     const imgHTML = `<figure class="quest-image"><img src="${imageUrl}" alt="${menu.menuName || 'ไม่มีชื่อ'}" loading="lazy"></figure>`;
 
     return `
-      <div class="quest-card menu-card" onclick="openViewMenu(${idx})" style="cursor: pointer; margin:0; background-color: #5BC8E0; border: 3px solid #3aafca;">
+      <div class="quest-card menu-card" onclick="openViewMenu(${idx})" style="cursor: pointer; margin:0;">
         <div class="menu-card-header">
             <h3 class="quest-title">${menu.menuName || 'ไม่มีชื่อ'}</h3>
         </div>

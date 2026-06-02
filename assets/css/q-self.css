@@ -27,7 +27,6 @@ body {
 
 /* ════ PAGE WRAP ════ */
 .page-wrap {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 24px 16px 100px;
   display: flex;
@@ -44,8 +43,8 @@ body {
 
 /* ════ MENU CARD ════ */
 .menu-card {
-  background: var(--card-blue);
-  border: 3px solid var(--card-blue-border);
+  background: var(--red-main);
+  border: none;
   border-radius: 18px;
   overflow: hidden;
   cursor: pointer;

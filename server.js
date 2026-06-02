@@ -993,7 +993,8 @@ app.put('/api/requests/:id/status', async (req, res) => {
 
           for (const quest of allQuests) {
             const questIdStr = quest._id.toString();
-            if (user.completedQuests && user.completedQuests.includes(questIdStr)) {
+            const hasCompleted = user.completedQuests && user.completedQuests.map(q => q.toString()).includes(questIdStr);
+            if (hasCompleted) {
               continue;
             }
 

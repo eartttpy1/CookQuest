@@ -115,30 +115,6 @@ body.darkmode{
     background: #f0f0f0;
 }
 
-.sort-dropdown {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    background: var(--base-color);
-    border-radius: 8px;
-    overflow: hidden;
-    min-width: 140px;
-    box-shadow: 0 4px 12px var(--box-shadow-color);
-    z-index: 200;
-}
-
-.sort-option {
-    padding: 10px 16px;
-    color: var(--text-color);
-    font-size: 0.95rem;
-    cursor: pointer;
-    font-family: "IBM Plex Sans Thai Looped", sans-serif;
-    transition: background 0.15s;
-}
-.sort-option:hover,
-.sort-option.active {
-    background: var(--hover-color);
-}
 
 .btn-add {
     background: #4CAF50;
@@ -243,11 +219,26 @@ body.darkmode{
     gap: 10px;
 }
 
+.recipe-title-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
 .item-title {
     font-size: 1.3rem;
     font-weight: 700;
     color: #222;
     font-family: "IBM Plex Sans Thai Looped", sans-serif;
+}
+
+.recipe-exp {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #222;
+    font-family: "Inria Serif", serif;
+    font-style: italic;
 }
 
 .tag-list {

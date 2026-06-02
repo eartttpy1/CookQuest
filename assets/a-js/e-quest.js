@@ -63,16 +63,73 @@ function renderQuests() {
     });
 
     updateDeleteButtons();
+    filterQuests();
 }
+
+let currentSortName = 'none';
+let currentSortExp = 'none';
 
 function setupQuestEventListeners() {
     // Search
     document.getElementById('searchInput').addEventListener('input', filterQuests);
 
-    // Sort
-    document.getElementById('sortBtn').addEventListener('click', toggleSortDropdown);
-    document.querySelectorAll('.sort-option').forEach(option => {
-        option.addEventListener('click', () => sortQuests(option.getAttribute('data-sort')));
+    // Sort Dropdown Toggle
+    const sortBtn = document.getElementById('sortBtn');
+    const sortDropdown = document.getElementById('sortDropdown');
+    if (sortBtn && sortDropdown) {
+        sortBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sortDropdown.classList.toggle('hidden');
+        });
+    }
+
+    // Helper to setup custom selects for Name and Exp
+    function setupCustomSelect(triggerId, optionsId, textId, type) {
+        const trigger = document.getElementById(triggerId);
+        const optionsContainer = document.getElementById(optionsId);
+        const textSpan = document.getElementById(textId);
+
+        if (!trigger || !optionsContainer) return;
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Close other options
+            document.querySelectorAll('.custom-options').forEach(opt => {
+                if (opt !== optionsContainer) opt.classList.add('hidden');
+            });
+            optionsContainer.classList.toggle('hidden');
+        });
+
+        optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const value = option.getAttribute('data-value');
+                textSpan.innerText = option.innerText;
+                optionsContainer.classList.add('hidden');
+
+                if (type === 'name') {
+                    currentSortName = value;
+                    currentSortExp = 'none';
+                    const expText = document.getElementById('current-exp-text');
+                    if (expText) expText.innerText = "เลือก";
+                } else if (type === 'exp') {
+                    currentSortExp = value;
+                    currentSortName = 'none';
+                    const nameText = document.getElementById('current-name-text');
+                    if (nameText) nameText.innerText = "เลือก";
+                }
+
+                sortQuests();
+            });
+        });
+    }
+
+    setupCustomSelect('nameTrigger', 'nameOptions', 'current-name-text', 'name');
+    setupCustomSelect('expTrigger', 'expOptions', 'current-exp-text', 'exp');
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        if (sortDropdown) sortDropdown.classList.add('hidden');
+        document.querySelectorAll('.custom-options').forEach(opt => opt.classList.add('hidden'));
     });
 
     // Delete buttons inside quest list
@@ -86,13 +143,6 @@ function setupQuestEventListeners() {
             }
         });
     }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.sort-wrapper')) {
-            document.getElementById('sortDropdown').classList.add('hidden');
-        }
-    });
 }
 
 function updateDeleteButtons() {
@@ -117,7 +167,9 @@ function toggleDeleteMode() {
 }
 
 function filterQuests() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+    const searchTerm = searchInput.value.toLowerCase();
     const questItems = document.querySelectorAll('.quest-item');
 
     questItems.forEach(item => {
@@ -129,27 +181,26 @@ function filterQuests() {
     });
 }
 
-function toggleSortDropdown() {
-    document.getElementById('sortDropdown').classList.toggle('hidden');
-}
-
-function sortQuests(sortType) {
-    document.querySelectorAll('.sort-option').forEach(opt => {
-        if (opt.getAttribute('data-sort') === sortType) {
-            opt.classList.add('active');
-        } else {
-            opt.classList.remove('active');
+function sortQuests() {
+    quests.sort((a, b) => {
+        if (currentSortName !== 'none') {
+            const nameA = a.name || "";
+            const nameB = b.name || "";
+            if (currentSortName === 'asc') return nameA.localeCompare(nameB, 'th');
+            if (currentSortName === 'desc') return nameB.localeCompare(nameA, 'th');
         }
+
+        if (currentSortExp !== 'none') {
+            const expA = parseInt(a.exp) || 0;
+            const expB = parseInt(b.exp) || 0;
+            if (currentSortExp === 'low') return expA - expB;
+            if (currentSortExp === 'high') return expB - expA;
+        }
+
+        return 0;
     });
 
-    if (sortType === 'az') {
-        quests.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortType === 'exp') {
-        quests.sort((a, b) => a.exp - b.exp);
-    }
-
     renderQuests();
-    toggleSortDropdown();
 }
 
 function openAddForm() {
