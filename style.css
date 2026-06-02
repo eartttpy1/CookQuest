@@ -109,6 +109,7 @@ body{
 
 /* user */
 .NL .linkhref{
+  font-family: "Inria Serif", serif;
   height: 100%;
   padding: 0 30px;
   text-decoration: none;
