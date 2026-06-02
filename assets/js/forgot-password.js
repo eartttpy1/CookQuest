@@ -39,3 +39,20 @@ async function resetPassword() {
         alert(message);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('new-password-input');
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', () => {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                togglePassword.classList.replace('fa-eye-slash', 'fa-eye');
+            } else {
+                passwordInput.type = 'password';
+                togglePassword.classList.replace('fa-eye', 'fa-eye-slash');
+            }
+        });
+    }
+});
+

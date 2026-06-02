@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,7 +8,7 @@ const { Server } = require('socket.io');
 const dns = require("dns");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'cookquest_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET;
 const nodemailer = require('nodemailer');
 
 // ผมไม่สามารถเข้าปกติได้ ต้องset dns ไว้
@@ -17,7 +18,7 @@ dns.setServers([
 ]);
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT;
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
@@ -66,7 +67,7 @@ function toRequestListItem(request) {
   return request;
 }
 // MongoDB connection
-const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
+const mongoURI = process.env.MONGODB_URI;
 
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
@@ -82,24 +83,16 @@ mongoose.connect(mongoURI, {
   ]);
   console.log('✓ Database indexes synced');
 
-  // Seed preset categories
-  if (Tag && Tag.PRESET_CATEGORIES) {
-    for (const name of Tag.PRESET_CATEGORIES) {
-      await Tag.findOneAndUpdate({ name }, { name }, { upsert: true });
-    }
-    console.log('✓ Preset categories seeded');
-  }
-
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Check server at http://localhost:${PORT}`);
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Check server at http://localhost:${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('✗ MongoDB connection error:', err.message);
+    console.error('Connection string:', mongoURI);
+    process.exit(1);
   });
-})
-.catch(err => {
-  console.error('✗ MongoDB connection error:', err.message);
-  console.error('Connection string:', mongoURI);
-  process.exit(1);
-});
 
 // Handle connection events
 mongoose.connection.on('disconnected', () => {
@@ -114,8 +107,8 @@ mongoose.connection.on('error', (err) => {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'theripper754@gmail.com',
-    pass: 'vbfjgtqzlbidhmhx'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
@@ -126,11 +119,13 @@ app.post('/api/register', async (req, res) => {
 
     const { username, email, password } = req.body;
 
-    // เช็ค user ซ้ำ
+    // เช็ค user ซ้ำ (case-insensitive)
+    const escapedUsername = String(username || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedEmail = String(email || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const exist = await User.findOne({
       $or: [
-        { username },
-        { email }
+        { username: { $regex: '^' + escapedUsername + '$', $options: 'i' } },
+        { email: { $regex: '^' + escapedEmail + '$', $options: 'i' } }
       ]
     });
 
@@ -152,22 +147,22 @@ app.post('/api/register', async (req, res) => {
       rank: 'BRONZE Chef',
       exp: 0
     });
-    
+
     //OTP
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-      user.otp = otp;
-      user.otpExpire = Date.now() + 5 * 60 * 1000;
+    user.otp = otp;
+    user.otpExpire = Date.now() + 5 * 60 * 1000;
 
-      await user.save();
- 
-      await transporter.sendMail({
-        from: 'CookQuest',
-        to: user.email,
-        subject: 'Your OTP Code',
-        text: `Your OTP is ${otp}`
-     });
+    await user.save();
+
+    await transporter.sendMail({
+      from: 'CookQuest',
+      to: user.email,
+      subject: 'Your OTP Code',
+      text: `Your OTP is ${otp}`
+    });
 
     res.json({
       msg: 'Register success',
@@ -194,10 +189,14 @@ app.post('/api/verify-otp', async (req, res) => {
   console.log("BODY:", req.body);
 
   const { email, otp } = req.body;
+  const normalizedEmail = String(email || '').trim();
+  const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  const user = await User.findOne({ email });
-    console.log("email:", email);
-    console.log("otp:", otp);
+  const user = await User.findOne({
+    email: { $regex: '^' + escapedEmail + '$', $options: 'i' }
+  });
+  console.log("email:", email);
+  console.log("otp:", otp);
 
   if (!user) {
     return res.status(404).json({
@@ -239,10 +238,11 @@ app.post('/api/forgot-password', async (req, res) => {
       return res.status(400).json({ msg: 'Please provide username or email' });
     }
 
+    const escapedIdentity = normalizedIdentity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const user = await User.findOne({
       $or: [
-        { email: normalizedIdentity },
-        { username: normalizedIdentity }
+        { email: { $regex: '^' + escapedIdentity + '$', $options: 'i' } },
+        { username: { $regex: '^' + escapedIdentity + '$', $options: 'i' } }
       ]
     });
 
@@ -285,10 +285,11 @@ app.post('/api/reset-password', async (req, res) => {
       return res.status(400).json({ msg: 'New password must be at least 6 characters' });
     }
 
+    const escapedIdentity = normalizedIdentity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const user = await User.findOne({
       $or: [
-        { email: normalizedIdentity },
-        { username: normalizedIdentity }
+        { email: { $regex: '^' + escapedIdentity + '$', $options: 'i' } },
+        { username: { $regex: '^' + escapedIdentity + '$', $options: 'i' } }
       ]
     });
 
@@ -322,11 +323,14 @@ app.post('/api/login', async (req, res) => {
 
     const { username, password } = req.body;
 
-    // หา user
+    const normalizedUsername = String(username || '').trim();
+    const escapedUsername = normalizedUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // หา user (case-insensitive & trim-robust)
     const user = await User.findOne({
       $or: [
-        { username },
-        { email: username }
+        { username: { $regex: '^' + escapedUsername + '$', $options: 'i' } },
+        { email: { $regex: '^' + escapedUsername + '$', $options: 'i' } }
       ]
     });
 
@@ -348,13 +352,13 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-   if (!user.isVerified) {
+    if (!user.isVerified) {
       return res.status(400).json({
         msg: 'Please verify OTP first',
         needsOtp: true,  // เพิ่ม flag เพื่อบอก front-end
         email: user.email // ส่ง email กลับไปเพื่อใช้ในหน้า verify-otp
       });
-}
+    }
 
     // สร้าง TOKEN
     const token = jwt.sign(
@@ -474,7 +478,7 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
 async function addExpToProfile(req, res, expToAdd) {
   try {
     const user = await User.findById(req.user.id);
-    
+
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
@@ -484,20 +488,20 @@ async function addExpToProfile(req, res, expToAdd) {
 
     // Re-calculate Level and Rank
     const levelSystem = {
-        1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
-        2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
-        3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
-        4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
-        5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
-        6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
+      1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
+      2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+      3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+      4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
+      5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
+      6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
     };
 
     for (let level = 6; level >= 1; level--) {
-        if (user.exp >= levelSystem[level].minXP) {
-            user.level = level;
-            user.rank = levelSystem[level].rank;
-            break;
-        }
+      if (user.exp >= levelSystem[level].minXP) {
+        user.level = level;
+        user.rank = levelSystem[level].rank;
+        break;
+      }
     }
 
     await user.save();
@@ -516,7 +520,7 @@ app.post('/api/profile/add-badge', authMiddleware, async (req, res) => {
   try {
     const { badgeName, badgeIcon } = req.body;
     const user = await User.findById(req.user.id);
-    
+
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
@@ -630,7 +634,7 @@ app.put('/api/menus/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/menus/:id', authMiddleware, adminMiddleware,async (req, res) => {
+app.delete('/api/menus/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const menu = await Menu.findByIdAndDelete(req.params.id);
     if (!menu) {
@@ -825,19 +829,19 @@ app.put('/api/requests/:id/status', async (req, res) => {
           if (request.menuName) {
             approvedMenuNames.add(request.menuName.toLowerCase().trim());
           }
-          
+
           for (const quest of allQuests) {
             const questIdStr = quest._id.toString();
             if (user.completedQuests && user.completedQuests.includes(questIdStr)) {
               continue;
             }
-            
+
             const relatedMenus = allMenus.filter(m => {
               const hasQuestId = m.questIds && m.questIds.includes(questIdStr);
               const hasTagMatch = quest.tags && quest.tags.some(tag => tag.toLowerCase() === (m.menuName || '').toLowerCase());
               return hasQuestId || hasTagMatch;
             });
-            
+
             if (relatedMenus.length > 0) {
               let questCompleted = true;
               for (const m of relatedMenus) {
@@ -846,7 +850,7 @@ app.put('/api/requests/:id/status', async (req, res) => {
                   break;
                 }
               }
-              
+
               if (questCompleted) {
                 const questExp = quest.exp || 0;
                 user.exp = Number(user.exp || 0) + questExp;
@@ -865,20 +869,20 @@ app.put('/api/requests/:id/status', async (req, res) => {
 
         // Re-calculate Level and Rank
         const levelSystem = {
-            1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
-            2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
-            3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
-            4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
-            5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
-            6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
+          1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
+          2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+          3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+          4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
+          5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
+          6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
         };
 
         for (let level = 6; level >= 1; level--) {
-            if (user.exp >= levelSystem[level].minXP) {
-                user.level = level;
-                user.rank = levelSystem[level].rank;
-                break;
-            }
+          if (user.exp >= levelSystem[level].minXP) {
+            user.level = level;
+            user.rank = levelSystem[level].rank;
+            break;
+          }
         }
 
         // Check and award Milestone Badges directly to the database
@@ -887,13 +891,13 @@ app.put('/api/requests/:id/status', async (req, res) => {
         }
         const earnedBadges = user.badges.map((b) => b.name);
         if (user.completedRecipes >= 1 && !earnedBadges.includes('First Dish')) {
-            user.badges.push({ name: 'First Dish', icon: '👨‍🍳' });
+          user.badges.push({ name: 'First Dish', icon: '👨‍🍳' });
         }
         if (user.completedRecipes >= 5 && !earnedBadges.includes('5 Dishes')) {
-            user.badges.push({ name: '5 Dishes', icon: '🔥' });
+          user.badges.push({ name: '5 Dishes', icon: '🔥' });
         }
         if (user.completedRecipes >= 10 && !earnedBadges.includes('10 Dishes')) {
-            user.badges.push({ name: '10 Dishes', icon: '👑' });
+          user.badges.push({ name: '10 Dishes', icon: '👑' });
         }
 
         await user.save();
@@ -959,7 +963,7 @@ app.delete('/api/quests/:id', async (req, res) => {
 app.post('/api/submissions', async (req, res) => {
   try {
     const { menuName, randomQuests, imageURL, tasteRating, tasteTags, review, createdBy } = req.body;
-    
+
     const request = new Request({
       menuName,
       randomQuests,
@@ -1001,7 +1005,7 @@ app.put('/api/submissions/:id', async (req, res) => {
       { imageURL, tasteRating, tasteTags, review, editedAt: new Date() },
       { new: true, runValidators: true }
     );
-    
+
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
     }
@@ -1013,7 +1017,7 @@ app.put('/api/submissions/:id', async (req, res) => {
         { imageURL, tasteRating, tasteTags, review },
         { new: true }
       );
-      
+
       // Emit socket event so that admin page reloads immediately
       io.emit('new_submission', { request, submission });
     }
@@ -1079,11 +1083,11 @@ app.get('/api/history', async (req, res) => {
 
     const history = await historyQuery
       .populate({
-          path: 'requestId',
-          select: 'menuName randomQuests status'
+        path: 'requestId',
+        select: 'menuName randomQuests status'
       })
       .sort({ _id: -1 });
-      
+
     // Filter out submissions where requestId didn't match
     const filteredHistory = history.filter(sub => sub.requestId != null);
 
