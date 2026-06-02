@@ -82,6 +82,14 @@ mongoose.connect(mongoURI, {
   ]);
   console.log('✓ Database indexes synced');
 
+  // Seed preset categories
+  if (Tag && Tag.PRESET_CATEGORIES) {
+    for (const name of Tag.PRESET_CATEGORIES) {
+      await Tag.findOneAndUpdate({ name }, { name }, { upsert: true });
+    }
+    console.log('✓ Preset categories seeded');
+  }
+
   server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Check server at http://localhost:${PORT}`);
@@ -680,7 +688,7 @@ app.get('/api/tags', async (req, res) => {
   try {
     const search = req.query.search || '';
     const query = search ? { name: { $regex: search, $options: 'i' } } : {};
-    const tags = await Tag.find(query).sort({ name: 1 }).limit(50);
+    const tags = await Tag.find(query).sort({ name: 1 });
     res.json(tags);
   } catch (error) {
     console.error('Error fetching tags:', error.message);

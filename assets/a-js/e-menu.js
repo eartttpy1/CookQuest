@@ -1,17 +1,19 @@
 // e-menu.js - Handles functionality for e-menu admin page
 
-const CATEGORIES_LIST = [
-    // วัตถุดิบ
-    "เมนูไข่", "เมนูไก่", "เมนูหมู", "เมนูเป็ด", "เมนูเนื้อวัว", "เมนูไส้กรอก", "เมนูเบคอน", "เมนูอาหารทะเล", "เมนูเส้น", "เมนูเห็ด", "เมนูเต้าหู้", "เมนูข้าว", "เมนูผัก", "เมนูผลไม้",
-    // ประเภทอาหาร
-    "เมนูอาหารเช้า", "เมนูอาหารจานเดียว", "เมนูกับแกล้ม/อาหารว่าง", "เมนูมังสวิรัติ", "เมนูอาหารไทย", "เมนูอาหารเหนือ", "เมนูอาหารอีสาน", "เมนูอาหารใต้", "เมนูอาหารญี่ปุ่น", "เมนูอาหารจีน", "เมนูอาหารเกาหลี", "เมนูอาหารฝรั่ง", "เมนูอาหารอิตาเลียน", "เมนูสเต๊ก", "เมนูแกง", "สูตรน้ำจิ้ม", "เมนูอาหารฟิวชัน", "เมนูซุป", "อาหารนานาชาติ", "เมนูแซนด์วิช", "เมนูอาหารเย็น", "เมนูน้ำพริก", "เมนูกับข้าว", "เมนูก๋วยเตี๋ยว",
-    // วิธีการ
-    "เมนูไมโครเวฟ", "เมนูต้ม", "เมนูผัด", "เมนูทอด", "เมนูอบ", "เมนูนึ่ง", "เมนูยำ", "เมนูย่าง", "เมนูหม้ออบลมร้อน", "เมนูหม้อหุงข้าว",
-    // ของหวาน/เบเกอรี่
-    "เมนูไอศกรีม", "เมนูขนมไทย", "เมนูเบเกอรี", "เมนูเค้ก", "เมนูของหวาน", "เมนูช็อคโกแลต",
-    // เมนูพิเศษ
-    "เมนูทำง่ายไม่เกิน 15 นาที", "เมนูประหยัด", "เมนูเด็กหอ", "เมนูสร้างอาชีพ", "เมนูข้าวกล่อง", "เมนูวาเลนไทน์", "เมนูฮาโลวีน", "เมนูคริสต์มาส"
-];
+let CATEGORIES_LIST = [];
+
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/tags');
+        if (response.ok) {
+            const tags = await response.json();
+            CATEGORIES_LIST = tags.map(t => t.name);
+            renderCategoryQuickSelect();
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
 
 function renderCategoryQuickSelect() {
     const container = document.getElementById('categoryQuickSelect');
@@ -68,18 +70,12 @@ let deleteMode = false;
 let currentEditItem = null;
 let recipes = [];
 let selectedImageData = '';
-let availableTags = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     loadRecipes();
-    loadTags();
+    loadCategories();
     setupMenuEventListeners();
-
-    const tagSearchInput = document.getElementById('tagSearchInput');
-    if (tagSearchInput) {
-        tagSearchInput.addEventListener('input', handleTagSearchInput);
-    }
 
     // Form submission
     const saveBtn = document.querySelector('.btn-save');
@@ -200,11 +196,6 @@ function openAddForm() {
     document.getElementById('prepTime').value = '';
     document.getElementById('cookTime').value = '';
     document.getElementById('tagsArea').innerHTML = '';
-    const tagSearchInput = document.getElementById('tagSearchInput');
-    if (tagSearchInput) {
-        tagSearchInput.value = '';
-    }
-    renderTagSuggestions('');
     if (typeof renderCategoryQuickSelect === 'function') {
         renderCategoryQuickSelect();
     }
@@ -277,8 +268,6 @@ async function openEditFormById(id) {
     document.getElementById('prepTime').value = parseInt(currentEditItem.prepTime) || '';
     document.getElementById('cookTime').value = parseInt(currentEditItem.cookTime) || '';
     document.getElementById('tagsArea').innerHTML = (currentEditItem.tags || []).map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
-    document.getElementById('tagSearchInput').value = '';
-    renderTagSuggestions('');
     if (typeof renderCategoryQuickSelect === 'function') {
         renderCategoryQuickSelect();
     }
@@ -778,63 +767,6 @@ function clearImagePreview() {
     `;
 }
 
-async function loadTags(search = '') {
-    try {
-        const query = search ? `?search=${encodeURIComponent(search)}` : '';
-        const response = await fetch(`/api/tags${query}`);
-        if (!response.ok) {
-            throw new Error('Failed to load tags');
-        }
-        availableTags = await response.json();
-        renderTagSuggestions(search);
-    } catch (error) {
-        console.error('Error loading tags:', error);
-    }
-}
-
-function handleTagSearchInput(event) {
-    const query = event.target.value.trim();
-    loadTags(query);
-}
-
-function renderTagSuggestions(query) {
-    const resultsContainer = document.getElementById('tagSearchResults');
-    const tagNewRow = document.getElementById('tagNewRow');
-    if (!resultsContainer || !tagNewRow) return;
-
-    const normalizedQuery = query.toLowerCase();
-    const matchingTags = availableTags
-        .filter(tag => tag.name.toLowerCase().includes(normalizedQuery))
-        .slice(0, 10);
-
-    resultsContainer.innerHTML = '';
-    matchingTags.forEach(tag => {
-        const item = document.createElement('div');
-        item.className = 'tag-search-result';
-        item.textContent = tag.name;
-        item.addEventListener('click', () => addTag(tag.name));
-        resultsContainer.appendChild(item);
-    });
-
-    if (query && matchingTags.length === 0) {
-        tagNewRow.innerHTML = '';
-        const label = document.createElement('span');
-        label.className = 'thai';
-        label.textContent = 'สร้างใหม่:';
-
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'btn-add-tag';
-        button.textContent = query;
-        button.addEventListener('click', () => createAndAddTag(query));
-
-        tagNewRow.appendChild(label);
-        tagNewRow.appendChild(button);
-    } else {
-        tagNewRow.innerHTML = '<span class="thai">สร้างใหม่:</span>';
-    }
-}
-
 function addTag(tagName) {
     const tagsArea = document.getElementById('tagsArea');
     if (!tagsArea) return;
@@ -862,29 +794,5 @@ function addTag(tagName) {
     tagsArea.appendChild(tagElement);
     if (typeof syncCategoryBadges === 'function') {
         syncCategoryBadges();
-    }
-}
-
-async function createAndAddTag(tagName) {
-    try {
-        const response = await fetch('/api/tags', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: tagName })
-        });
-        if (!response.ok) {
-            throw new Error('Failed to create tag');
-        }
-        const createdTag = await response.json();
-        availableTags.push(createdTag);
-        addTag(createdTag.name);
-        document.getElementById('tagSearchInput').value = '';
-        await loadTags('');
-        renderTagSuggestions('');
-    } catch (error) {
-        console.error('Error creating tag:', error);
-        alert('ไม่สามารถสร้าง tag ใหม่ได้');
     }
 }
