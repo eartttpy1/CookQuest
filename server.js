@@ -246,6 +246,46 @@ app.post('/api/verify-otp', async (req, res) => {
 
 });
 
+app.post('/api/resend-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const normalizedEmail = String(email || '').trim();
+    if (!normalizedEmail) {
+      return res.status(400).json({ msg: 'Email is required' });
+    }
+    const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const user = await User.findOne({
+      email: { $regex: '^' + escapedEmail + '$', $options: 'i' }
+    });
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ msg: 'User is already verified' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpire = Date.now() + 5 * 60 * 1000;
+    await user.save();
+
+    await transporter.sendMail({
+      from: 'CookQuest',
+      to: user.email,
+      subject: 'Your OTP Code',
+      text: `Your new OTP code is ${otp}. It expires in 5 minutes.`
+    });
+
+    res.json({ msg: 'OTP has been resent successfully' });
+  } catch (error) {
+    console.error('Error resending OTP:', error);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
 app.post('/api/forgot-password', async (req, res) => {
   try {
     const { identity } = req.body;

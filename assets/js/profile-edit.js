@@ -1,6 +1,7 @@
 const usernameInput = document.getElementById("username");
 const emailInput = document.getElementById("email");
 const editButtons = document.querySelectorAll(".btn-edit");
+let currentSavedEmail = "";
 
 const completeCard = document.querySelectorAll(".card .number")[0];
 const pendingCard = document.querySelectorAll(".card .number")[1];
@@ -30,6 +31,7 @@ async function loadProfile() {
 
     usernameInput.value = data.username;
     emailInput.value = data.email;
+    currentSavedEmail = data.email;
 }
 
 // ================== UPDATE PROFILE ==================
@@ -114,6 +116,9 @@ editButtons.forEach(btn => {
 const btnConfirmEmailOtp = document.getElementById("btn-confirm-email-otp");
 const emailOtpInput = document.getElementById("email-otp");
 
+let emailResendCountdown = 0;
+let emailResendTimer;
+
 if (btnConfirmEmailOtp) {
     btnConfirmEmailOtp.addEventListener("click", async (e) => {
         e.preventDefault();
@@ -126,6 +131,7 @@ if (btnConfirmEmailOtp) {
         const result = await updateProfile("email", emailInput.value, otpValue);
         if (result === true) {
             emailInput.readOnly = true;
+            currentSavedEmail = emailInput.value; // Keep track of updated email
             const emailEditBtn = document.querySelector('.btn-edit[data-target="email"]');
             if (emailEditBtn) {
                 emailEditBtn.textContent = "Edit";
@@ -135,6 +141,54 @@ if (btnConfirmEmailOtp) {
                 otpContainer.classList.add("hidden");
                 emailOtpInput.value = "";
             }
+            if (emailResendTimer) {
+                clearInterval(emailResendTimer);
+            }
+            const btnResendEmailOtp = document.getElementById("btn-resend-email-otp");
+            if (btnResendEmailOtp) {
+                btnResendEmailOtp.disabled = false;
+                btnResendEmailOtp.textContent = "Resend OTP";
+            }
+            emailResendCountdown = 0;
+        }
+    });
+}
+
+const btnResendEmailOtp = document.getElementById("btn-resend-email-otp");
+if (btnResendEmailOtp) {
+    btnResendEmailOtp.addEventListener("click", async (e) => {
+        e.preventDefault();
+        if (emailResendCountdown > 0) return;
+
+        const emailVal = emailInput.value.trim();
+        const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+        if (!gmailRegex.test(emailVal)) {
+            alert("กรุณากรอก Gmail ที่ถูกต้อง (เช่น user@gmail.com)");
+            emailInput.focus();
+            return;
+        }
+
+        btnResendEmailOtp.disabled = true;
+        btnResendEmailOtp.textContent = "กำลังส่ง...";
+
+        const result = await updateProfile("email", emailVal);
+        if (result === 'OTP_SENT') {
+            alert("ส่ง OTP ใหม่สำเร็จแล้ว กรุณาตรวจสอบอีเมลของคุณ");
+            emailResendCountdown = 60;
+            btnResendEmailOtp.textContent = `ส่งอีกครั้งใน (${emailResendCountdown}s)`;
+            emailResendTimer = setInterval(() => {
+                emailResendCountdown--;
+                if (emailResendCountdown <= 0) {
+                    clearInterval(emailResendTimer);
+                    btnResendEmailOtp.disabled = false;
+                    btnResendEmailOtp.textContent = "Resend OTP";
+                } else {
+                    btnResendEmailOtp.textContent = `ส่งอีกครั้งใน (${emailResendCountdown}s)`;
+                }
+            }, 1000);
+        } else {
+            btnResendEmailOtp.disabled = false;
+            btnResendEmailOtp.textContent = "Resend OTP";
         }
     });
 }
@@ -181,9 +235,9 @@ let countdownTimer;
 if (btnSendOtp) {
     btnSendOtp.addEventListener("click", async (e) => {
         e.preventDefault();
-        const email = emailInput.value.trim();
+        const email = currentSavedEmail;
         if (!email) {
-            alert("กรุณาระบุอีเมลก่อนขอรับ OTP");
+            alert("กรุณารอโหลดข้อมูลโปรไฟล์สักครู่...");
             return;
         }
         btnSendOtp.disabled = true;
@@ -228,7 +282,11 @@ if (btnSendOtp) {
 if (btnSubmitPassword) {
     btnSubmitPassword.addEventListener("click", async (e) => {
         e.preventDefault();
-        const email = emailInput.value.trim();
+        const email = currentSavedEmail;
+        if (!email) {
+            alert("กรุณารอโหลดข้อมูลโปรไฟล์สักครู่...");
+            return;
+        }
         const newPassword = newPasswordInput.value;
         const otp = passwordOtpInput.value.trim();
 

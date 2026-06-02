@@ -46,7 +46,7 @@ if (socket) {
         try {
             const userData = JSON.parse(localStorage.getItem('user_data'));
             if (userData?.user?.id) userId = userData.user.id;
-        } catch (e) {}
+        } catch (e) { }
         sessionStorage.removeItem(`cookquest_cache_v2_${userId}`);
         sessionStorage.removeItem(`cookquest_cache_${userId}`);
 
@@ -83,11 +83,11 @@ document.addEventListener('click', async function (e) {
     const card = e.target.closest('.quest-card');
     if (!card) return;
     const idx = card.dataset.id;
-    
+
     // Prevent double clicking
     if (e.target.classList.contains('is-loading')) return;
     e.target.classList.add('is-loading');
-    
+
     try {
         const res = await fetch('http://localhost:4000/api/favorites/toggle', {
             method: 'POST',
@@ -115,10 +115,10 @@ document.querySelector('.modal-star').addEventListener('click', async function (
     const modal = document.getElementById('questModal');
     const idx = modal.dataset.currentCard;
     if (idx === undefined) return;
-    
+
     if (e.target.classList.contains('is-loading')) return;
     e.target.classList.add('is-loading');
-    
+
     try {
         const res = await fetch('http://localhost:4000/api/favorites/toggle', {
             method: 'POST',
@@ -145,7 +145,7 @@ document.addEventListener('click', async (e) => {
     if (card && (card.closest('#menuList') || card.closest('#recipes-container') || card.closest('#favorites-container'))) {
         // ป้องกันการเปิด modal ถ้ากดโดนดาว Favorite
         if (e.target.classList.contains('fa-star')) return;
-        
+
         e.preventDefault();
         const menuId = card.dataset.id;
         const modal = document.getElementById('questModal');
@@ -230,7 +230,7 @@ async function _populateModalAsync(menu, modal) {
     const infoEls = modal.querySelectorAll('.modal-info');
     if (infoEls.length >= 2) {
         infoEls[0].textContent = `จำนวน : ${menu.servings || 1} จาน`;
-        
+
         const prepStr = menu.prepTime || '0 นาที';
         const cookStr = menu.cookTime || '0 นาที';
         infoEls[1].textContent = `เวลาเตรียม: ${prepStr} | เวลาปรุง: ${cookStr}`;
@@ -321,24 +321,24 @@ async function _populateModalAsync(menu, modal) {
                 questTitle.style.justifyContent = 'space-between';
                 questTitle.style.alignItems = 'center';
                 questTitle.style.width = '100%';
-                
+
 
                 rerollBtn = document.createElement('button');
                 rerollBtn.type = 'button';
                 rerollBtn.className = 'btn-reroll-quest thai';
                 rerollBtn.style.cssText = 'background: transparent; border: none; color: rgba(255, 255, 255, 0.85); cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 4px; font-family: "IBM Plex Sans Thai Looped", "Nunito", sans-serif; font-weight: normal; transition: color 0.2s ease; margin-left: auto; padding: 0;';
                 rerollBtn.innerHTML = '<i class="fa-solid fa-rotate"></i>';
-                
+
                 rerollBtn.addEventListener('mouseenter', () => { rerollBtn.style.color = '#ffffff'; });
                 rerollBtn.addEventListener('mouseleave', () => { rerollBtn.style.color = 'rgba(255, 255, 255, 0.85)'; });
-                
+
                 rerollBtn.addEventListener('click', () => {
                     const randomIndex = Math.floor(Math.random() * randomQuests.length);
                     const newQuest = randomQuests[randomIndex];
                     localStorage.setItem(cacheKey, newQuest);
                     questDesc.textContent = newQuest;
                 });
-                
+
                 questTitle.appendChild(rerollBtn);
             }
         }
@@ -376,7 +376,7 @@ async function _populateModalAsync(menu, modal) {
         const res = await fetch(`http://localhost:4000/api/history?menuName=${encodeURIComponent(menu.menuName)}&userId=${CURRENT_USER_ID}`);
         if (res.ok) {
             const historyData = await res.json();
-            
+
             // Render History Modal
             renderHistory(historyData);
 
@@ -395,7 +395,7 @@ async function _populateModalAsync(menu, modal) {
                     submitBtn.dataset.isResubmit = 'true';
                 } else {
                     submitBtn.textContent = 'Submit';
-                    submitBtn.style.backgroundColor = ''; 
+                    submitBtn.style.backgroundColor = '';
                     submitBtn.style.color = '';
                     submitBtn.disabled = false;
                     submitBtn.dataset.isResubmit = 'false';
@@ -426,7 +426,7 @@ function renderHistory(historyData) {
             const req = sub.requestId || {};
             const statusLabel = sub.status === 'pending' ? 'Pending ...' : (sub.status === 'approved' ? 'Approved' : 'Rejected');
             const statusClass = sub.status;
-            
+
             const allTags = ["หวาน", "เค็ม", "เปรี้ยว", "ขม", "อูมามิ", "เผ็ด"];
             const tasteTagsHtml = allTags.map(tag => {
                 const isSelected = sub.tasteTags && sub.tasteTags.includes(tag);
@@ -570,18 +570,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Collect data
             const preview = document.getElementById('uploadPreview');
             const imageURL = preview.src && !preview.classList.contains('hidden') ? preview.src : '';
-            
+
             const activeStars = document.querySelectorAll('#tasteStars .taste-star.active');
             let tasteRating = 0;
             if (activeStars.length > 0) {
                 tasteRating = parseInt(activeStars[activeStars.length - 1].dataset.val);
             }
-            
+
             const activeTags = document.querySelectorAll('#tasteTags .taste-tag.selected');
             const tasteTags = Array.from(activeTags).map(t => t.dataset.taste);
-            
+
             const review = document.getElementById('reviewText').value.trim();
-            
+
             if (!imageURL || tasteRating === 0 || tasteTags.length === 0 || !review) {
                 alert('กรุณากรอกข้อมูลให้ครบถ้วนก่อนส่ง (รูปถ่าย, รสชาติ, รูปแบบรสชาติ, รีวิว)');
                 window.isQuestSubmitting = false;
@@ -591,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitBtn.textContent = originalText;
                 return;
             }
-            
+
             if (submitBtn.dataset.isResubmit === 'true') {
                 const confirmResubmit = confirm('การส่งใหม่จะไม่ได้ EXP เพิ่มเติม จะถูกบันทึกเป็นประวัติเท่านั้น ยืนยันที่จะส่งหรือไม่?');
                 if (!confirmResubmit) {
@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
             }
-            
+
             const randomQuests = modal.querySelector('.modal-quest-desc').textContent;
             const menuName = menuData.menuName;
 
@@ -613,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ menuName, randomQuests, imageURL, tasteRating, tasteTags, review, createdBy: CURRENT_USER_ID })
                 });
-                
+
                 if (res.ok) {
                     // Clear the persisted random quest for this menu so a new one gets rolled next time
                     localStorage.removeItem(`cookquest_random_quest_${menuId}`);
@@ -627,14 +627,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     document.querySelectorAll('#tasteTags .taste-tag').forEach(t => t.classList.remove('selected'));
                     document.getElementById('reviewText').value = '';
-                    
+
                     // Change button to pending
                     submitBtn.textContent = 'Pending';
                     submitBtn.style.backgroundColor = '#f1c40f'; // สีเหลือง
                     submitBtn.style.color = '#fff';
                     submitBtn.disabled = true;
                     submitBtn.dataset.isResubmit = 'false';
-                    
+
                     // Update history UI dynamically
                     try {
                         const historyRes = await fetch(`http://localhost:4000/api/history?menuName=${encodeURIComponent(menuName)}&userId=${CURRENT_USER_ID}`);
@@ -654,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         card.classList.remove('status-approved', 'status-rejected');
                         card.classList.add('status-pending');
                     }
-                    
+
                     alert('ส่ง Quest สำเร็จ! รอการตรวจสอบจากแอดมิน');
                 } else {
                     alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
@@ -715,7 +715,7 @@ async function loadQuestDetails(questId) {
                 <span class="category-title thai">${currentQuest.name}</span>
             `;
         }
-        
+
         const relatedMenus = menus.filter(menu => {
             const hasQuestId = menu.questIds && menu.questIds.includes(questId);
             const hasTagMatch = currentQuest.tags && currentQuest.tags.some(tag => tag.toLowerCase() === (menu.menuName || '').toLowerCase());
@@ -757,7 +757,7 @@ async function loadQuestDetails(questId) {
 
     workerPort.postMessage({ userId: CURRENT_USER_ID, token });
 
-    workerPort.onmessage = function(e) {
+    workerPort.onmessage = function (e) {
         const data = e.data;
         if (!data.success) {
             console.error('Worker error:', data.error);
@@ -773,12 +773,12 @@ async function loadQuestDetails(questId) {
         } catch (e) {
             console.warn('Could not cache data in sessionStorage. Quota might be exceeded:', e);
         }
-        
+
         renderFromData(quests, menus, newFavState, menuStatusMap, profile);
     };
 
     if (typeof SharedWorker === 'undefined') {
-        worker.onerror = function(error) {
+        worker.onerror = function (error) {
             console.error('Worker failed:', error);
         };
     }
@@ -787,9 +787,9 @@ async function loadQuestDetails(questId) {
 function renderMenus(menus, menuStatusMap = {}) {
     const menuList = document.getElementById('menuList');
     if (!menuList) return;
-    
+
     menuList.innerHTML = '';
-    
+
     menus.forEach(menu => {
         const card = document.createElement('div');
         card.className = 'quest-card menu-card';
@@ -815,7 +815,7 @@ function renderMenus(menus, menuStatusMap = {}) {
             'bronze': 1, 'silver': 2, 'gold': 3,
             'platinum': 4, 'diamond': 5, 'master': 6
         };
-        
+
         let userRankStr = 'bronze';
         if (window.currentUserProfile && window.currentUserProfile.rank) {
             const cleanRank = window.currentUserProfile.rank.toLowerCase();
@@ -826,7 +826,7 @@ function renderMenus(menus, menuStatusMap = {}) {
             else if (cleanRank.includes('diamond')) userRankStr = 'diamond';
             else if (cleanRank.includes('master')) userRankStr = 'master';
         }
-        
+
         const requiredVal = rankOrder[requiredRank] || 1;
         const userVal = rankOrder[userRankStr] || 1;
         const isLocked = userVal < requiredVal;
@@ -905,14 +905,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
- 
+
     // ─── Modal & History: Taste tag toggle ───
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('taste-tag')) {
             if (e.target.classList.contains('disabled')) return; // block ถ้า disabled
             e.target.classList.toggle('selected');
         }
-        
+
         // ─── History: Taste star rating (Event Delegation) ───
         if (e.target.classList.contains('taste-star') && e.target.closest('#historyModal')) {
             const star = e.target;
@@ -923,11 +923,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const val = parseInt(star.dataset.val);
             group.querySelectorAll('.taste-star').forEach(s => {
                 if (parseInt(s.dataset.val) <= val) {
-                    s.classList.replace('fa-regular','fa-solid');
+                    s.classList.replace('fa-regular', 'fa-solid');
                     s.classList.add('active');
                     s.style.color = '#FFD700';
                 } else {
-                    s.classList.replace('fa-solid','fa-regular');
+                    s.classList.replace('fa-solid', 'fa-regular');
                     s.classList.remove('active');
                     s.style.color = 'white';
                 }
@@ -935,7 +935,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
- // ─── Modal tags: show partial / show all ───
+// ─── Modal tags: show partial / show all ───
 document.addEventListener('DOMContentLoaded', () => {
     const tagsContainer = document.querySelector('.modal-tags');
     if (!tagsContainer) return;
@@ -965,28 +965,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── History Modal ───
 document.addEventListener('DOMContentLoaded', () => {
-  const historyModal = document.getElementById('historyModal');
-  const closeHistoryBtn = document.getElementById('closeHistoryModal');
-  const openHistoryBtn = document.querySelector('.btn-history');
+    const historyModal = document.getElementById('historyModal');
+    const closeHistoryBtn = document.getElementById('closeHistoryModal');
+    const openHistoryBtn = document.querySelector('.btn-history');
 
-  // เปิด
-  if (openHistoryBtn) {
-    openHistoryBtn.addEventListener('click', () => {
-      historyModal.classList.remove('hidden');
+    // เปิด
+    if (openHistoryBtn) {
+        openHistoryBtn.addEventListener('click', () => {
+            historyModal.classList.remove('hidden');
+        });
+    }
+
+    // ปิดด้วย X
+    if (closeHistoryBtn) {
+        closeHistoryBtn.addEventListener('click', () => {
+            historyModal.classList.add('hidden');
+        });
+    }
+
+    // ปิดเมื่อคลิกพื้นหลัง
+    historyModal.addEventListener('click', (e) => {
+        if (e.target === historyModal) historyModal.classList.add('hidden');
     });
-  }
-
-  // ปิดด้วย X
-  if (closeHistoryBtn) {
-    closeHistoryBtn.addEventListener('click', () => {
-      historyModal.classList.add('hidden');
-    });
-  }
-
-  // ปิดเมื่อคลิกพื้นหลัง
-  historyModal.addEventListener('click', (e) => {
-    if (e.target === historyModal) historyModal.classList.add('hidden');
-  });
 
 });
 
@@ -1023,69 +1023,69 @@ function cancelEditMode(idx) {
 }
 
 async function saveHistoryEdit(idx, submissionId, btn) {
-  if (btn) {
-      if (btn.getAttribute('data-saving') === 'true' || btn.disabled) return;
-      btn.setAttribute('data-saving', 'true');
-      btn.disabled = true;
-      btn.style.pointerEvents = 'none';
-  }
+    if (btn) {
+        if (btn.getAttribute('data-saving') === 'true' || btn.disabled) return;
+        btn.setAttribute('data-saving', 'true');
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+    }
 
-  const input = document.getElementById(`historyReviewInput${idx}`);
-  const text = document.getElementById(`historyReviewText${idx}`);
-  
-  // รวบรวมข้อมูลใหม่
-  const review = input.value.trim();
-  const activeStars = document.querySelectorAll(`#historyTasteStars${idx} .taste-star.active`);
-  const tasteRating = activeStars.length > 0 ? parseInt(activeStars[activeStars.length - 1].dataset.val) : 0;
-  
-  const activeTags = document.querySelectorAll(`#historyTasteTags${idx} .taste-tag.selected`);
-  const tasteTags = Array.from(activeTags).map(t => t.dataset.taste);
-  
-  const photoImg = document.getElementById(`historyPhoto${idx}`);
-  const imageURL = photoImg.src; // อาจจะเป็น base64 หากเพิ่งเปลี่ยน
+    const input = document.getElementById(`historyReviewInput${idx}`);
+    const text = document.getElementById(`historyReviewText${idx}`);
 
-  if (tasteRating === 0 || tasteTags.length === 0 || !review) {
-      alert('กรุณากรอกข้อมูลดาว รสชาติ และรีวิวให้ครบถ้วน');
-      if (btn) {
-          btn.removeAttribute('data-saving');
-          btn.disabled = false;
-          btn.style.pointerEvents = '';
-      }
-      return;
-  }
+    // รวบรวมข้อมูลใหม่
+    const review = input.value.trim();
+    const activeStars = document.querySelectorAll(`#historyTasteStars${idx} .taste-star.active`);
+    const tasteRating = activeStars.length > 0 ? parseInt(activeStars[activeStars.length - 1].dataset.val) : 0;
 
-  try {
-      const res = await fetch(`http://localhost:4000/api/submissions/${submissionId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ review, tasteRating, tasteTags, imageURL })
-      });
+    const activeTags = document.querySelectorAll(`#historyTasteTags${idx} .taste-tag.selected`);
+    const tasteTags = Array.from(activeTags).map(t => t.dataset.taste);
 
-      if (res.ok) {
-          text.textContent = review; // อัปเดตใน UI
-          cancelEditMode(idx);
-          alert('บันทึกการแก้ไขสำเร็จ!');
-      } else {
-          alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-      }
-  } catch (err) {
-      console.error(err);
-      alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
-  } finally {
-      if (btn) {
-          btn.removeAttribute('data-saving');
-          btn.disabled = false;
-          btn.style.pointerEvents = '';
-      }
-  }
+    const photoImg = document.getElementById(`historyPhoto${idx}`);
+    const imageURL = photoImg.src; // อาจจะเป็น base64 หากเพิ่งเปลี่ยน
+
+    if (tasteRating === 0 || tasteTags.length === 0 || !review) {
+        alert('กรุณากรอกข้อมูลดาว รสชาติ และรีวิวให้ครบถ้วน');
+        if (btn) {
+            btn.removeAttribute('data-saving');
+            btn.disabled = false;
+            btn.style.pointerEvents = '';
+        }
+        return;
+    }
+
+    try {
+        const res = await fetch(`http://localhost:4000/api/submissions/${submissionId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ review, tasteRating, tasteTags, imageURL })
+        });
+
+        if (res.ok) {
+            text.textContent = review; // อัปเดตใน UI
+            cancelEditMode(idx);
+            alert('บันทึกการแก้ไขสำเร็จ!');
+        } else {
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    } finally {
+        if (btn) {
+            btn.removeAttribute('data-saving');
+            btn.disabled = false;
+            btn.style.pointerEvents = '';
+        }
+    }
 }
 
 // Helper เพื่อลดขนาดและบีบอัดรูปภาพก่อนส่งขึ้น Server
 function compressImage(file, callback) {
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         const img = new Image();
-        img.onload = function() {
+        img.onload = function () {
             const MAX_WIDTH = 1000;
             const MAX_HEIGHT = 1000;
             let width = img.width;
@@ -1138,7 +1138,7 @@ async function deleteHistorySubmission(submissionId) {
             // Clear session cache to force re-fetch
             const cacheKey = `cookquest_cache_v2_${CURRENT_USER_ID}`;
             sessionStorage.removeItem(cacheKey);
-            
+
             // Reload page to refresh UI
             window.location.reload();
         } else {
@@ -1158,7 +1158,7 @@ function previewUpload(event) {
     const icon = document.getElementById('uploadIcon');
     const label = document.getElementById('uploadLabel');
     const actions = document.getElementById('uploadActions');
-    
+
     compressImage(file, (compressedDataUrl) => {
         preview.src = compressedDataUrl;
         preview.classList.remove('hidden');
@@ -1182,56 +1182,56 @@ function removeUpload() {
 }
 
 function getRankColor(rank) {
-  switch (rank.toLowerCase()) {
-    case 'bronze': return '#ffa954ff'; // ทองแดง
-    case 'silver': return '#e3e3e3ff'; // เงิน
-    case 'gold': return '#FFD700'; // ทอง
-    case 'platinum': return '#ff25ffff'; // แพลตินัม
-    case 'diamond': return '#34d0ffff'; // เพชร
-    case 'master': return 'rainbow'; // ปรมาจารย์ (สีรุ้ง)
-    default: return '#fff';
-  }
+    switch (rank.toLowerCase()) {
+        case 'bronze': return '#ffa954ff'; // ทองแดง
+        case 'silver': return '#e3e3e3ff'; // เงิน
+        case 'gold': return '#FFD700'; // ทอง
+        case 'platinum': return '#ff25ffff'; // แพลตินัม
+        case 'diamond': return '#34d0ffff'; // เพชร
+        case 'master': return 'rainbow'; // ปรมาจารย์ (สีรุ้ง)
+        default: return '#fff';
+    }
 }
 
 function applyRankColors() {
-  const textEls = document.querySelectorAll('.rank-text'); // หรือ class ที่คุณใช้
-  textEls.forEach(el => {
-    const rank = el.textContent.trim().toLowerCase();
-    
-    // Reset previous inline styles or rainbow class
-    el.style.color = '';
-    el.classList.remove('rank-rainbow');
-    
-    const lockOverlay = el.closest('.lock-overlay');
-    let lockIcon = null;
-    if (lockOverlay) {
-        lockIcon = lockOverlay.querySelector('.fa-lock');
-        if (lockIcon) {
-            lockIcon.style.color = '';
-            lockIcon.classList.remove('rank-rainbow');
-        }
-    }
+    const textEls = document.querySelectorAll('.rank-text'); // หรือ class ที่คุณใช้
+    textEls.forEach(el => {
+        const rank = el.textContent.trim().toLowerCase();
 
-    const color = getRankColor(rank);
-    if (color === 'rainbow') {
-        el.classList.add('rank-rainbow');
-        if (lockIcon) {
-            lockIcon.classList.add('rank-rainbow');
+        // Reset previous inline styles or rainbow class
+        el.style.color = '';
+        el.classList.remove('rank-rainbow');
+
+        const lockOverlay = el.closest('.lock-overlay');
+        let lockIcon = null;
+        if (lockOverlay) {
+            lockIcon = lockOverlay.querySelector('.fa-lock');
+            if (lockIcon) {
+                lockIcon.style.color = '';
+                lockIcon.classList.remove('rank-rainbow');
+            }
         }
-    } else {
-        el.style.color = color;
-        if (lockIcon) {
-            lockIcon.style.color = color;
+
+        const color = getRankColor(rank);
+        if (color === 'rainbow') {
+            el.classList.add('rank-rainbow');
+            if (lockIcon) {
+                lockIcon.classList.add('rank-rainbow');
+            }
+        } else {
+            el.style.color = color;
+            if (lockIcon) {
+                lockIcon.style.color = color;
+            }
         }
-    }
-  });
+    });
 }
 
 // ─── Search and Render Related Menus ───
 function applySearchAndRender() {
     const searchInput = document.querySelector('.search-input');
     const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
-    
+
     let filteredMenus = window.allRelatedMenus || [];
     if (query) {
         filteredMenus = filteredMenus.filter(menu => {
@@ -1241,7 +1241,7 @@ function applySearchAndRender() {
             return nameMatch || tagMatch || ingMatch;
         });
     }
-    
+
     renderMenus(filteredMenus, window.currentMenuStatusMap || {});
 }
 

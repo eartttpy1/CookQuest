@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let chartInstance = null;
       
-      const renderView = (profile, historyData) => {
+      const renderView = (profile, historyData, quests = []) => {
           // 2. Calculate and display Level, Rank, and XP Bar
           const levelSystem = {
             1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
@@ -148,11 +148,38 @@ document.addEventListener('DOMContentLoaded', async () => {
               badgeCountEl.textContent = `${unlockedCount} / ${evaluatedBadges.length}`;
               badgeCountEl.hidden = evaluatedBadges.length === 0;
           }
+
+          // 5. Render Completed Quests
+          const questsContainer = document.getElementById('view-completed-quests');
+          if (questsContainer) {
+              const completedQuests = profile.completedQuests || [];
+              if (completedQuests.length === 0) {
+                  questsContainer.innerHTML = '<p class="thai" style="color: var(--profile-stat-text-muted); opacity: 0.8; font-size: 0.95rem;">ยังไม่มีเควสที่ทำสำเร็จ (No completed quests yet)</p>';
+              } else {
+                  questsContainer.innerHTML = completedQuests.map(qId => {
+                      const questObj = quests.find(q => q._id === qId);
+                      const questName = questObj ? questObj.name : 'Unknown Quest';
+                      return `
+                          <div class="completed-quest-tag" style="background: linear-gradient(135deg, #FFD700, #ffa954ff); color: #000; font-weight: bold; padding: 6px 12px; border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-bottom: 5px;">
+                              <i class="fa-solid fa-trophy" style="font-size: 0.85rem; color: #800002;"></i>
+                              <span class="thai">${questName}</span>
+                          </div>
+                      `;
+                  }).join('');
+              }
+          }
       };
 
       const showSkeletonLoadersInView = () => {
           document.getElementById('view-level-title').innerHTML = '<div class="skeleton-bg" style="height: 24px; width: 150px; border-radius: 4px; margin-bottom: 8px;"></div>';
           document.getElementById('view-xp-text').innerHTML = '<div class="skeleton-bg" style="height: 16px; width: 80px; border-radius: 4px; float: right;"></div>';
+          
+          const questsContainer = document.getElementById('view-completed-quests');
+          if (questsContainer) {
+              questsContainer.innerHTML = `
+                  <div class="skeleton-bg" style="height: 30px; width: 120px; border-radius: 20px; display: inline-block; margin-right: 10px;"></div>
+              `.repeat(3);
+          }
           
           const badgeGrid = document.getElementById('view-badge-grid');
           if (badgeGrid) {
@@ -171,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (cachedData) {
           try {
               const parsed = JSON.parse(cachedData);
-              renderView(parsed.profile, parsed.historyData);
+              renderView(parsed.profile, parsed.historyData, parsed.quests || []);
           } catch (e) {
               console.error('Cache parsing failed', e);
               showSkeletonLoadersInView();
@@ -204,17 +231,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
               const freshProfile = data.profile || null;
               const freshHistoryData = data.history || [];
+              const freshQuests = data.quests || [];
 
               if (freshProfile) {
                   try {
                       sessionStorage.setItem(cacheKey, JSON.stringify({
                           profile: freshProfile,
-                          historyData: freshHistoryData
+                          historyData: freshHistoryData,
+                          quests: freshQuests
                       }));
                   } catch (err) {
                       console.warn('Quota exceeded for session storage', err);
                   }
-                  renderView(freshProfile, freshHistoryData);
+                  renderView(freshProfile, freshHistoryData, freshQuests);
               }
           };
 
