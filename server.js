@@ -123,6 +123,12 @@ app.post('/api/register', async (req, res) => {
 
     const { username, email, password } = req.body;
 
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        msg: 'Password must be at least 6 characters'
+      });
+    }
+
     // เช็ค user ซ้ำ (case-insensitive)
     const escapedUsername = String(username || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const escapedEmail = String(email || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

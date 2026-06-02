@@ -13,6 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      if (password.length < 6) {
+        alert("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+        return;
+      }
+
       btn.disabled = true;
       btn.innerText = "Loading...";
 
