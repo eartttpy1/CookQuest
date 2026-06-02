@@ -13,6 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+      if (!gmailRegex.test(email)) {
+        alert("กรุณากรอก Gmail ที่ถูกต้อง (เช่น user@gmail.com)");
+        return;
+      }
+
       if (password.length < 6) {
         alert("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
         return;

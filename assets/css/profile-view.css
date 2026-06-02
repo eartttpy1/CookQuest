@@ -1,7 +1,7 @@
 /* ─── Performance view: readable text + theme tokens ─── */
 :root {
   /* Performance view */
-  --perf-bg: transparent;
+  --perf-bg: linear-gradient(165deg, #FFFaf0 0%, #FFF3C9 45%, #F5E6B3 100%);
   --perf-text: #2a2520;
   --perf-text-muted: #5a5248;
   --perf-heading: #3a1214;
@@ -115,30 +115,27 @@ body.darkmode {
   --profile-badge-border: var(--perf-border);
 }
 
-.perf-view {
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 1.5rem 1.25rem 3rem;
-  color: var(--perf-text);
-  background: var(--perf-bg);
-}
-
-/* Full-page dark backdrop — no cream (#FFF3C9) peeking around edges */
-body.darkmode:has(.perf-view) {
-  background-color: #232836 !important;
+/* Full-page backdrop — no cutoffs or cream peeking around edges */
+body:has(.perf-view) {
+  background-color: #FFF3C9 !important;
   background-image: none !important;
 }
 
-body.darkmode .perf-view {
+body.darkmode:has(.perf-view) {
+  background-color: #232836 !important;
+}
+
+.perf-view {
+  width: 100%;
+  min-height: calc(100vh - 4.5rem);
+  margin: 0;
+  max-width: none;
   border-radius: 0;
   box-shadow: none;
-  max-width: none;
-}
-
-/* Full-page dark backdrop — no cream (#FFF3C9) peeking around edges */
-body.darkmode:has(.perf-view) {
-  background-color: #232836 !important;
-  background-image: none !important;
+  padding: 1.5rem clamp(1rem, 4vw, 2rem) 3rem;
+  box-sizing: border-box;
+  color: var(--perf-text);
+  background: var(--perf-bg);
 }
 
 body.darkmode .perf-view {
@@ -151,14 +148,6 @@ body.darkmode .perf-view {
 
   color: var(--perf-text);
   background: linear-gradient(165deg, #343a4d 0%, #2a2f3e 45%, #232836 100%);
-  border-radius: 0;
-  box-shadow: none;
-  max-width: none;
-  width: 100%;
-  min-height: calc(100vh - 4.5rem);
-  margin: 0;
-  padding: 1.5rem clamp(1rem, 4vw, 2rem) 3rem;
-  box-sizing: border-box;
 }
 
 .visually-hidden {
@@ -225,18 +214,19 @@ body.darkmode .perf-view {
 }
 
 .perf-view .header-icon {
-  color: var(--perf-accent);
+  color: var(--perf-accent) !important;
+  font-size: 1.5rem !important;
   flex-shrink: 0;
 }
 
-.back-link {
+.perf-view .back-link {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  text-decoration: none;
-  color: var(--perf-heading);
+  text-decoration: none !important;
+  color: var(--perf-heading) !important;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.9rem !important;
   padding: 0.55rem 1rem;
   border-radius: 999px;
   border: 2px solid var(--perf-border);
@@ -246,7 +236,18 @@ body.darkmode .perf-view {
   white-space: nowrap;
 }
 
-.back-link:hover {
+.perf-view .back-link i {
+  color: var(--perf-heading) !important;
+  font-size: 1rem !important;
+}
+
+.perf-view .back-link span {
+  color: var(--perf-heading) !important;
+  font-size: 0.9rem !important;
+  font-weight: 600;
+}
+
+.perf-view .back-link:hover {
   border-color: var(--perf-accent);
   transform: translateX(-2px);
 }

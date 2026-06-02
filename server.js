@@ -129,6 +129,13 @@ app.post('/api/register', async (req, res) => {
       });
     }
 
+    const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    if (!email || !gmailRegex.test(String(email).trim())) {
+      return res.status(400).json({
+        msg: 'Email must be a valid Gmail address (e.g. user@gmail.com)'
+      });
+    }
+
     // เช็ค user ซ้ำ (case-insensitive)
     const escapedUsername = String(username || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const escapedEmail = String(email || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -499,6 +506,11 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
 
     if (!trimmedUsername || !trimmedEmail) {
       return res.status(400).json({ msg: 'Username and email cannot be empty' });
+    }
+
+    const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    if (!gmailRegex.test(trimmedEmail)) {
+      return res.status(400).json({ msg: 'Email must be a valid Gmail address (e.g. user@gmail.com)' });
     }
 
     const escapedUsername = trimmedUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
