@@ -54,8 +54,7 @@ function openAddMenu(menuId = null) {
         document.getElementById('amMainBox').style.minHeight = 'auto';
       }
 
-      amTags = [...(menu.tags || [])];
-      amRenderTags();
+
 
       // Ingredients
       document.getElementById('amIngList').innerHTML = '';
@@ -179,25 +178,16 @@ function openViewMenu(index) {
 
   // จำนวน / เวลา
   const qtyEl   = document.getElementById('viewQtyInfo');
-  const timeEl  = document.getElementById('viewTimeInfo');
+  const prepEl  = document.getElementById('viewPrepTimeInfo');
+  const cookEl  = document.getElementById('viewCookTimeInfo');
   const infoRow = document.getElementById('viewInfoRow');
 
   qtyEl.innerHTML  = menu.servings  ? `<i class="fa-solid fa-utensils"></i> ${menu.servings} จาน` : '';
-  const totalTime  = (parseInt(menu.prepTime) || 0) + (parseInt(menu.cookTime) || 0);
-  timeEl.innerHTML = totalTime  ? `<i class="fa-regular fa-clock"></i> ${totalTime} นาที` : '';
-  infoRow.style.display = (menu.servings || totalTime) ? '' : 'none';
-
-  // Tags
-  const tagsSec  = document.getElementById('viewTagsSection');
-  const tagsWrap = document.getElementById('viewTagsWrap');
-  if (menu.tags && menu.tags.length > 0) {
-    tagsWrap.innerHTML = menu.tags.map(t =>
-      `<span class="am-tag-pill"><span>${t}</span></span>`
-    ).join('');
-    tagsSec.classList.remove('hidden');
-  } else {
-    tagsSec.classList.add('hidden');
-  }
+  const prepTime = parseInt(menu.prepTime) || 0;
+  const cookTime = parseInt(menu.cookTime) || 0;
+  prepEl.innerHTML = prepTime  ? `<i class="fa-regular fa-clock"></i> เตรียม ${prepTime} นาที` : '';
+  cookEl.innerHTML = cookTime  ? `<i class="fa-regular fa-clock"></i> ปรุง ${cookTime} นาที` : '';
+  infoRow.style.display = (menu.servings || prepTime || cookTime) ? '' : 'none';
 
   // วัตถุดิบ
   const ingSection = document.getElementById('viewIngSection');
@@ -294,9 +284,8 @@ function renderMenuCards() {
   if (query) {
       filteredMenus = filteredMenus.filter(menu => {
           const nameMatch = (menu.menuName || '').toLowerCase().includes(query);
-          const tagMatch = menu.tags && menu.tags.some(tag => tag.toLowerCase().includes(query));
           const ingMatch = menu.ingredients && menu.ingredients.some(ing => (ing.name || '').toLowerCase().includes(query));
-          return nameMatch || tagMatch || ingMatch;
+          return nameMatch || ingMatch;
       });
   }
   
@@ -309,8 +298,7 @@ function renderMenuCards() {
     const idx = menuList.indexOf(menu);
     const totalTime = (parseInt(menu.prepTime) || 0) + (parseInt(menu.cookTime) || 0);
     const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
-    const lazyAttr = menu._id ? ` data-lazy-menu-id="${menu._id}"` : '';
-    const imgHTML = `<figure class="quest-image"><img src="${imageUrl}" alt="${menu.menuName || 'ไม่มีชื่อ'}" loading="lazy"${lazyAttr}></figure>`;
+    const imgHTML = `<figure class="quest-image"><img src="${imageUrl}" alt="${menu.menuName || 'ไม่มีชื่อ'}" loading="lazy"></figure>`;
 
     return `
       <div class="quest-card menu-card" onclick="openViewMenu(${idx})" style="cursor: pointer; margin:0; background-color: #5BC8E0; border: 3px solid #3aafca;">
@@ -324,10 +312,6 @@ function renderMenuCards() {
         </div>
       </div>`;
   }).join('');
-
-  if (typeof setupLazyMenuImages === 'function') {
-      setupLazyMenuImages(grid);
-  }
 }
 
 // ─── Main Image Upload ───────────────────────────────────────
@@ -383,29 +367,7 @@ function removeMainImg() {
   document.getElementById('amMainFile').value = '';
 }
 
-// ─── Tags ────────────────────────────────────────────────────
-let amTags = [];
 
-function amRenderTags() {
-  document.getElementById('amTagsWrap').innerHTML = amTags.map((t, i) =>
-    `<span class="am-tag-pill">
-       <span>${t}</span>
-       <span class="am-tag-rm" onclick="amRemoveTag(${i})">✕</span>
-     </span>`
-  ).join('');
-}
-
-function amAddTag() {
-  const inp = document.getElementById('amTagInput');
-  const val = inp.value.trim();
-  if (val) { amTags.push(val); inp.value = ''; amRenderTags(); }
-}
-
-function amRemoveTag(i) { amTags.splice(i, 1); amRenderTags(); }
-
-function amTagKeydown(e) {
-  if (e.key === 'Enter') { e.preventDefault(); amAddTag(); }
-}
 
 // ─── Ingredients ─────────────────────────────────────────────
 let amIngCount = 0;
@@ -565,16 +527,13 @@ function amResetForm() {
   document.getElementById('amPrepTime').value  = '';
   document.getElementById('amCookTime').value  = '';
   document.getElementById('amReview').value    = '';
-  document.getElementById('amTagInput').value  = '';
 
-  amTags      = [];
   amIngCount  = 0;
   amStepCount = 0;
   stepImgSrcs = {};
   amStarValue = 0;
   editingMenuId = null;
 
-  amRenderTags();
   amUpdateStars(0);
   document.querySelectorAll('#amTasteTags .am-ttag').forEach(b => b.classList.remove('selected'));
   document.getElementById('amIngList').innerHTML  = '';
@@ -608,7 +567,6 @@ async function amSubmit() {
     servings   : parseInt(qty) || 1,
     prepTime   : prepTime,
     cookTime   : cookTime,
-    tags       : [...amTags],
     ingredients: ingredients,
     instructions: steps,
     tasteRating: amStarValue,
@@ -652,7 +610,6 @@ async function amSubmit() {
 
 // ─── Init ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  amRenderTags();
   amInitStars();
   amInitTasteTags();
   fetchUserMenus(); // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ

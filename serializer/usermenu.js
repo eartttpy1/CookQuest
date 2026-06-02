@@ -53,9 +53,7 @@ const userMenuSchema = new mongoose.Schema({
       default: ''
     }
   }],
-  tags: [{
-    type: String
-  }],
+
   tasteRating: {
     type: Number,
     default: 0

@@ -702,6 +702,7 @@ async function loadQuestDetails(questId) {
 
     const renderFromData = (quests, menus, fState, mStatusMap, profile) => {
         window.currentUserProfile = profile;
+        window.currentMenuStatusMap = mStatusMap;
         for (let key in favState) delete favState[key];
         Object.assign(favState, fState);
         const currentQuest = quests.find(q => q._id === questId);
@@ -722,12 +723,13 @@ async function loadQuestDetails(questId) {
         });
 
         window.allRelatedMenus = relatedMenus; // เก็บไว้ใช้ใน Modal
-        renderMenus(relatedMenus, mStatusMap);
+        applySearchAndRender();
     };
 
     if (cachedData) {
         try {
             const data = JSON.parse(cachedData);
+            window.currentMenuStatusMap = data.menuStatusMap;
             renderFromData(data.quests, data.menus, data.favState, data.menuStatusMap, data.profile);
         } catch (e) {
             console.error('Cache parsing failed', e);
@@ -763,6 +765,7 @@ async function loadQuestDetails(questId) {
         }
 
         const { quests, menus, favState: newFavState, menuStatusMap, profile } = data;
+        window.currentMenuStatusMap = menuStatusMap;
         try {
             sessionStorage.setItem(cacheKey, JSON.stringify({
                 quests, menus, favState: newFavState, menuStatusMap, profile
@@ -1223,3 +1226,35 @@ function applyRankColors() {
     }
   });
 }
+
+// ─── Search and Render Related Menus ───
+function applySearchAndRender() {
+    const searchInput = document.querySelector('.search-input');
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    
+    let filteredMenus = window.allRelatedMenus || [];
+    if (query) {
+        filteredMenus = filteredMenus.filter(menu => {
+            const nameMatch = (menu.menuName || '').toLowerCase().includes(query);
+            const tagMatch = menu.tags && menu.tags.some(tag => tag.toLowerCase().includes(query));
+            const ingMatch = menu.ingredients && menu.ingredients.some(ing => (ing.name || '').toLowerCase().includes(query));
+            return nameMatch || tagMatch || ingMatch;
+        });
+    }
+    
+    renderMenus(filteredMenus, window.currentMenuStatusMap || {});
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.querySelector('.search-input');
+    const searchBtn = document.querySelector('.search-button');
+    if (searchInput) {
+        searchInput.addEventListener('input', applySearchAndRender);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') applySearchAndRender();
+        });
+    }
+    if (searchBtn) {
+        searchBtn.addEventListener('click', applySearchAndRender);
+    }
+});
