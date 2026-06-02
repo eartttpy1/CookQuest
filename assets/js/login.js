@@ -1,6 +1,6 @@
 const login = async () => {
     try {
-        const username = document.querySelector('.inputbox input[name="username"]').value;
+        const username = document.querySelector('.inputbox input[name="username"]').value.trim();
         const password = document.querySelector('.inputbox input[name="password"]').value;
         const response = await axios.post('http://localhost:4000/api/login', {
             username,

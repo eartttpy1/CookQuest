@@ -118,11 +118,13 @@ app.post('/api/register', async (req, res) => {
 
     const { username, email, password } = req.body;
 
-    // เช็ค user ซ้ำ
+    // เช็ค user ซ้ำ (case-insensitive)
+    const escapedUsername = String(username || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedEmail = String(email || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const exist = await User.findOne({
       $or: [
-        { username },
-        { email }
+        { username: { $regex: '^' + escapedUsername + '$', $options: 'i' } },
+        { email: { $regex: '^' + escapedEmail + '$', $options: 'i' } }
       ]
     });
 
@@ -186,8 +188,12 @@ app.post('/api/verify-otp', async (req, res) => {
   console.log("BODY:", req.body);
 
   const { email, otp } = req.body;
+  const normalizedEmail = String(email || '').trim();
+  const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({
+    email: { $regex: '^' + escapedEmail + '$', $options: 'i' }
+  });
     console.log("email:", email);
     console.log("otp:", otp);
 
@@ -231,10 +237,11 @@ app.post('/api/forgot-password', async (req, res) => {
       return res.status(400).json({ msg: 'Please provide username or email' });
     }
 
+    const escapedIdentity = normalizedIdentity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const user = await User.findOne({
       $or: [
-        { email: normalizedIdentity },
-        { username: normalizedIdentity }
+        { email: { $regex: '^' + escapedIdentity + '$', $options: 'i' } },
+        { username: { $regex: '^' + escapedIdentity + '$', $options: 'i' } }
       ]
     });
 
@@ -277,10 +284,11 @@ app.post('/api/reset-password', async (req, res) => {
       return res.status(400).json({ msg: 'New password must be at least 6 characters' });
     }
 
+    const escapedIdentity = normalizedIdentity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const user = await User.findOne({
       $or: [
-        { email: normalizedIdentity },
-        { username: normalizedIdentity }
+        { email: { $regex: '^' + escapedIdentity + '$', $options: 'i' } },
+        { username: { $regex: '^' + escapedIdentity + '$', $options: 'i' } }
       ]
     });
 
@@ -314,11 +322,14 @@ app.post('/api/login', async (req, res) => {
 
     const { username, password } = req.body;
 
-    // หา user
+    const normalizedUsername = String(username || '').trim();
+    const escapedUsername = normalizedUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // หา user (case-insensitive & trim-robust)
     const user = await User.findOne({
       $or: [
-        { username },
-        { email: username }
+        { username: { $regex: '^' + escapedUsername + '$', $options: 'i' } },
+        { email: { $regex: '^' + escapedUsername + '$', $options: 'i' } }
       ]
     });
 
