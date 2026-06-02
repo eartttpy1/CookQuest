@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const categoryType = urlParams.get('type');
-    
+
     // Map category type to Thai category name
     const categoryMap = {
         'egg': 'เมนูไข่', 'chicken': 'เมนูไก่', 'pork': 'เมนูหมู', 'duck': 'เมนูเป็ด',
@@ -29,13 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
         'dorm-life': 'เมนูเด็กหอ', 'business': 'เมนูสร้างอาชีพ', 'lunch-box': 'เมนูข้าวกล่อง',
         'valentine': 'เมนูวาเลนไทน์', 'halloween': 'เมนูฮาโลวีน', 'christmas': 'เมนูคริสต์มาส'
     };
-    
+
     const categoryName = categoryMap[categoryType] || decodeURIComponent(categoryType || '');
-    
+
     // Set category header title
     const titleEl = document.querySelector('.category-title');
     if (titleEl) titleEl.textContent = categoryName;
-    
+
     const getUserId = () => {
         try {
             const data = JSON.parse(localStorage.getItem('user_data'));
@@ -44,10 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return 'user123';
         }
     };
-    
+
     const userId = getUserId();
     const token = localStorage.getItem('authToken');
-    
+
     // Skeleton loader
     const showSkeletons = () => {
         const menuList = document.getElementById('menuList');
@@ -60,30 +60,30 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `.repeat(6);
     };
-    
+
     showSkeletons();
-    
+
     const renderFromData = (quests, menus, fState, mStatusMap, profile) => {
         window.currentUserProfile = profile;
         if (typeof favState !== 'undefined') {
             for (let key in favState) delete favState[key];
             Object.assign(favState, fState);
         }
-        
+
         // Filter menus that have the category name in their tags
         const filteredMenus = menus.filter(menu => {
             return menu.tags && menu.tags.some(tag => tag.toLowerCase() === categoryName.toLowerCase());
         });
-        
+
         window.allRelatedMenus = filteredMenus;
-        
+
         // Render menus using the global function from q-detail.js
         if (typeof renderMenus === 'function') {
             renderMenus(filteredMenus, mStatusMap);
         } else {
             console.error('renderMenus is not defined!');
         }
-        
+
         // Setup sort system if defined
         if (typeof setupSortSystem === 'function') {
             setupSortSystem(
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
     };
-    
+
     // Setup worker connection to get data
     if (window.Worker) {
         let worker;
@@ -112,21 +112,21 @@ document.addEventListener('DOMContentLoaded', () => {
             worker = new Worker('../../assets/js/worker.js');
             workerPort = worker;
         }
-        
+
         workerPort.postMessage({ userId, token });
-        
-        workerPort.onmessage = function(e) {
+
+        workerPort.onmessage = function (e) {
             const data = e.data;
             if (!data.success) {
                 console.error('Worker error:', data.error);
                 return;
             }
-            
+
             renderFromData(data.quests, data.menus, data.favState, data.menuStatusMap, data.profile);
         };
-        
+
         if (typeof SharedWorker === 'undefined') {
-            worker.onerror = function(error) {
+            worker.onerror = function (error) {
                 console.error('Worker failed:', error);
             };
         }
@@ -135,11 +135,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Search bar functionality
     const searchInput = document.querySelector('.search-input');
     const searchBtn = document.querySelector('.search-button');
-    
+
     const performSearch = () => {
         const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
         const cards = document.querySelectorAll('#menuList .quest-card');
-        
+
         cards.forEach(card => {
             const name = (card.getAttribute('data-name') || '').toLowerCase();
             if (name.includes(query)) {
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     };
-    
+
     if (searchInput) {
         searchInput.addEventListener('input', performSearch);
     }

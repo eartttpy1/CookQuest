@@ -85,6 +85,7 @@ const mockUserData = {
     username: 'CookMaster',
     exp: 850,
     completedRecipes: 5,
+    completedQuests: [],
     favorites: [1, 3, 5],
     badges: []
 };
@@ -220,6 +221,10 @@ function createRecipeCard(data, isMenu = false) {
     else if (status === 'approved') statusClass = 'status-approved';
     else if (status === 'rejected') statusClass = 'status-rejected';
 
+    const completedCount = (typeof userHistoryData !== 'undefined' ? userHistoryData : []).filter(
+        h => h.requestId && h.requestId.menuName === menu.menuName && h.status === 'approved'
+    ).length;
+
     return `
         <div class="quest-card menu-card ${statusClass} ${isLocked ? 'locked' : ''}" data-id="${menuId}" data-name="${menu.menuName}" data-exp="${menuExp}">
             <span class="quest-title-wrapper">
@@ -235,6 +240,7 @@ function createRecipeCard(data, isMenu = false) {
             </figure>
             <div class="menu-footer">
                 <span class="time"><i class="fa-solid fa-clock"></i> ${timeDisplay}</span>
+                <span class="done-count" style="font-size: 0.9rem; color: #FFF3C9;"><i class="fa-solid fa-circle-check"></i> ทำแล้ว ${completedCount} ครั้ง</span>
                 <span class="exp"><i class="fa-solid fa-star"></i> ${menuExp} EXP</span>
             </div>
         </div>
@@ -662,6 +668,8 @@ async function loadUserProfile() {
             updateXPDisplay();
             const compEl = document.getElementById('profile-completed');
             if (compEl) compEl.textContent = mockUserData.completedRecipes;
+            const questsCompEl = document.getElementById('profile-quests-completed');
+            if (questsCompEl) questsCompEl.textContent = (mockUserData.completedQuests || []).length;
             
             highlightCurrentRank();
             
@@ -728,6 +736,7 @@ async function loadUserProfile() {
                 mockUserData.username = pData.username !== undefined ? pData.username : mockUserData.username;
                 mockUserData.exp = pData.exp !== undefined ? pData.exp : mockUserData.exp;
                 mockUserData.completedRecipes = pData.completedRecipes !== undefined ? pData.completedRecipes : mockUserData.completedRecipes;
+                mockUserData.completedQuests = pData.completedQuests || [];
                 mockUserData.badges = pData.badges || [];
                 window.currentUserProfile = pData;
             }

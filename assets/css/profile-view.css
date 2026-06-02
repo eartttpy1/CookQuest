@@ -657,8 +657,8 @@ body.darkmode .perf-view {
    ═══════════════════════════════════════════ */
 .profile-page .profile-container {
   padding: 0;
-  max-width: 920px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
 }
 
 .profile-page .profile-header {
@@ -875,8 +875,8 @@ body.darkmode .perf-view {
 }
 
 .profile-page-lower {
-  max-width: 920px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 0 0 2rem;
 }
 
