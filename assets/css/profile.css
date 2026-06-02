@@ -83,14 +83,14 @@ body.darkmode{
   font-family: "Inria Serif";
   color: var(--text-main);
 }
-a {
-    margin: 0;
+.profile-container a, .profile-page-lower a, .badges a {
+  margin: 0;
   font-family: "Inria Serif";
   color: var(--text-main);
   font-size: 1.17em;
-    text-decoration: none;
-
+  text-decoration: none;
 }
+
 .edit-btn {
   margin-top: 4px;
   border: 1px solid var(--background-color);

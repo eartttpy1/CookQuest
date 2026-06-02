@@ -270,7 +270,12 @@
             </section>
 
             <section class ="category-container">
-                    <span class="category-header">Quest</span>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <span class="category-header" style="margin-bottom: 0;">Quest</span>
+                    <a href="#menuSection" class="goto-menu-btn thai" onclick="document.getElementById('menuSection').scrollIntoView({ behavior: 'smooth' }); return false;" style="text-decoration: none; background: white; color: var(--red-main); border: 2px solid var(--red-main); padding: 6px 14px; border-radius: 10px; font-weight: bold; font-size: 0.95rem; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 0;" onmouseover="this.style.background='var(--red-main)'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='var(--red-main)';">
+                        <i class="fa-solid fa-circle-chevron-down"></i> ไปที่ส่วนเมนูอาหาร (Go to Menus)
+                    </a>
+                </div>
                 <div class="sort-container">
                     <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
                     <div class="sort-dropdown hidden" id="sortDropdown">
@@ -312,7 +317,7 @@
             </section>
             <section id="questList" class="quest-section"></section>
             </div>
-            <section class ="category-container">
+            <section class ="category-container" id="menuSection">
                     <span class="category-header">Menu</span>
                 <div class="sort-container">
                     <button class="sort-btn" id="menu-sortBtn"><i class="fa-solid fa-list"></i></button>
@@ -602,6 +607,25 @@
     </div>
   
     <!-- ==============All Quest page content ============== -->
+
+    <!-- Floating Back to Top Button -->
+    <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' });" class="floating-back-to-top" style="position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; color: var(--red-main); border: 2px solid var(--red-main); cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.15); transition: opacity 0.3s ease, background 0.2s ease, color 0.2s ease; z-index: 9999; opacity: 0; pointer-events: none;" onmouseover="this.style.background='var(--red-main)'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='var(--red-main)';">
+        <i class="fa-solid fa-arrow-up" style="font-size: 1.3rem;"></i>
+    </button>
+    <script>
+        window.addEventListener('scroll', () => {
+            const btn = document.querySelector('.floating-back-to-top');
+            if (btn) {
+                if (window.scrollY > 300) {
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                } else {
+                    btn.style.opacity = '0';
+                    btn.style.pointerEvents = 'none';
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>
