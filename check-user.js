@@ -9,7 +9,7 @@ mongoose.connect(mongoURI)
   const docs = await collection.find({}).toArray();
   console.log(`Found ${docs.length} users`);
   docs.forEach(doc => {
-    console.log(`ID: ${doc._id}, Username: ${doc.username}, Email: ${doc.email}, XP: ${doc.xp}, Level: ${doc.level}, Rank: ${doc.rank}`);
+    console.log(`ID: ${doc._id}, Username: ${doc.username}, Email: ${doc.email}, EXP: ${doc.exp || 0}, Level: ${doc.level}, Rank: ${doc.rank}`);
   });
   mongoose.connection.close();
 })

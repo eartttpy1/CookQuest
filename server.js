@@ -62,6 +62,7 @@ const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1ba
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
 })
 .then(async () => {
   console.log('✓ MongoDB connected successfully');
@@ -71,6 +72,11 @@ mongoose.connect(mongoURI, {
     Favorite.syncIndexes(),
   ]);
   console.log('✓ Database indexes synced');
+
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Check server at http://localhost:${PORT}`);
+  });
 })
 .catch(err => {
   console.error('✗ MongoDB connection error:', err.message);
@@ -127,7 +133,7 @@ app.post('/api/register', async (req, res) => {
       password: hashedPassword,
       level: 1,
       rank: 'BRONZE Chef',
-      xp: 0
+      exp: 0
     });
     
     //OTP
@@ -205,6 +211,92 @@ app.post('/api/verify-otp', async (req, res) => {
     msg: 'Verify success'
   });
 
+});
+
+app.post('/api/forgot-password', async (req, res) => {
+  try {
+    const { identity } = req.body;
+    const normalizedIdentity = String(identity || '').trim();
+
+    if (!normalizedIdentity) {
+      return res.status(400).json({ msg: 'Please provide username or email' });
+    }
+
+    const user = await User.findOne({
+      $or: [
+        { email: normalizedIdentity },
+        { username: normalizedIdentity }
+      ]
+    });
+
+    // Do not expose whether account exists
+    if (!user) {
+      return res.json({ msg: 'If this account exists, we sent a reset OTP to the registered email.' });
+    }
+
+    const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordOtp = resetOtp;
+    user.resetPasswordOtpExpire = Date.now() + (10 * 60 * 1000);
+    await user.save();
+
+    await transporter.sendMail({
+      from: 'CookQuest',
+      to: user.email,
+      subject: 'CookQuest password reset OTP',
+      text: `Your password reset OTP is ${resetOtp}. It expires in 10 minutes.`
+    });
+
+    return res.json({ msg: 'If this account exists, we sent a reset OTP to the registered email.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+app.post('/api/reset-password', async (req, res) => {
+  try {
+    const { identity, otp, newPassword } = req.body;
+    const normalizedIdentity = String(identity || '').trim();
+    const normalizedOtp = String(otp || '').trim();
+    const password = String(newPassword || '');
+
+    if (!normalizedIdentity || !normalizedOtp || !password) {
+      return res.status(400).json({ msg: 'Identity, OTP and new password are required' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ msg: 'New password must be at least 6 characters' });
+    }
+
+    const user = await User.findOne({
+      $or: [
+        { email: normalizedIdentity },
+        { username: normalizedIdentity }
+      ]
+    });
+
+    if (!user || !user.resetPasswordOtp || !user.resetPasswordOtpExpire) {
+      return res.status(400).json({ msg: 'Invalid reset request' });
+    }
+
+    if (user.resetPasswordOtp !== normalizedOtp) {
+      return res.status(400).json({ msg: 'Invalid OTP' });
+    }
+
+    if (user.resetPasswordOtpExpire < Date.now()) {
+      return res.status(400).json({ msg: 'OTP expired' });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordOtp = null;
+    user.resetPasswordOtpExpire = null;
+    await user.save();
+
+    return res.json({ msg: 'Password reset successful' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return res.status(500).json({ msg: 'Server error' });
+  }
 });
 
 app.post('/api/login', async (req, res) => {
@@ -362,17 +454,16 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
 
 });
 
-app.post('/api/profile/add-xp', authMiddleware, async (req, res) => {
+async function addExpToProfile(req, res, expToAdd) {
   try {
-    const { xpToAdd } = req.body;
     const user = await User.findById(req.user.id);
     
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    // Add XP
-    user.xp = (user.xp || 0) + Number(xpToAdd);
+    const currentExp = Number(user.exp || 0);
+    user.exp = currentExp + Number(expToAdd || 0);
 
     // Re-calculate Level and Rank
     const levelSystem = {
@@ -385,7 +476,7 @@ app.post('/api/profile/add-xp', authMiddleware, async (req, res) => {
     };
 
     for (let level = 6; level >= 1; level--) {
-        if (user.xp >= levelSystem[level].minXP) {
+        if (user.exp >= levelSystem[level].minXP) {
             user.level = level;
             user.rank = levelSystem[level].rank;
             break;
@@ -393,11 +484,15 @@ app.post('/api/profile/add-xp', authMiddleware, async (req, res) => {
     }
 
     await user.save();
-    res.json({ msg: 'XP & Level updated successfully', user });
+    res.json({ msg: 'EXP & Level updated successfully', user });
   } catch (err) {
-    console.error('Error updating XP:', err);
+    console.error('Error updating EXP:', err);
     res.status(500).json({ msg: 'Server error' });
   }
+}
+
+app.post('/api/profile/add-exp', authMiddleware, async (req, res) => {
+  return addExpToProfile(req, res, req.body.expToAdd);
 });
 
 app.post('/api/profile/add-badge', authMiddleware, async (req, res) => {
@@ -675,21 +770,22 @@ app.put('/api/requests/:id/status', async (req, res) => {
     if (normalizedStatus === 'approved' && creatorId) {
       const user = await User.findById(creatorId);
       if (user) {
-        let xpReward = 100; // Default XP fallback
+        let expReward = 100; // Default EXP fallback
 
         // Try to find the exact EXP from the database models
         const menu = await Menu.findOne({ menuName: request.menuName });
-        if (menu && menu.EXP) { xpReward = menu.EXP; }
+        if (menu && menu.EXP) { expReward = menu.EXP; }
         else {
           const quest = await Quest.findOne({ name: request.menuName });
-          if (quest && quest.exp) { xpReward = quest.exp; }
+          if (quest && quest.exp) { expReward = quest.exp; }
           else {
             const userMenu = await UserMenu.findOne({ menuName: request.menuName });
-            if (userMenu && userMenu.EXP) { xpReward = userMenu.EXP; }
+            if (userMenu && userMenu.EXP) { expReward = userMenu.EXP; }
           }
         }
 
-        user.xp = (user.xp || 0) + xpReward;
+        const currentExp = Number(user.exp || 0);
+        user.exp = currentExp + expReward;
         user.completedRecipes = (user.completedRecipes || 0) + 1;
 
         // Check Quest completion and award Quest EXP
@@ -731,7 +827,7 @@ app.put('/api/requests/:id/status', async (req, res) => {
               
               if (questCompleted) {
                 const questExp = quest.exp || 0;
-                user.xp = (user.xp || 0) + questExp;
+                user.exp = Number(user.exp || 0) + questExp;
                 if (!user.completedQuests) {
                   user.completedQuests = [];
                 }
@@ -755,7 +851,7 @@ app.put('/api/requests/:id/status', async (req, res) => {
         };
 
         for (let level = 6; level >= 1; level--) {
-            if (user.xp >= levelSystem[level].minXP) {
+            if (user.exp >= levelSystem[level].minXP) {
                 user.level = level;
                 user.rank = levelSystem[level].rank;
                 break;
@@ -763,7 +859,10 @@ app.put('/api/requests/:id/status', async (req, res) => {
         }
 
         // Check and award Milestone Badges directly to the database
-        const earnedBadges = user.badges.map(b => b.name);
+        if (!Array.isArray(user.badges)) {
+          user.badges = [];
+        }
+        const earnedBadges = user.badges.map((b) => b.name);
         if (user.completedRecipes >= 1 && !earnedBadges.includes('First Dish')) {
             user.badges.push({ name: 'First Dish', icon: '👨‍🍳' });
         }
@@ -1059,9 +1158,4 @@ app.delete('/api/usermenus/:id', async (req, res) => {
     console.error('Error deleting usermenu:', error.message);
     res.status(500).json({ error: error.message });
   }
-});
-
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Check server at http://localhost:${PORT}`);
 });

@@ -22,6 +22,8 @@ const userSchema = new mongoose.Schema({
 
     otp: String,
     otpExpire: Date,
+    resetPasswordOtp: String,
+    resetPasswordOtpExpire: Date,
     isVerified: {
     type: Boolean,
     default: false
@@ -43,7 +45,7 @@ const userSchema = new mongoose.Schema({
         default: 'BRONZE Chef'
     },
 
-    xp: {
+    exp: {
         type: Number,
         default: 0
     },
