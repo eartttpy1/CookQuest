@@ -9,7 +9,7 @@ info:
     name: CookQuest Team
 
 servers:
-  - url: http://localhost:4000
+  - url: http://localhost:4000/api
     description: Local Development Server
 
 tags:
@@ -18,21 +18,21 @@ tags:
   - name: Profile
     description: จัดการโปรไฟล์ผู้ใช้ EXP และ Badge
   - name: Menus
-    description: รายการเมนูอาหาร
+    description: รายการเมนูอาหาร (POST/PUT/DELETE — Admin only)
   - name: Tags
-    description: แท็กสำหรับเมนูและ Quest
+    description: แท็กสำหรับเมนูและ Quest (POST/DELETE — Admin only)
   - name: Requests
-    description: คำขอ Submission (มุมมอง Admin)
+    description: คำขอ Submission (มุมมอง Admin) — ต้อง Login
   - name: Submissions
-    description: การส่งผลงานการทำอาหาร (มุมมอง User)
+    description: การส่งผลงานการทำอาหาร (มุมมอง User) — ต้อง Login
   - name: History
-    description: ประวัติการส่งผลงาน
+    description: ประวัติการส่งผลงาน — ต้อง Login
   - name: Favorites
-    description: รายการโปรด
+    description: รายการโปรด — ต้อง Login
   - name: UserMenus
-    description: สูตรอาหารที่ผู้ใช้สร้างเอง
+    description: สูตรอาหารที่ผู้ใช้สร้างเอง — ต้อง Login
   - name: Quests
-    description: ระบบ Quest และภารกิจ
+    description: ระบบ Quest และภารกิจ (POST/PUT/DELETE — Admin only)
 
 # ─────────────────────────────────────────
 # Security Schemes
@@ -711,8 +711,7 @@ paths:
                   example: "123456"
       responses:
         '200':
-          description: |
-            อัปเดตสำเร็จ หรือ ส่ง OTP แล้ว (ถ้าเปลี่ยน email)
+          description: อัปเดตสำเร็จ หรือ ส่ง OTP แล้ว (ถ้าเปลี่ยน email)
           content:
             application/json:
               schema:
@@ -861,7 +860,7 @@ paths:
   /menus:
     get:
       tags: [Menus]
-      summary: ดูรายการเมนูทั้งหมด
+      summary: ดูรายการเมนูทั้งหมด (Public)
       description: |
         ค่าเริ่มต้นจะ strip imageURL ออกและคืน `hasImage: true` แทน
         ใช้ `?full=true` เพื่อรับข้อมูลเต็มรวมถึง imageURL
@@ -886,7 +885,9 @@ paths:
 
     post:
       tags: [Menus]
-      summary: สร้างเมนูใหม่
+      summary: สร้างเมนูใหม่ (Admin only)
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -906,13 +907,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/ServerError'
 
   /menus/images:
     get:
       tags: [Menus]
-      summary: ดึง imageURL ของหลายเมนูพร้อมกัน
+      summary: ดึง imageURL ของหลายเมนูพร้อมกัน (Public)
       parameters:
         - name: ids
           in: query
@@ -939,7 +944,7 @@ paths:
   /menus/{id}:
     get:
       tags: [Menus]
-      summary: ดูเมนูตาม ID (ข้อมูลเต็ม)
+      summary: ดูเมนูตาม ID (Public)
       parameters:
         - name: id
           in: path
@@ -961,7 +966,9 @@ paths:
 
     put:
       tags: [Menus]
-      summary: แก้ไขเมนู
+      summary: แก้ไขเมนู (Admin only)
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -981,10 +988,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Menu'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '400':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
 
     delete:
       tags: [Menus]
@@ -1038,7 +1051,7 @@ paths:
   /menus/{id}/image:
     get:
       tags: [Menus]
-      summary: ดึง imageURL ของเมนูเดียว
+      summary: ดึง imageURL ของเมนูเดียว (Public)
       parameters:
         - name: id
           in: path
@@ -1067,7 +1080,7 @@ paths:
   /tags:
     get:
       tags: [Tags]
-      summary: ดูแท็กทั้งหมด
+      summary: ดูแท็กทั้งหมด (Public)
       parameters:
         - name: search
           in: query
@@ -1089,9 +1102,10 @@ paths:
 
     post:
       tags: [Tags]
-      summary: สร้างแท็ก (รองรับทั้ง string เดียวและ array)
-      description: |
-        ถ้าแท็กมีอยู่แล้วจะ upsert (ไม่ duplicate)
+      summary: สร้างแท็ก (Admin only)
+      description: ถ้าแท็กมีอยู่แล้วจะ upsert (ไม่ duplicate)
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -1119,8 +1133,14 @@ paths:
                   - type: array
                     items:
                       $ref: '#/components/schemas/Tag'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '400':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
 
   # ══════════════════════════════════════
   # REQUESTS (Admin View)
@@ -1128,8 +1148,10 @@ paths:
   /requests:
     get:
       tags: [Requests]
-      summary: ดู requests ทั้งหมด (Admin view)
+      summary: ดู requests ทั้งหมด (ต้อง Login)
       description: ไม่รวม imageURL เพื่อลด payload
+      security:
+        - BearerAuth: []
       parameters:
         - name: status
           in: query
@@ -1153,13 +1175,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/ServerError'
 
   /requests/{id}/image:
     get:
       tags: [Requests]
-      summary: ดึงรูปของ request
+      summary: ดึงรูปของ request (ต้อง Login)
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1176,6 +1202,8 @@ paths:
                 properties:
                   imageURL:
                     type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '400':
@@ -1184,7 +1212,7 @@ paths:
   /requests/{id}/status:
     put:
       tags: [Requests]
-      summary: อัปเดตสถานะ request (approved / rejected)
+      summary: อัปเดตสถานะ request — approved / rejected (Admin only)
       description: |
         เมื่อ approved ระบบจะ:
         1. อัปเดตสถานะ Submission ที่เกี่ยวข้อง
@@ -1194,6 +1222,8 @@ paths:
         5. คำนวณ Level/Rank ใหม่
         6. ให้ Badge milestone (First Dish, 5 Dishes, 10 Dishes)
         7. Emit Socket.io event `status_updated`
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1232,6 +1262,10 @@ paths:
                 alreadyDecided:
                   value:
                     error: "Status cannot be changed after decision"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -1243,10 +1277,12 @@ paths:
   /submissions:
     post:
       tags: [Submissions]
-      summary: ส่งผลงานการทำอาหาร
+      summary: ส่งผลงานการทำอาหาร (ต้อง Login)
       description: |
         สร้างทั้ง Request และ Submission พร้อมกัน
         และ emit Socket.io event `new_submission`
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -1298,14 +1334,18 @@ paths:
                     $ref: '#/components/schemas/Submission'
         '400':
           $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/ServerError'
 
   /submissions/{id}:
     put:
       tags: [Submissions]
-      summary: แก้ไข submission (เฉพาะ pending)
+      summary: แก้ไข submission (ต้อง Login — เฉพาะ pending)
       description: อัปเดตทั้ง Submission และ Request ที่เกี่ยวข้อง
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1338,6 +1378,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Submission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '400':
@@ -1347,10 +1389,12 @@ paths:
 
     delete:
       tags: [Submissions]
-      summary: ลบ submission (เฉพาะ pending)
+      summary: ลบ submission (ต้อง Login — เฉพาะ pending)
       description: |
         ลบทั้ง Submission และ Request ที่เกี่ยวข้อง
         และ emit Socket.io event `status_updated` พร้อม status `deleted`
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1376,6 +1420,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 error: "Only pending submissions can be deleted"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -1387,13 +1433,15 @@ paths:
   /history:
     get:
       tags: [History]
-      summary: ดูประวัติการส่งผลงาน
+      summary: ดูประวัติการส่งผลงาน (ต้อง Login)
       description: |
         สามารถกรองได้หลายแบบ:
         - `userId` — ประวัติของ user คนนั้น (auto-summary mode)
         - `menuName` — กรองตามชื่อเมนู
         - `requestId` — ดู submission ของ request นั้น
         - `summary=true` — ไม่รวม imageURL เพื่อลด payload
+      security:
+        - BearerAuth: []
       parameters:
         - name: userId
           in: query
@@ -1424,6 +1472,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Submission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/ServerError'
 
@@ -1433,7 +1483,9 @@ paths:
   /favorites:
     get:
       tags: [Favorites]
-      summary: ดูรายการโปรดของ user
+      summary: ดูรายการโปรดของ user (ต้อง Login)
+      security:
+        - BearerAuth: []
       parameters:
         - name: userId
           in: query
@@ -1456,16 +1508,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/ServerError'
 
   /favorites/toggle:
     post:
       tags: [Favorites]
-      summary: Toggle favorite (เพิ่ม / ลบ)
+      summary: Toggle favorite เพิ่ม/ลบ (ต้อง Login)
       description: |
         ถ้ายังไม่ได้ favorite → เพิ่ม (201)
         ถ้า favorite แล้ว → ลบ (200)
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -1511,6 +1567,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/ServerError'
 
@@ -1520,7 +1578,9 @@ paths:
   /usermenus:
     get:
       tags: [UserMenus]
-      summary: ดูสูตรอาหาร custom ทั้งหมด
+      summary: ดูสูตรอาหาร custom ทั้งหมด (ต้อง Login)
+      security:
+        - BearerAuth: []
       parameters:
         - name: userId
           in: query
@@ -1537,12 +1597,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserMenu'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/ServerError'
 
     post:
       tags: [UserMenus]
-      summary: สร้าง custom recipe
+      summary: สร้าง custom recipe (ต้อง Login)
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -1558,13 +1622,17 @@ paths:
                 $ref: '#/components/schemas/UserMenu'
         '400':
           $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/ServerError'
 
   /usermenus/{id}:
     put:
       tags: [UserMenus]
-      summary: แก้ไข custom recipe
+      summary: แก้ไข custom recipe (ต้อง Login)
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1584,6 +1652,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserMenu'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '400':
@@ -1593,7 +1663,9 @@ paths:
 
     delete:
       tags: [UserMenus]
-      summary: ลบ custom recipe
+      summary: ลบ custom recipe (ต้อง Login)
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1611,6 +1683,8 @@ paths:
                   message:
                     type: string
                     example: "UserMenu deleted successfully"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -1622,7 +1696,7 @@ paths:
   /quests:
     get:
       tags: [Quests]
-      summary: ดู quests ทั้งหมด
+      summary: ดู quests ทั้งหมด (Public)
       responses:
         '200':
           description: รายการ quests
@@ -1637,7 +1711,9 @@ paths:
 
     post:
       tags: [Quests]
-      summary: สร้าง quest ใหม่
+      summary: สร้าง quest ใหม่ (Admin only)
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -1653,13 +1729,19 @@ paths:
                 $ref: '#/components/schemas/Quest'
         '400':
           $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/ServerError'
 
   /quests/{id}:
     put:
       tags: [Quests]
-      summary: แก้ไข quest
+      summary: แก้ไข quest (Admin only)
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1679,6 +1761,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Quest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '400':
@@ -1688,7 +1774,9 @@ paths:
 
     delete:
       tags: [Quests]
-      summary: ลบ quest
+      summary: ลบ quest (Admin only)
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1706,6 +1794,10 @@ paths:
                   message:
                     type: string
                     example: "Quest deleted successfully"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
