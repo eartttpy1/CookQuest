@@ -5,7 +5,7 @@ const mockCompletedRecipes = [
         name: 'สเต็กหมู',
         image: 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092',
         time: '45 นาที',
-        xp: 200,
+        exp: 200,
         isFavorite: true
     },
     {
@@ -13,7 +13,7 @@ const mockCompletedRecipes = [
         name: 'ไก่ย่างเกาลัด',
         image: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6',
         time: '30 นาที',
-        xp: 150,
+        exp: 150,
         isFavorite: false
     },
     {
@@ -21,7 +21,7 @@ const mockCompletedRecipes = [
         name: 'ปลาทอดน้ำปลา',
         image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
         time: '20 นาที',
-        xp: 100,
+        exp: 100,
         isFavorite: true
     },
     {
@@ -29,7 +29,7 @@ const mockCompletedRecipes = [
         name: 'ผัดไทย',
         image: 'https://images.unsplash.com/photo-1559314311-7db3814d4c4d',
         time: '25 นาที',
-        xp: 120,
+        exp: 120,
         isFavorite: false
     },
     {
@@ -37,7 +37,7 @@ const mockCompletedRecipes = [
         name: 'แกงแดงไก่',
         image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641',
         time: '40 นาที',
-        xp: 180,
+        exp: 180,
         isFavorite: true
     }
 ];
@@ -83,7 +83,7 @@ function getRankByXP(totalXP) {
 // Mock user data
 const mockUserData = {
     username: 'CookMaster',
-    xp: 850,
+    exp: 850,
     completedRecipes: 5,
     favorites: [1, 3, 5],
     badges: []
@@ -190,7 +190,7 @@ function createRecipeCard(data, isMenu = false) {
         else if (cleanRank.includes('diamond')) userRankStr = 'diamond';
         else if (cleanRank.includes('master')) userRankStr = 'master';
     } else {
-        const lvlData = getRankByXP(mockUserData.xp);
+        const lvlData = getRankByXP(mockUserData.exp);
         const cleanRank = lvlData.rank.toLowerCase();
         if (cleanRank.includes('bronze')) userRankStr = 'bronze';
         else if (cleanRank.includes('silver')) userRankStr = 'silver';
@@ -429,7 +429,7 @@ function initTabSwitching() {
  * Highlight current rank in level system
  */
 function highlightCurrentRank() {
-    const levelData = getRankByXP(mockUserData.xp);
+    const levelData = getRankByXP(mockUserData.exp);
     const currentLevel = levelData.level;
     const rankIds = ['rank-bronze', 'rank-silver', 'rank-gold', 'rank-platinum', 'rank-diamond', 'rank-master'];
     
@@ -457,7 +457,7 @@ function loadUserBadges() {
     badgeList.innerHTML = '';
 
     const profile = {
-        level: getRankByXP(mockUserData.xp).level,
+        level: getRankByXP(mockUserData.exp).level,
         badges: mockUserData.badges || []
     };
     
@@ -606,7 +606,7 @@ function showProfileSkeleton() {
 }
 
 function updateXPDisplay() {
-    const levelData = getRankByXP(mockUserData.xp);
+    const levelData = getRankByXP(mockUserData.exp);
     const xpElement = document.getElementById('profile-xp');
     if (xpElement) {
         const maxDisplay = levelData.maxXP === Infinity ? 'MAX' : levelData.maxXP;
@@ -639,7 +639,7 @@ async function loadUserProfile() {
         // Use mock data for test2
         if (testUser === 'test2') {
             mockUserData.username = 'test2';
-            mockUserData.xp = 250;
+            mockUserData.exp = 250;
             mockUserData.completedRecipes = 3;
             mockUserData.favorites = [2, 4];
         }
@@ -648,7 +648,7 @@ async function loadUserProfile() {
         const cachedData = sessionStorage.getItem(cacheKey);
         
         const renderAll = () => {
-            const levelData = getRankByXP(mockUserData.xp);
+            const levelData = getRankByXP(mockUserData.exp);
             
             const nameEl = document.getElementById('profile-username');
             if (nameEl) nameEl.textContent = mockUserData.username;
@@ -724,7 +724,7 @@ async function loadUserProfile() {
             if (data.profile) {
                 const pData = data.profile;
                 mockUserData.username = pData.username !== undefined ? pData.username : mockUserData.username;
-                mockUserData.xp = pData.xp !== undefined ? pData.xp : mockUserData.xp;
+                mockUserData.exp = pData.exp !== undefined ? pData.exp : mockUserData.exp;
                 mockUserData.completedRecipes = pData.completedRecipes !== undefined ? pData.completedRecipes : mockUserData.completedRecipes;
                 mockUserData.badges = pData.badges || [];
                 window.currentUserProfile = pData;
@@ -800,17 +800,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Test function for adding XP and syncing to database
-    window.addTestXP = async (amount) => {
+    window.addTestExp = async (amount) => {
         try {
             const token = localStorage.getItem('authToken');
-            const res = await axios.post('http://localhost:4000/api/profile/add-xp', 
-                { xpToAdd: amount },
+            const res = await axios.post('http://localhost:4000/api/profile/add-exp', 
+                { expToAdd: amount },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            console.log(`✅ Success! DB Updated. New XP: ${res.data.user.xp} | Level: ${res.data.user.level} | Rank: ${res.data.user.rank}`);
+            console.log(`✅ Success! DB Updated. New EXP: ${res.data.user.exp} | Level: ${res.data.user.level} | Rank: ${res.data.user.rank}`);
             location.reload(); // Reload the page to see the changes immediately
         } catch (err) {
-            console.error("Failed to add XP to database:", err);
+            console.error("Failed to add EXP to database:", err);
         }
     };
 

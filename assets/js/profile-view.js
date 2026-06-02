@@ -18,28 +18,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
             6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
           };
-          const xp = profile.xp || 0;
+          const exp = profile.exp || 0;
           
           let lvl = 1;
           for (let l = 6; l >= 1; l--) {
-              if (xp >= levelSystem[l].minXP) {
+              if (exp >= levelSystem[l].minXP) {
                   lvl = l;
                   break;
               }
           }
           const currentLevelData = levelSystem[lvl];
           const tierSize = currentLevelData.maxXP - currentLevelData.minXP;
-          const progressInTier = xp - currentLevelData.minXP;
+          const progressInTier = exp - currentLevelData.minXP;
           const xpPercentage = tierSize === Infinity ? 100 : Math.min((progressInTier / tierSize) * 100, 100);
           const maxDisplay = currentLevelData.maxXP === Infinity ? 'MAX' : currentLevelData.maxXP;
 
           document.getElementById('view-level-title').textContent = `Level ${lvl} ${currentLevelData.rank}`;
-          document.getElementById('view-xp-text').textContent = `${xp} / ${maxDisplay}`;
+          document.getElementById('view-xp-text').textContent = `${exp} / ${maxDisplay}`;
           document.querySelector('.xp-fill').style.width = `${xpPercentage}%`;
           const xpProgress = document.getElementById('xp-progress');
           if (xpProgress) {
               xpProgress.setAttribute('aria-valuenow', String(Math.round(xpPercentage)));
-              xpProgress.setAttribute('aria-label', `Experience: ${xp} of ${maxDisplay}`);
+              xpProgress.setAttribute('aria-label', `Experience: ${exp} of ${maxDisplay}`);
           }
 
           // 1. Filter only 'approved' dishes and sort them by date (oldest to newest)

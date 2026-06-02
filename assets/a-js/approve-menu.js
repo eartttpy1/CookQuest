@@ -115,10 +115,10 @@ function renderRequests() {
             return false;
         }
 
-        const menuName = getMenuName(request).toLowerCase();
-        const userName = getUserName(request).toLowerCase();
+        const menuName = String(getMenuName(request) || '').toLowerCase();
+        const userName = String(getUserName(request) || '').toLowerCase();
         const requestId = String(request._id || '').toLowerCase();
-        const quest = (request.randomQuests || '').toLowerCase();
+        const quest = String(request.randomQuests || '').toLowerCase();
         return menuName.includes(searchTerm) || userName.includes(searchTerm) || requestId.includes(searchTerm) || quest.includes(searchTerm);
     });
 
@@ -249,7 +249,17 @@ function getMenuName(request) {
 }
 
 function getUserName(request) {
-    return request.createdBy || request.userName || request.username || request.user?.name || request.user || 'Unknown user';
+    if (request.userName) return request.userName;
+    if (request.username) return request.username;
+    if (request.user?.name) return request.user.name;
+    if (request.user?.username) return request.user.username;
+    if (request.createdBy?.username) return request.createdBy.username;
+    if (request.createdBy && typeof request.createdBy === 'object' && request.createdBy._id) {
+        return request.createdBy._id;
+    }
+    if (request.createdBy) return request.createdBy;
+    if (request.user) return request.user;
+    return 'Unknown user';
 }
 
 function getImageUrl(request) {
