@@ -475,6 +475,105 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
 
 });
 
+app.put('/api/profile', authMiddleware, async (req, res) => {
+  try {
+    const { username, email, otp } = req.body;
+    const currentUserId = req.user.id;
+
+    if (!username || !email) {
+      return res.status(400).json({ msg: 'Username and email are required' });
+    }
+
+    const trimmedUsername = String(username).trim();
+    const trimmedEmail = String(email).trim();
+
+    if (!trimmedUsername || !trimmedEmail) {
+      return res.status(400).json({ msg: 'Username and email cannot be empty' });
+    }
+
+    const escapedUsername = trimmedUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedEmail = trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Check for duplicate username or email with other users
+    const duplicate = await User.findOne({
+      _id: { $ne: currentUserId },
+      $or: [
+        { username: { $regex: '^' + escapedUsername + '$', $options: 'i' } },
+        { email: { $regex: '^' + escapedEmail + '$', $options: 'i' } }
+      ]
+    });
+
+    if (duplicate) {
+      const isUsernameDuplicate = duplicate.username.toLowerCase() === trimmedUsername.toLowerCase();
+      const isEmailDuplicate = duplicate.email.toLowerCase() === trimmedEmail.toLowerCase();
+      
+      if (isUsernameDuplicate && isEmailDuplicate) {
+        return res.status(400).json({ msg: 'Username and email are already in use' });
+      } else if (isUsernameDuplicate) {
+        return res.status(400).json({ msg: 'Username is already in use' });
+      } else {
+        return res.status(400).json({ msg: 'Email is already in use' });
+      }
+    }
+
+    // Update user profile
+    const user = await User.findById(currentUserId);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    const isEmailChanging = user.email.toLowerCase() !== trimmedEmail.toLowerCase();
+
+    if (isEmailChanging) {
+      if (!otp) {
+        const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.otp = emailOtp;
+        user.otpExpire = Date.now() + 5 * 60 * 1000;
+        await user.save();
+
+        await transporter.sendMail({
+          from: 'CookQuest',
+          to: trimmedEmail,
+          subject: 'Verify Your New Email Address - CookQuest',
+          text: `Your verification OTP for changing email to ${trimmedEmail} is ${emailOtp}. It will expire in 5 minutes.`
+        });
+
+        return res.json({
+          status: 'OTP_SENT',
+          msg: 'Verification OTP has been sent to your new email address. Please enter it to complete the update.'
+        });
+      } else {
+        const normalizedOtp = String(otp).trim();
+        if (user.otp !== normalizedOtp) {
+          return res.status(400).json({ msg: 'Invalid OTP' });
+        }
+        if (user.otpExpire < Date.now()) {
+          return res.status(400).json({ msg: 'OTP has expired' });
+        }
+        user.otp = null;
+        user.otpExpire = null;
+      }
+    }
+
+    user.username = trimmedUsername;
+    user.email = trimmedEmail;
+    await user.save();
+
+    res.json({
+      msg: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
 async function addExpToProfile(req, res, expToAdd) {
   try {
     const user = await User.findById(req.user.id);

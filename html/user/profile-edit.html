@@ -128,6 +128,41 @@
                     <input type="email" id="email" value="eartttpy1@gmail.com" readonly>
                     <button class="btn-edit" data-target="email">Edit</button>
                 </div>
+                <!-- Inline OTP container for email change -->
+                <div id="email-otp-container" class="hidden" style="margin-top: 10px; display: flex; gap: 15px;">
+                    <input type="text" id="email-otp" placeholder="Enter OTP sent to new email" style="flex-grow: 1;">
+                    <button class="btn-action" id="btn-confirm-email-otp" style="min-width: 80px;">Confirm</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <div class="input-row">
+                    <input type="password" id="password-placeholder" value="••••••••" readonly>
+                    <button class="btn-edit" id="btn-change-password">Change</button>
+                </div>
+            </div>
+
+            <!-- Hidden container for password changing -->
+            <div id="password-change-fields" class="hidden password-fields">
+                <div class="input-group">
+                    <label>New Password</label>
+                    <div class="input-row password-wrapper">
+                        <input type="password" id="new-password" placeholder="Enter new password">
+                        <i class="fa-regular fa-eye-slash toggle-password-icon" id="toggle-new-password"></i>
+                    </div>
+                </div>
+                <div class="input-group" id="otp-container">
+                    <label>Enter OTP from Email</label>
+                    <div class="input-row">
+                        <input type="text" id="password-otp" placeholder="Enter 6-digit OTP">
+                        <button class="btn-action" id="btn-send-otp">Send OTP</button>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn-submit" id="btn-submit-password">Submit Password Change</button>
+                    <button class="btn-cancel" id="btn-cancel-password">Cancel</button>
+                </div>
             </div>
 
         </section>
