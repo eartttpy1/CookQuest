@@ -60,12 +60,24 @@ setupSwagger(app, PORT);
 // Import models at the top
 const Menu = require('./serializer/menu');
 const Quest = require('./serializer/quest');
-const Tag = require('./serializer/tag');
 const Request = require('./serializer/request');
 const Submission = require('./serializer/submission');
 const Favorite = require('./serializer/favorite');
 const UserMenu = require('./serializer/usermenu');
 const User = require('./serializer/user');
+
+const PRESET_CATEGORIES = [
+    // วัตถุดิบ
+    "เมนูไข่", "เมนูไก่", "เมนูหมู", "เมนูเป็ด", "เมนูเนื้อวัว", "เมนูไส้กรอก", "เมนูเบคอน", "เมนูอาหารทะเล", "เมนูเส้น", "เมนูเห็ด", "เมนูเต้าหู้", "เมนูข้าว", "เมนูผัก", "เมนูผลไม้",
+    // ประเภทอาหาร
+    "เมนูอาหารเช้า", "เมนูอาหารจานเดียว", "เมนูกับแกล้ม/อาหารว่าง", "เมนูมังสวิรัติ", "เมนูอาหารไทย", "เมนูอาหารเหนือ", "เมนูอาหารอีสาน", "เมนูอาหารใต้", "เมนูอาหารญี่ปุ่น", "เมนูอาหารจีน", "เมนูอาหารเกาหลี", "เมนูอาหารฝรั่ง", "เมนูอาหารอิตาเลียน", "เมนูสเต๊ก", "เมนูแกง", "สูตรน้ำจิ้ม", "เมนูอาหารฟิวชัน", "เมนูซุป", "อาหารนานาชาติ", "เมนูแซนด์วิช", "เมนูอาหารเย็น", "เมนูน้ำพริก", "เมนูกับข้าว", "เมนูก๋วยเตี๋ยว",
+    // วิธีการ
+    "เมนูไมโครเวฟ", "เมนูต้ม", "เมนูผัด", "เมนูทอด", "เมนูอบ", "เมนูนึ่ง", "เมนูยำ", "เมนูย่าง", "เมนูหม้ออบลมร้อน", "เมนูหม้อหุงข้าว",
+    // ของหวาน/เบเกอรี่
+    "เมนูไอศกรีม", "เมนูขนมไทย", "เมนูเบเกอรี", "เมนูเค้ก", "เมนูของหวาน", "เมนูช็อคโกแลต",
+    // เมนูพิเศษ
+    "เมนูทำง่ายไม่เกิน 15 นาที", "เมนูประหยัด", "เมนูเด็กหอ", "เมนูสร้างอาชีพ", "เมนูข้าวกล่อง", "เมนูวาเลนไทน์", "เมนูฮาโลวีน", "เมนูคริสต์มาส"
+];
 
 function isBase64DataUrl(value) {
   return typeof value === 'string' && value.startsWith('data:');
@@ -985,11 +997,14 @@ app.delete('/api/menus/:id', authMiddleware, adminMiddleware, async (req, res) =
   }
 });
 
-app.get('/api/tags', async (req, res) => {
+app.get('/api/tags', (req, res) => {
   try {
-    const search = req.query.search || '';
-    const query = search ? { name: { $regex: search, $options: 'i' } } : {};
-    const tags = await Tag.find(query).sort({ name: 1 });
+    const search = (req.query.search || '').trim().toLowerCase();
+    const tags = PRESET_CATEGORIES.map(name => ({ name }));
+    if (search) {
+      const filtered = tags.filter(t => t.name.toLowerCase().includes(search));
+      return res.json(filtered);
+    }
     res.json(tags);
   } catch (error) {
     console.error('Error fetching tags:', error.message);
@@ -997,23 +1012,13 @@ app.get('/api/tags', async (req, res) => {
   }
 });
 
-app.post('/api/tags', async (req, res) => {
+app.post('/api/tags', (req, res) => {
   try {
     const names = Array.isArray(req.body.name) ? req.body.name : [req.body.name];
-    const createdTags = [];
-
-    for (const name of names) {
-      if (!name || typeof name !== 'string') continue;
-      const trimmed = name.trim();
-      if (!trimmed) continue;
-      const tag = await Tag.findOneAndUpdate(
-        { name: trimmed },
-        { name: trimmed },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-      createdTags.push(tag);
-    }
-
+    const createdTags = names
+      .map(n => typeof n === 'string' ? n.trim() : '')
+      .filter(Boolean)
+      .map(name => ({ name }));
     res.status(201).json(createdTags.length === 1 ? createdTags[0] : createdTags);
   } catch (error) {
     console.error('Error creating tag:', error.message);

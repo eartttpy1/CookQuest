@@ -21,14 +21,6 @@ const menuSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  prepareTime: {
-    type: Number,
-    default: 0
-  },
-  cookingTime: {
-    type: Number,
-    default: 0
-  },
   createdBy: {
     type: String,
     default: ''
