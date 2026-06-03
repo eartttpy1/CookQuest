@@ -111,30 +111,6 @@ body.darkmode{
 }
 .sort-btn:hover { background: #f0f0f0; }
 
-.sort-dropdown {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    background: var(--base-color);
-    border-radius: 8px;
-    overflow: hidden;
-    min-width: 140px;
-    box-shadow: 0 4px 12px var(--box-shadow-color);
-    z-index: 200;
-}
-
-.sort-option {
-    padding: 10px 16px;
-    color: var(--text-color);
-    font-size: 0.95rem;
-    cursor: pointer;
-    font-family: "IBM Plex Sans Thai Looped", sans-serif;
-    transition: background 0.15s;
-}
-.sort-option:hover,
-.sort-option.active {
-    background: var(--hover-color);
-}
 
 .btn-add {
     background: #4CAF50;
@@ -591,10 +567,28 @@ body.darkmode{
 
 .tag-search-results {
     flex-direction: column;
+    flex-wrap: nowrap;
     width: 100%;
     max-height: 240px;
     overflow-y: auto;
     overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #f1f1f1;
+}
+
+.tag-search-results::-webkit-scrollbar {
+    width: 6px;
+}
+.tag-search-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+.tag-search-results::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+.tag-search-results::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
 }
 
 .tag-search-result {
@@ -759,3 +753,42 @@ body.darkmode{
     .quest-title { font-size: 1.1rem; }
     .quest-exp { font-size: 1rem; }
 }
+
+/* Custom Selectable Menu Item styling */
+.menu-select-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1.5px solid #eee;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    color: #333;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.menu-select-item:hover {
+    background: #FFF3C9;
+    border-color: #ffd666;
+}
+
+.menu-select-item.selected {
+    background: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.menu-select-item i {
+    font-size: 1.2rem;
+    color: #999;
+    transition: color 0.2s;
+}
+
+.menu-select-item.selected i {
+    color: #28a745;
+}

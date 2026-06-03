@@ -53,4 +53,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  const resendBtn = document.getElementById("btn-resend-otp");
+  if (resendBtn) {
+      let resendCountdown = 0;
+      resendBtn.addEventListener("click", async () => {
+          if (resendCountdown > 0) return;
+          resendBtn.style.pointerEvents = "none";
+          resendBtn.textContent = "Sending OTP...";
+          try {
+              const res = await axios.post("http://localhost:4000/api/resend-otp", { email });
+              alert(res.data.msg || "ส่ง OTP สำเร็จแล้ว");
+              resendCountdown = 60;
+              resendBtn.textContent = `Resend OTP in (${resendCountdown}s)`;
+              const timer = setInterval(() => {
+                  resendCountdown--;
+                  if (resendCountdown <= 0) {
+                      clearInterval(timer);
+                      resendBtn.style.pointerEvents = "auto";
+                      resendBtn.textContent = "Haven’t Got OTP Code? Resend OTP";
+                  } else {
+                      resendBtn.textContent = `Resend OTP in (${resendCountdown}s)`;
+                  }
+              }, 1000);
+          } catch (err) {
+              alert(err.response?.data?.msg || "Error");
+              resendBtn.style.pointerEvents = "auto";
+              resendBtn.textContent = "Haven’t Got OTP Code? Resend OTP";
+          }
+      });
+  }
+
 });

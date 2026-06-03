@@ -10,6 +10,16 @@ body.darkmode{
     --text-shadow-color: rgb(0, 0, 0);
     --box-shadow-color: rgb(0, 0, 0, 0.7);
 }
+
+body.darkmode .wrapper main {
+    background-color: var(--base-color);
+    color: var(--text-color);
+}
+
+body.darkmode .wrapper main p,
+body.darkmode .wrapper .about-link {
+    color: var(--text-color);
+}
 .wrapper{
     display: flex;
     flex-direction: column;

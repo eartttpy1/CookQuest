@@ -1,17 +1,19 @@
 // e-menu.js - Handles functionality for e-menu admin page
 
-const CATEGORIES_LIST = [
-    // วัตถุดิบ
-    "เมนูไข่", "เมนูไก่", "เมนูหมู", "เมนูเป็ด", "เมนูเนื้อวัว", "เมนูไส้กรอก", "เมนูเบคอน", "เมนูอาหารทะเล", "เมนูเส้น", "เมนูเห็ด", "เมนูเต้าหู้", "เมนูข้าว", "เมนูผัก", "เมนูผลไม้",
-    // ประเภทอาหาร
-    "เมนูอาหารเช้า", "เมนูอาหารจานเดียว", "เมนูกับแกล้ม/อาหารว่าง", "เมนูมังสวิรัติ", "เมนูอาหารไทย", "เมนูอาหารเหนือ", "เมนูอาหารอีสาน", "เมนูอาหารใต้", "เมนูอาหารญี่ปุ่น", "เมนูอาหารจีน", "เมนูอาหารเกาหลี", "เมนูอาหารฝรั่ง", "เมนูอาหารอิตาเลียน", "เมนูสเต๊ก", "เมนูแกง", "สูตรน้ำจิ้ม", "เมนูอาหารฟิวชัน", "เมนูซุป", "อาหารนานาชาติ", "เมนูแซนด์วิช", "เมนูอาหารเย็น", "เมนูน้ำพริก", "เมนูกับข้าว", "เมนูก๋วยเตี๋ยว",
-    // วิธีการ
-    "เมนูไมโครเวฟ", "เมนูต้ม", "เมนูผัด", "เมนูทอด", "เมนูอบ", "เมนูนึ่ง", "เมนูยำ", "เมนูย่าง", "เมนูหม้ออบลมร้อน", "เมนูหม้อหุงข้าว",
-    // ของหวาน/เบเกอรี่
-    "เมนูไอศกรีม", "เมนูขนมไทย", "เมนูเบเกอรี", "เมนูเค้ก", "เมนูของหวาน", "เมนูช็อคโกแลต",
-    // เมนูพิเศษ
-    "เมนูทำง่ายไม่เกิน 15 นาที", "เมนูประหยัด", "เมนูเด็กหอ", "เมนูสร้างอาชีพ", "เมนูข้าวกล่อง", "เมนูวาเลนไทน์", "เมนูฮาโลวีน", "เมนูคริสต์มาส"
-];
+let CATEGORIES_LIST = [];
+
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/tags');
+        if (response.ok) {
+            const tags = await response.json();
+            CATEGORIES_LIST = tags.map(t => t.name);
+            renderCategoryQuickSelect();
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
 
 function renderCategoryQuickSelect() {
     const container = document.getElementById('categoryQuickSelect');
@@ -68,18 +70,12 @@ let deleteMode = false;
 let currentEditItem = null;
 let recipes = [];
 let selectedImageData = '';
-let availableTags = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     loadRecipes();
-    loadTags();
+    loadCategories();
     setupMenuEventListeners();
-
-    const tagSearchInput = document.getElementById('tagSearchInput');
-    if (tagSearchInput) {
-        tagSearchInput.addEventListener('input', handleTagSearchInput);
-    }
 
     // Form submission
     const saveBtn = document.querySelector('.btn-save');
@@ -114,7 +110,10 @@ function renderRecipes() {
                 <img src="${recipe.imageURL || '../../assets/a-img/placeholder-dish.png'}" alt="dish"${recipe.hasImage ? ` data-lazy-menu-id="${recipe._id}"` : ''}>
             </div>
             <div class="item-info">
-                <span class="item-title thai">${recipe.menuName}</span>
+                <div class="recipe-title-row">
+                    <span class="item-title thai">${recipe.menuName}</span>
+                    <span class="recipe-exp">${recipe.EXP ?? 0} EXP</span>
+                </div>
                 <div class="tag-list">
                     ${(recipe.tags || []).map(tag => `<span class="tag thai">${tag}</span>`).join('')}
                 </div>
@@ -128,23 +127,73 @@ function renderRecipes() {
     if (typeof setupLazyMenuImages === 'function') {
         setupLazyMenuImages(recipeList, { fallback: '../../assets/a-img/placeholder-dish.png' });
     }
+    filterRecipes();
 }
+
+let currentSortName = 'none';
+let currentSortExp = 'none';
 
 function setupMenuEventListeners() {
     // Search
     document.getElementById('searchInput').addEventListener('input', filterRecipes);
 
-    // Sort
-    document.getElementById('sortBtn').addEventListener('click', toggleSortDropdown);
-    document.querySelectorAll('.sort-option').forEach(option => {
-        option.addEventListener('click', () => sortRecipes(option.getAttribute('data-sort')));
-    });
+    // Sort Dropdown Toggle
+    const sortBtn = document.getElementById('sortBtn');
+    const sortDropdown = document.getElementById('sortDropdown');
+    if (sortBtn && sortDropdown) {
+        sortBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sortDropdown.classList.toggle('hidden');
+        });
+    }
+
+    // Helper to setup custom selects for Name and Exp
+    function setupCustomSelect(triggerId, optionsId, textId, type) {
+        const trigger = document.getElementById(triggerId);
+        const optionsContainer = document.getElementById(optionsId);
+        const textSpan = document.getElementById(textId);
+
+        if (!trigger || !optionsContainer) return;
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Close other options
+            document.querySelectorAll('.custom-options').forEach(opt => {
+                if (opt !== optionsContainer) opt.classList.add('hidden');
+            });
+            optionsContainer.classList.toggle('hidden');
+        });
+
+        optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const value = option.getAttribute('data-value');
+                textSpan.innerText = option.innerText;
+                optionsContainer.classList.add('hidden');
+
+                if (type === 'name') {
+                    currentSortName = value;
+                    currentSortExp = 'none';
+                    const expText = document.getElementById('current-exp-text');
+                    if (expText) expText.innerText = "เลือก";
+                } else if (type === 'exp') {
+                    currentSortExp = value;
+                    currentSortName = 'none';
+                    const nameText = document.getElementById('current-name-text');
+                    if (nameText) nameText.innerText = "เลือก";
+                }
+
+                sortRecipes();
+            });
+        });
+    }
+
+    setupCustomSelect('nameTrigger', 'nameOptions', 'current-name-text', 'name');
+    setupCustomSelect('expTrigger', 'expOptions', 'current-exp-text', 'exp');
 
     // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.sort-wrapper')) {
-            document.getElementById('sortDropdown').classList.add('hidden');
-        }
+    document.addEventListener('click', () => {
+        if (sortDropdown) sortDropdown.classList.add('hidden');
+        document.querySelectorAll('.custom-options').forEach(opt => opt.classList.add('hidden'));
     });
 
     // Delete buttons inside recipe list
@@ -161,7 +210,9 @@ function setupMenuEventListeners() {
 }
 
 function filterRecipes() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+    const searchTerm = searchInput.value.toLowerCase();
     const recipeItems = document.querySelectorAll('.recipe-item');
 
     recipeItems.forEach(item => {
@@ -173,20 +224,26 @@ function filterRecipes() {
     });
 }
 
-function toggleSortDropdown() {
-    document.getElementById('sortDropdown').classList.add('hidden');
-    document.getElementById('sortDropdown').classList.toggle('hidden');
-}
+function sortRecipes() {
+    recipes.sort((a, b) => {
+        if (currentSortName !== 'none') {
+            const nameA = a.menuName || "";
+            const nameB = b.menuName || "";
+            if (currentSortName === 'asc') return nameA.localeCompare(nameB, 'th');
+            if (currentSortName === 'desc') return nameB.localeCompare(nameA, 'th');
+        }
 
-function sortRecipes(sortType) {
-    if (sortType === 'az') {
-        recipes.sort((a, b) => a.menuName.localeCompare(b.menuName));
-    } else if (sortType === 'za') {
-        recipes.sort((a, b) => b.menuName.localeCompare(a.menuName));
-    }
+        if (currentSortExp !== 'none') {
+            const expA = parseInt(a.EXP) || 0;
+            const expB = parseInt(b.EXP) || 0;
+            if (currentSortExp === 'low') return expA - expB;
+            if (currentSortExp === 'high') return expB - expA;
+        }
+
+        return 0;
+    });
 
     renderRecipes();
-    toggleSortDropdown();
 }
 
 function openAddForm() {
@@ -200,11 +257,6 @@ function openAddForm() {
     document.getElementById('prepTime').value = '';
     document.getElementById('cookTime').value = '';
     document.getElementById('tagsArea').innerHTML = '';
-    const tagSearchInput = document.getElementById('tagSearchInput');
-    if (tagSearchInput) {
-        tagSearchInput.value = '';
-    }
-    renderTagSuggestions('');
     if (typeof renderCategoryQuickSelect === 'function') {
         renderCategoryQuickSelect();
     }
@@ -274,11 +326,9 @@ async function openEditFormById(id) {
     document.getElementById('menuName').value = currentEditItem.menuName;
     document.getElementById('menuServings').value = currentEditItem.servings || 1;
     document.getElementById('menuExp').value = currentEditItem.EXP ?? 0;
-    document.getElementById('prepTime').value = currentEditItem.prepTime || '';
-    document.getElementById('cookTime').value = currentEditItem.cookTime || '';
+    document.getElementById('prepTime').value = parseInt(currentEditItem.prepTime) || '';
+    document.getElementById('cookTime').value = parseInt(currentEditItem.cookTime) || '';
     document.getElementById('tagsArea').innerHTML = (currentEditItem.tags || []).map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
-    document.getElementById('tagSearchInput').value = '';
-    renderTagSuggestions('');
     if (typeof renderCategoryQuickSelect === 'function') {
         renderCategoryQuickSelect();
     }
@@ -405,8 +455,14 @@ async function deleteItem(button) {
     openDeleteModal(deleteMessage, async () => {
         console.log('Attempting to delete menu with id:', id);
         try {
+            const token = localStorage.getItem('authToken');
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
             const response = await fetch(`/api/menus/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: headers
             });
             console.log('Fetch response status:', response.status);
             const data = await response.json();
@@ -772,63 +828,6 @@ function clearImagePreview() {
     `;
 }
 
-async function loadTags(search = '') {
-    try {
-        const query = search ? `?search=${encodeURIComponent(search)}` : '';
-        const response = await fetch(`/api/tags${query}`);
-        if (!response.ok) {
-            throw new Error('Failed to load tags');
-        }
-        availableTags = await response.json();
-        renderTagSuggestions(search);
-    } catch (error) {
-        console.error('Error loading tags:', error);
-    }
-}
-
-function handleTagSearchInput(event) {
-    const query = event.target.value.trim();
-    loadTags(query);
-}
-
-function renderTagSuggestions(query) {
-    const resultsContainer = document.getElementById('tagSearchResults');
-    const tagNewRow = document.getElementById('tagNewRow');
-    if (!resultsContainer || !tagNewRow) return;
-
-    const normalizedQuery = query.toLowerCase();
-    const matchingTags = availableTags
-        .filter(tag => tag.name.toLowerCase().includes(normalizedQuery))
-        .slice(0, 10);
-
-    resultsContainer.innerHTML = '';
-    matchingTags.forEach(tag => {
-        const item = document.createElement('div');
-        item.className = 'tag-search-result';
-        item.textContent = tag.name;
-        item.addEventListener('click', () => addTag(tag.name));
-        resultsContainer.appendChild(item);
-    });
-
-    if (query && matchingTags.length === 0) {
-        tagNewRow.innerHTML = '';
-        const label = document.createElement('span');
-        label.className = 'thai';
-        label.textContent = 'สร้างใหม่:';
-
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'btn-add-tag';
-        button.textContent = query;
-        button.addEventListener('click', () => createAndAddTag(query));
-
-        tagNewRow.appendChild(label);
-        tagNewRow.appendChild(button);
-    } else {
-        tagNewRow.innerHTML = '<span class="thai">สร้างใหม่:</span>';
-    }
-}
-
 function addTag(tagName) {
     const tagsArea = document.getElementById('tagsArea');
     if (!tagsArea) return;
@@ -856,29 +855,5 @@ function addTag(tagName) {
     tagsArea.appendChild(tagElement);
     if (typeof syncCategoryBadges === 'function') {
         syncCategoryBadges();
-    }
-}
-
-async function createAndAddTag(tagName) {
-    try {
-        const response = await fetch('/api/tags', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: tagName })
-        });
-        if (!response.ok) {
-            throw new Error('Failed to create tag');
-        }
-        const createdTag = await response.json();
-        availableTags.push(createdTag);
-        addTag(createdTag.name);
-        document.getElementById('tagSearchInput').value = '';
-        await loadTags('');
-        renderTagSuggestions('');
-    } catch (error) {
-        console.error('Error creating tag:', error);
-        alert('ไม่สามารถสร้าง tag ใหม่ได้');
     }
 }

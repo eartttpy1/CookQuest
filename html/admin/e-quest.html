@@ -114,8 +114,36 @@
                     <div class="sort-wrapper">
                         <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
                         <div class="sort-dropdown hidden" id="sortDropdown">
-                            <div class="sort-option" data-sort="az">↑ A-Z ก-ฮ</div>
-                            <div class="sort-option active" data-sort="level">↑ ระดับ</div>
+                            <!-- Sort Name -->
+                            <div class="sort-row">
+                                <span class="sort-label">Name</span>
+                                <div class="custom-select-wrapper">
+                                    <button class="custom-select-trigger" id="nameTrigger">
+                                        <span id="current-name-text">เลือก</span>
+                                        <i class="fa-solid fa-caret-down"></i>
+                                    </button>
+                                    <div class="custom-options hidden" id="nameOptions">
+                                        <div class="custom-option" data-value="none">เลือก</div>
+                                        <div class="custom-option" data-value="asc">ก → ฮ</div>
+                                        <div class="custom-option" data-value="desc">ฮ → ก</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Sort Exp -->
+                            <div class="sort-row">
+                                <span class="sort-label">Exp</span>
+                                <div class="custom-select-wrapper">
+                                    <button class="custom-select-trigger" id="expTrigger">
+                                        <span id="current-exp-text">เลือก</span>
+                                        <i class="fa-solid fa-caret-down"></i>
+                                    </button>
+                                    <div class="custom-options hidden" id="expOptions">
+                                        <div class="custom-option" data-value="none">เลือก</div>
+                                        <div class="custom-option" data-value="low">น้อย → มาก</div>
+                                        <div class="custom-option" data-value="high">มาก → น้อย</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <button class="btn-add" id="addBtn" onclick="openAddForm()"><i class="fa-solid fa-plus"></i></button>
@@ -150,8 +178,8 @@
             </div>
             <div class="form-body">
  
-                <!-- Image Upload -->
-                <div class="form-img-upload" id="formImgPreview">
+                <!-- Image Upload (Hidden since quests do not have images in DB) -->
+                <div class="form-img-upload" id="formImgPreview" style="display: none;">
                     <label class="img-upload-label thai">
                         <i class="fa-solid fa-image"></i>
                         <span>เพิ่มไฟล์รูปภาพ</span>
@@ -165,18 +193,9 @@
                     <input type="text" class="form-input thai" id="questName" placeholder="ชื่อเควส">
                 </div>
  
-                <!-- Level + EXP -->
+                <!-- EXP -->
                 <div class="form-row">
-                    <label class="form-label thai">ระดับ</label>
-                    <div class="select-wrapper">
-                        <select class="form-select thai" id="questLevel">
-                            <option value="bronze">Bronze</option>
-                            <option value="silver">Silver</option>
-                            <option value="gold">Gold</option>
-                        </select>
-                        <i class="fa-solid fa-caret-down select-arrow"></i>
-                    </div>
-                    <label class="form-label thai" style="margin-left:16px;">EXP ที่ได้</label>
+                    <label class="form-label thai">EXP ที่ได้</label>
                     <input type="number" class="form-input small thai" id="questExp" placeholder="200">
                 </div>
  

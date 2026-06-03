@@ -42,16 +42,11 @@ function renderQuests() {
 
     quests.forEach(quest => {
         const questItem = document.createElement('div');
-        questItem.className = `quest-item bg-${quest.level}`;
+        questItem.className = 'quest-item';
         questItem.setAttribute('data-id', quest._id);
 
         questItem.innerHTML = `
             <button class="item-delete-btn${deleteMode ? '' : ' hidden'}"><i class="fa-solid fa-minus"></i></button>
-            <div class="quest-icon-area">
-                <div class="quest-icon-placeholder">
-                    <img src="../../assets/a-img/placeholder-quest.png" alt="quest">
-                </div>
-            </div>
             <div class="quest-info">
                 <div class="quest-title-row">
                     <span class="quest-title thai">${quest.name}</span>
@@ -68,16 +63,73 @@ function renderQuests() {
     });
 
     updateDeleteButtons();
+    filterQuests();
 }
+
+let currentSortName = 'none';
+let currentSortExp = 'none';
 
 function setupQuestEventListeners() {
     // Search
     document.getElementById('searchInput').addEventListener('input', filterQuests);
 
-    // Sort
-    document.getElementById('sortBtn').addEventListener('click', toggleSortDropdown);
-    document.querySelectorAll('.sort-option').forEach(option => {
-        option.addEventListener('click', () => sortQuests(option.getAttribute('data-sort')));
+    // Sort Dropdown Toggle
+    const sortBtn = document.getElementById('sortBtn');
+    const sortDropdown = document.getElementById('sortDropdown');
+    if (sortBtn && sortDropdown) {
+        sortBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sortDropdown.classList.toggle('hidden');
+        });
+    }
+
+    // Helper to setup custom selects for Name and Exp
+    function setupCustomSelect(triggerId, optionsId, textId, type) {
+        const trigger = document.getElementById(triggerId);
+        const optionsContainer = document.getElementById(optionsId);
+        const textSpan = document.getElementById(textId);
+
+        if (!trigger || !optionsContainer) return;
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Close other options
+            document.querySelectorAll('.custom-options').forEach(opt => {
+                if (opt !== optionsContainer) opt.classList.add('hidden');
+            });
+            optionsContainer.classList.toggle('hidden');
+        });
+
+        optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const value = option.getAttribute('data-value');
+                textSpan.innerText = option.innerText;
+                optionsContainer.classList.add('hidden');
+
+                if (type === 'name') {
+                    currentSortName = value;
+                    currentSortExp = 'none';
+                    const expText = document.getElementById('current-exp-text');
+                    if (expText) expText.innerText = "เลือก";
+                } else if (type === 'exp') {
+                    currentSortExp = value;
+                    currentSortName = 'none';
+                    const nameText = document.getElementById('current-name-text');
+                    if (nameText) nameText.innerText = "เลือก";
+                }
+
+                sortQuests();
+            });
+        });
+    }
+
+    setupCustomSelect('nameTrigger', 'nameOptions', 'current-name-text', 'name');
+    setupCustomSelect('expTrigger', 'expOptions', 'current-exp-text', 'exp');
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        if (sortDropdown) sortDropdown.classList.add('hidden');
+        document.querySelectorAll('.custom-options').forEach(opt => opt.classList.add('hidden'));
     });
 
     // Delete buttons inside quest list
@@ -91,13 +143,6 @@ function setupQuestEventListeners() {
             }
         });
     }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.sort-wrapper')) {
-            document.getElementById('sortDropdown').classList.add('hidden');
-        }
-    });
 }
 
 function updateDeleteButtons() {
@@ -122,7 +167,9 @@ function toggleDeleteMode() {
 }
 
 function filterQuests() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+    const searchTerm = searchInput.value.toLowerCase();
     const questItems = document.querySelectorAll('.quest-item');
 
     questItems.forEach(item => {
@@ -134,20 +181,26 @@ function filterQuests() {
     });
 }
 
-function toggleSortDropdown() {
-    document.getElementById('sortDropdown').classList.toggle('hidden');
-}
+function sortQuests() {
+    quests.sort((a, b) => {
+        if (currentSortName !== 'none') {
+            const nameA = a.name || "";
+            const nameB = b.name || "";
+            if (currentSortName === 'asc') return nameA.localeCompare(nameB, 'th');
+            if (currentSortName === 'desc') return nameB.localeCompare(nameA, 'th');
+        }
 
-function sortQuests(sortType) {
-    if (sortType === 'az') {
-        quests.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortType === 'level') {
-        const levelOrder = { bronze: 1, silver: 2, gold: 3 };
-        quests.sort((a, b) => levelOrder[a.level] - levelOrder[b.level]);
-    }
+        if (currentSortExp !== 'none') {
+            const expA = parseInt(a.exp) || 0;
+            const expB = parseInt(b.exp) || 0;
+            if (currentSortExp === 'low') return expA - expB;
+            if (currentSortExp === 'high') return expB - expA;
+        }
+
+        return 0;
+    });
 
     renderQuests();
-    toggleSortDropdown();
 }
 
 function openAddForm() {
@@ -156,7 +209,6 @@ function openAddForm() {
     clearImagePreview();
     document.getElementById('formTitle').textContent = 'เพิ่มเควส';
     document.getElementById('questName').value = '';
-    document.getElementById('questLevel').value = 'bronze';
     document.getElementById('questExp').value = '';
     document.getElementById('menuTagsArea').innerHTML = '';
     const tagSearchInput = document.getElementById('menuTagSearchInput');
@@ -176,7 +228,6 @@ function openEditForm(button) {
 
     document.getElementById('formTitle').textContent = 'แก้ไขเควส';
     document.getElementById('questName').value = currentEditItem.name;
-    document.getElementById('questLevel').value = currentEditItem.level;
     document.getElementById('questExp').value = currentEditItem.exp;
     document.getElementById('menuTagsArea').innerHTML = (currentEditItem.tags || []).map(tag => `<span class="tag removable thai">${tag} <button onclick="removeTag(this)">X</button></span>`).join('');
     const tagSearchInput = document.getElementById('menuTagSearchInput');
@@ -278,6 +329,9 @@ async function deleteItem(button) {
 
 function removeTag(button) {
     button.parentElement.remove();
+    const searchInput = document.getElementById('menuTagSearchInput');
+    const query = searchInput ? searchInput.value : '';
+    renderMenuTagSuggestions(query);
 }
 
 async function loadMenus(search = '') {
@@ -303,20 +357,43 @@ function renderMenuTagSuggestions(query) {
     const resultsContainer = document.getElementById('menuTagSearchResults');
     if (!resultsContainer) return;
 
-    const normalizedQuery = query.toLowerCase();
+    const selectedTags = Array.from(document.querySelectorAll('#menuTagsArea .tag'))
+        .map(tag => tag.textContent.replace(/\s*X$/, '').trim());
+
+    const normalizedQuery = (query || '').toLowerCase();
     const matchingMenus = availableTags
-        .filter(menu => menu.name.toLowerCase().includes(normalizedQuery))
-        .slice(0, 10);
+        .filter(menu => menu.name.toLowerCase().includes(normalizedQuery));
 
     resultsContainer.innerHTML = '';
     matchingMenus.forEach(menu => {
+        const isSelected = selectedTags.includes(menu.name);
+        
         const item = document.createElement('div');
-        item.className = 'tag-search-result';
-        item.textContent = menu.name;
-        item.addEventListener('click', () => addMenuTag(menu.name));
+        item.className = `menu-select-item${isSelected ? ' selected' : ''}`;
+        item.innerHTML = `
+            <span class="thai">${menu.name}</span>
+            <i class="fa-solid ${isSelected ? 'fa-square-check' : 'fa-square'}"></i>
+        `;
+        
+        item.addEventListener('click', () => {
+            if (isSelected) {
+                // Remove tag
+                const tags = Array.from(document.querySelectorAll('#menuTagsArea .tag'));
+                const targetTag = tags.find(t => t.textContent.replace(/\s*X$/, '').trim() === menu.name);
+                if (targetTag) targetTag.remove();
+            } else {
+                // Add tag
+                addMenuTag(menu.name);
+            }
+            // Re-render suggestions to update state
+            const searchInput = document.getElementById('menuTagSearchInput');
+            renderMenuTagSuggestions(searchInput ? searchInput.value : '');
+        });
+        
         resultsContainer.appendChild(item);
     });
 }
+
 
 function addMenuTag(tagName) {
     const tagsArea = document.getElementById('menuTagsArea');
@@ -365,7 +442,6 @@ async function saveQuest() {
     }
 
     const name = document.getElementById('questName').value;
-    const level = document.getElementById('questLevel').value;
     const exp = parseInt(document.getElementById('questExp').value);
     const tags = Array.from(document.querySelectorAll('#menuTagsArea .tag')).map(tag => tag.textContent.replace(/\s*X$/, '').trim());
 
@@ -380,7 +456,7 @@ async function saveQuest() {
         return;
     }
 
-    const questData = { name, level, exp, tags };
+    const questData = { name, exp, tags };
 
     try {
         if (currentEditItem) {

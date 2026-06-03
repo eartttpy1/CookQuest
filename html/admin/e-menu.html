@@ -115,8 +115,36 @@
                     <div class="sort-wrapper">
                         <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
                         <div class="sort-dropdown hidden" id="sortDropdown">
-                            <div class="sort-option" data-sort="az">↑ A-Z ก-ฮ</div>
-                            <div class="sort-option active" data-sort="za">↓ Z-A ฮ-ก</div>
+                            <!-- Sort Name -->
+                            <div class="sort-row">
+                                <span class="sort-label">Name</span>
+                                <div class="custom-select-wrapper">
+                                    <button class="custom-select-trigger" id="nameTrigger">
+                                        <span id="current-name-text">เลือก</span>
+                                        <i class="fa-solid fa-caret-down"></i>
+                                    </button>
+                                    <div class="custom-options hidden" id="nameOptions">
+                                        <div class="custom-option" data-value="none">เลือก</div>
+                                        <div class="custom-option" data-value="asc">ก → ฮ</div>
+                                        <div class="custom-option" data-value="desc">ฮ → ก</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Sort Exp -->
+                            <div class="sort-row">
+                                <span class="sort-label">Exp</span>
+                                <div class="custom-select-wrapper">
+                                    <button class="custom-select-trigger" id="expTrigger">
+                                        <span id="current-exp-text">เลือก</span>
+                                        <i class="fa-solid fa-caret-down"></i>
+                                    </button>
+                                    <div class="custom-options hidden" id="expOptions">
+                                        <div class="custom-option" data-value="none">เลือก</div>
+                                        <div class="custom-option" data-value="low">น้อย → มาก</div>
+                                        <div class="custom-option" data-value="high">มาก → น้อย</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <button class="btn-add" id="addBtn" onclick="openAddForm()"><i class="fa-solid fa-plus"></i></button>
@@ -192,14 +220,6 @@
                         <span class="tag removable thai">เมนูทอด <button onclick="removeTag(this)">X</button></span>
                         <span class="tag removable thai">เมนูไข่ <button onclick="removeTag(this)">X</button></span>
                     </div>
-                    <div class="tag-new-row" id="tagNewRow">
-                        <span class="thai">สร้างใหม่:</span>
-                    </div>
-                    <div class="tag-search-row">
-                        <span class="thai">เพิ่ม tag:</span>
-                        <input type="text" class="tag-search-input thai" id="tagSearchInput" placeholder="เมนูอาหาร">
-                    </div>
-                    <div class="tag-search-results" id="tagSearchResults"></div>
                 </div>
 
                 <!-- Categories Quick Select -->

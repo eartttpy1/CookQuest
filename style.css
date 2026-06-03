@@ -9,12 +9,51 @@
 }
 body.darkmode{
   --base-color: #3D4459;
+  --box-color: #3D4459;
   --text-color: white;
   --background-theme: #FFF3C9;
   --hover-color: rgba(87, 96, 130, 0.7);
   --box-shadow-color: rgb(0, 0, 0, 0.7);
   --border-bottom-color: rgba(255,255,255,0.2);
   --option-color: #2d3241;
+}
+
+/* Dark mode: unify box/container backgrounds with navbar */
+body.darkmode .chart-box,
+body.darkmode .badge-modal-content,
+body.darkmode .badge-card,
+body.darkmode .recipe-card,
+body.darkmode .skeleton-card,
+body.darkmode .category-quick-select,
+body.darkmode .search-box,
+body.darkmode .infobox,
+body.darkmode .infobox.register {
+  background: var(--box-color) !important;
+  background-color: var(--box-color) !important;
+}
+
+body.darkmode .search-box .search-input,
+body.darkmode .search-label {
+  color: var(--text-color);
+}
+
+body.darkmode .infobox h1,
+body.darkmode .inputbox,
+body.darkmode .infobox input,
+body.darkmode .inputbox label {
+  color: var(--text-color);
+}
+
+body.darkmode .inputbox {
+  border-bottom-color: var(--text-color);
+}
+
+body.darkmode .login-register #Have-an-account {
+  color: var(--text-color);
+}
+
+body.darkmode .sort-btn {
+  background: var(--box-color);
 }
 *{
     margin: 0;
@@ -70,6 +109,7 @@ body{
 
 /* user */
 .NL .linkhref{
+  font-family: "Inria Serif", serif;
   height: 100%;
   padding: 0 30px;
   text-decoration: none;
@@ -210,11 +250,12 @@ i, a{
     transform: translateY(-2px);
     box-shadow: 0 5px 10px var(--hover-color);
 }
-.NL .logo{
+.NL .logo, .NL .logo a{
   cursor: default;
-  font-weight: bold;
+  font-weight: 600;
   text-decoration: none;
   color: var(--text-color);
+  font-family: "Pattaya", sans-serif;
 }
 
 
@@ -435,4 +476,139 @@ i, a{
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+/* GLOBAL CUSTOM SORT DROPDOWN AND SELECT */
+.sort-container, .sort-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.sort-container .sort-btn, .sort-wrapper .sort-btn {
+    border-radius: 5px;
+    padding: 6px 10px;
+    border: none;
+    background-color: var(--base-color);
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sort-container .sort-btn i, .sort-wrapper .sort-btn i {
+    color: var(--text-color) !important;
+}
+
+.sort-dropdown {
+    position: absolute;
+    right: 0;
+    top: 40px;
+    background: white;
+    border: 2px solid var(--base-color);
+    border-radius: 15px;
+    padding: 15px;
+    width: 250px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+}
+
+body.darkmode .sort-dropdown {
+    background: var(--box-color);
+    border-color: var(--text-color);
+}
+
+.sort-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+}
+
+.sort-row .sort-label {
+    color: var(--text-main, black) !important;
+}
+
+body.darkmode .sort-row .sort-label {
+    color: var(--text-color) !important;
+}
+
+.custom-select-wrapper {
+    position: relative;
+    width: 120px;
+}
+
+.custom-select-trigger {
+    width: 100%;
+    padding: 8px 12px;
+    background: #fff;
+    border: 2px solid var(--base-color);
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-family: 'Pattaya', 'ThaiPattaya', sans-serif;
+    color: var(--base-color);
+}
+
+body.darkmode .custom-select-trigger {
+    background: var(--box-color);
+    border-color: var(--text-color);
+    color: var(--text-color);
+}
+
+.custom-select-trigger:hover {
+    background-color: var(--hover-color);
+    color: var(--base-color);
+}
+
+body.darkmode .custom-select-trigger:hover {
+    color: var(--text-color);
+}
+
+.custom-select-trigger i {
+    color: var(--base-color);
+}
+
+body.darkmode .custom-select-trigger i {
+    color: var(--text-color);
+}
+
+.custom-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 2px solid var(--base-color);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    z-index: 101;
+    overflow: hidden;
+}
+
+body.darkmode .custom-options {
+    background: var(--box-color);
+    border-color: var(--text-color);
+}
+
+.custom-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-main, black);
+}
+
+body.darkmode .custom-option {
+    color: var(--text-color);
+}
+
+.custom-option:hover {
+    background-color: var(--hover-color);
+    color: var(--base-color);
+}
+
+body.darkmode .custom-option:hover {
+    color: var(--text-color);
 }

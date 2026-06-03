@@ -5,7 +5,7 @@ const mockCompletedRecipes = [
         name: 'สเต็กหมู',
         image: 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092',
         time: '45 นาที',
-        xp: 200,
+        exp: 200,
         isFavorite: true
     },
     {
@@ -13,7 +13,7 @@ const mockCompletedRecipes = [
         name: 'ไก่ย่างเกาลัด',
         image: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6',
         time: '30 นาที',
-        xp: 150,
+        exp: 150,
         isFavorite: false
     },
     {
@@ -21,7 +21,7 @@ const mockCompletedRecipes = [
         name: 'ปลาทอดน้ำปลา',
         image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
         time: '20 นาที',
-        xp: 100,
+        exp: 100,
         isFavorite: true
     },
     {
@@ -29,7 +29,7 @@ const mockCompletedRecipes = [
         name: 'ผัดไทย',
         image: 'https://images.unsplash.com/photo-1559314311-7db3814d4c4d',
         time: '25 นาที',
-        xp: 120,
+        exp: 120,
         isFavorite: false
     },
     {
@@ -37,7 +37,7 @@ const mockCompletedRecipes = [
         name: 'แกงแดงไก่',
         image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641',
         time: '40 นาที',
-        xp: 180,
+        exp: 180,
         isFavorite: true
     }
 ];
@@ -83,8 +83,9 @@ function getRankByXP(totalXP) {
 // Mock user data
 const mockUserData = {
     username: 'CookMaster',
-    xp: 850,
+    exp: 850,
     completedRecipes: 5,
+    completedQuests: [],
     favorites: [1, 3, 5],
     badges: []
 };
@@ -190,7 +191,7 @@ function createRecipeCard(data, isMenu = false) {
         else if (cleanRank.includes('diamond')) userRankStr = 'diamond';
         else if (cleanRank.includes('master')) userRankStr = 'master';
     } else {
-        const lvlData = getRankByXP(mockUserData.xp);
+        const lvlData = getRankByXP(mockUserData.exp);
         const cleanRank = lvlData.rank.toLowerCase();
         if (cleanRank.includes('bronze')) userRankStr = 'bronze';
         else if (cleanRank.includes('silver')) userRankStr = 'silver';
@@ -205,6 +206,7 @@ function createRecipeCard(data, isMenu = false) {
     const isLocked = userVal < requiredVal;
 
     const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
+    const lazyAttr = menuId ? ` data-lazy-menu-id="${menuId}"` : '';
     const rankValue = requiredRank;
     const rankDisplay = rankValue.toUpperCase();
     const prepTimeStr = menu.prepTime || '0';
@@ -219,6 +221,10 @@ function createRecipeCard(data, isMenu = false) {
     else if (status === 'approved') statusClass = 'status-approved';
     else if (status === 'rejected') statusClass = 'status-rejected';
 
+    const completedCount = (typeof userHistoryData !== 'undefined' ? userHistoryData : []).filter(
+        h => h.requestId && h.requestId.menuName === menu.menuName && h.status === 'approved'
+    ).length;
+
     return `
         <div class="quest-card menu-card ${statusClass} ${isLocked ? 'locked' : ''}" data-id="${menuId}" data-name="${menu.menuName}" data-exp="${menuExp}">
             <span class="quest-title-wrapper">
@@ -226,7 +232,7 @@ function createRecipeCard(data, isMenu = false) {
                 <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star favorite-icon" style="cursor:pointer; color: white;"></i>
             </span>
             <figure class="quest-image">
-                <img src="${imageUrl}" alt="${menu.menuName}">
+                <img src="${imageUrl}" alt="${menu.menuName}" loading="lazy"${lazyAttr}>
                 ${isLocked ? `
                 <div class="lock-overlay">
                     <i class="fa-solid fa-lock"></i><span class="rank-label rank-text" data-rank="${rankValue}">${rankDisplay}</span>
@@ -234,6 +240,7 @@ function createRecipeCard(data, isMenu = false) {
             </figure>
             <div class="menu-footer">
                 <span class="time"><i class="fa-solid fa-clock"></i> ${timeDisplay}</span>
+                <span class="done-count" style="font-size: 0.9rem; color: #FFF3C9;"><i class="fa-solid fa-circle-check"></i> ทำแล้ว ${completedCount} ครั้ง</span>
                 <span class="exp"><i class="fa-solid fa-star"></i> ${menuExp} EXP</span>
             </div>
         </div>
@@ -303,6 +310,9 @@ async function loadCompletedRecipes() {
             .map(recipe => createRecipeCard(recipe))
             .join('');
         applyRankColors();
+        if (typeof setupLazyMenuImages === 'function') {
+            setupLazyMenuImages(recipesContainer);
+        }
     } catch (err) {
         console.error('Error fetching recipes:', err);
         recipesContainer.innerHTML = '<p class="empty-message thai">เกิดข้อผิดพลาดในการโหลดข้อมูลประวัติการทำอาหาร</p>';
@@ -327,6 +337,9 @@ function loadFavoriteRecipes() {
         .map(menu => createRecipeCard(menu, true))
         .join('');
     applyRankColors();
+    if (typeof setupLazyMenuImages === 'function') {
+        setupLazyMenuImages(favoritesContainer);
+    }
 }
 
 // Global event delegation for favorite icons in profile
@@ -422,7 +435,7 @@ function initTabSwitching() {
  * Highlight current rank in level system
  */
 function highlightCurrentRank() {
-    const levelData = getRankByXP(mockUserData.xp);
+    const levelData = getRankByXP(mockUserData.exp);
     const currentLevel = levelData.level;
     const rankIds = ['rank-bronze', 'rank-silver', 'rank-gold', 'rank-platinum', 'rank-diamond', 'rank-master'];
     
@@ -450,7 +463,7 @@ function loadUserBadges() {
     badgeList.innerHTML = '';
 
     const profile = {
-        level: getRankByXP(mockUserData.xp).level,
+        level: getRankByXP(mockUserData.exp).level,
         badges: mockUserData.badges || []
     };
     
@@ -479,8 +492,10 @@ function loadUserBadges() {
         });
 
         const healthyCount = approvedDishes.filter(d => {
-            const name = d.requestId?.menuName || '';
-            return name.includes('สลัด') || name.includes('ผัก') || name.includes('คลีน');
+            const menuName = d.requestId?.menuName || '';
+            const menu = allMenusData.find(m => m.menuName === menuName);
+            const tags = menu?.tags || [];
+            return tags.some(t => typeof t === 'string' && (t.includes('สลัด') || t.includes('ผัก') || t.includes('คลีน')));
         }).length;
 
         const ALL_BADGES = [
@@ -599,7 +614,7 @@ function showProfileSkeleton() {
 }
 
 function updateXPDisplay() {
-    const levelData = getRankByXP(mockUserData.xp);
+    const levelData = getRankByXP(mockUserData.exp);
     const xpElement = document.getElementById('profile-xp');
     if (xpElement) {
         const maxDisplay = levelData.maxXP === Infinity ? 'MAX' : levelData.maxXP;
@@ -632,7 +647,7 @@ async function loadUserProfile() {
         // Use mock data for test2
         if (testUser === 'test2') {
             mockUserData.username = 'test2';
-            mockUserData.xp = 250;
+            mockUserData.exp = 250;
             mockUserData.completedRecipes = 3;
             mockUserData.favorites = [2, 4];
         }
@@ -641,7 +656,7 @@ async function loadUserProfile() {
         const cachedData = sessionStorage.getItem(cacheKey);
         
         const renderAll = () => {
-            const levelData = getRankByXP(mockUserData.xp);
+            const levelData = getRankByXP(mockUserData.exp);
             
             const nameEl = document.getElementById('profile-username');
             if (nameEl) nameEl.textContent = mockUserData.username;
@@ -653,6 +668,8 @@ async function loadUserProfile() {
             updateXPDisplay();
             const compEl = document.getElementById('profile-completed');
             if (compEl) compEl.textContent = mockUserData.completedRecipes;
+            const questsCompEl = document.getElementById('profile-quests-completed');
+            if (questsCompEl) questsCompEl.textContent = (mockUserData.completedQuests || []).length;
             
             highlightCurrentRank();
             
@@ -717,8 +734,9 @@ async function loadUserProfile() {
             if (data.profile) {
                 const pData = data.profile;
                 mockUserData.username = pData.username !== undefined ? pData.username : mockUserData.username;
-                mockUserData.xp = pData.xp !== undefined ? pData.xp : mockUserData.xp;
+                mockUserData.exp = pData.exp !== undefined ? pData.exp : mockUserData.exp;
                 mockUserData.completedRecipes = pData.completedRecipes !== undefined ? pData.completedRecipes : mockUserData.completedRecipes;
+                mockUserData.completedQuests = pData.completedQuests || [];
                 mockUserData.badges = pData.badges || [];
                 window.currentUserProfile = pData;
             }
@@ -793,17 +811,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Test function for adding XP and syncing to database
-    window.addTestXP = async (amount) => {
+    window.addTestExp = async (amount) => {
         try {
             const token = localStorage.getItem('authToken');
-            const res = await axios.post('http://localhost:4000/api/profile/add-xp', 
-                { xpToAdd: amount },
+            const res = await axios.post('http://localhost:4000/api/profile/add-exp', 
+                { expToAdd: amount },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            console.log(`✅ Success! DB Updated. New XP: ${res.data.user.xp} | Level: ${res.data.user.level} | Rank: ${res.data.user.rank}`);
+            console.log(`✅ Success! DB Updated. New EXP: ${res.data.user.exp} | Level: ${res.data.user.level} | Rank: ${res.data.user.rank}`);
             location.reload(); // Reload the page to see the changes immediately
         } catch (err) {
-            console.error("Failed to add XP to database:", err);
+            console.error("Failed to add EXP to database:", err);
         }
     };
 

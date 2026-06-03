@@ -46,7 +46,7 @@ if (socket) {
         try {
             const userData = JSON.parse(localStorage.getItem('user_data'));
             if (userData?.user?.id) userId = userData.user.id;
-        } catch (e) {}
+        } catch (e) { }
         sessionStorage.removeItem(`cookquest_cache_v2_${userId}`);
         sessionStorage.removeItem(`cookquest_cache_${userId}`);
 
@@ -83,11 +83,11 @@ document.addEventListener('click', async function (e) {
     const card = e.target.closest('.quest-card');
     if (!card) return;
     const idx = card.dataset.id;
-    
+
     // Prevent double clicking
     if (e.target.classList.contains('is-loading')) return;
     e.target.classList.add('is-loading');
-    
+
     try {
         const res = await fetch('http://localhost:4000/api/favorites/toggle', {
             method: 'POST',
@@ -115,10 +115,10 @@ document.querySelector('.modal-star').addEventListener('click', async function (
     const modal = document.getElementById('questModal');
     const idx = modal.dataset.currentCard;
     if (idx === undefined) return;
-    
+
     if (e.target.classList.contains('is-loading')) return;
     e.target.classList.add('is-loading');
-    
+
     try {
         const res = await fetch('http://localhost:4000/api/favorites/toggle', {
             method: 'POST',
@@ -145,7 +145,7 @@ document.addEventListener('click', async (e) => {
     if (card && (card.closest('#menuList') || card.closest('#recipes-container') || card.closest('#favorites-container'))) {
         // ป้องกันการเปิด modal ถ้ากดโดนดาว Favorite
         if (e.target.classList.contains('fa-star')) return;
-        
+
         e.preventDefault();
         const menuId = card.dataset.id;
         const modal = document.getElementById('questModal');
@@ -169,9 +169,30 @@ document.addEventListener('click', async (e) => {
                     window.allRelatedMenus[cacheIdx] = menuData;
                 }
                 populateModal(menuData, modal);
+            } else {
+                // Fallback for custom menus/usermenus where the API returns 404
+                const fallbackMenu = {
+                    _id: menuId,
+                    menuName: card.getAttribute('data-name') || 'เมนูคัสตอม',
+                    EXP: parseInt(card.getAttribute('data-exp')) || 100,
+                    imageURL: card.querySelector('img')?.src || '',
+                    ingredients: [],
+                    instructions: []
+                };
+                populateModal(fallbackMenu, modal);
             }
         } catch (err) {
             console.error('Error loading menu details:', err);
+            // Fallback on network/fetch error
+            const fallbackMenu = {
+                _id: menuId,
+                menuName: card.getAttribute('data-name') || 'เมนูคัสตอม',
+                EXP: parseInt(card.getAttribute('data-exp')) || 100,
+                imageURL: card.querySelector('img')?.src || '',
+                ingredients: [],
+                instructions: []
+            };
+            populateModal(fallbackMenu, modal);
         }
     }
 });
@@ -189,7 +210,7 @@ async function _populateModalAsync(menu, modal) {
 
     // Image
     const imgEl = modal.querySelector('.modal-main-img');
-    if (imgEl) imgEl.src = menu.imageURL || '../../assets/img/emptymenu.jpg';
+    if (imgEl) imgEl.src = menu.imageURL || '../../assets/img/emptyfood.jpg';
 
     // Tags
     const tagsContainer = modal.querySelector('.modal-tags');
@@ -209,7 +230,7 @@ async function _populateModalAsync(menu, modal) {
     const infoEls = modal.querySelectorAll('.modal-info');
     if (infoEls.length >= 2) {
         infoEls[0].textContent = `จำนวน : ${menu.servings || 1} จาน`;
-        
+
         const prepStr = menu.prepTime || '0 นาที';
         const cookStr = menu.cookTime || '0 นาที';
         infoEls[1].textContent = `เวลาเตรียม: ${prepStr} | เวลาปรุง: ${cookStr}`;
@@ -281,8 +302,46 @@ async function _populateModalAsync(menu, modal) {
             "ถ่ายรูปเงาของมือที่กำลังเอื้อมไปหยิบอาหาร (เล่นกับแสงแดดหรือโคมไฟ)",
             "ถ่ายรูปมือขณะถือจานอาหารยื่นมาข้างหน้า (เหมือนกำลังจะเสิร์ฟให้คนดู)"
         ];
-        const randomIndex = Math.floor(Math.random() * randomQuests.length);
-        questDesc.textContent = randomQuests[randomIndex];
+
+        const cacheKey = `cookquest_random_quest_${menu._id}`;
+        let assignedQuest = localStorage.getItem(cacheKey);
+        if (!assignedQuest) {
+            const randomIndex = Math.floor(Math.random() * randomQuests.length);
+            assignedQuest = randomQuests[randomIndex];
+            localStorage.setItem(cacheKey, assignedQuest);
+        }
+        questDesc.textContent = assignedQuest;
+
+        // Add Reroll option button dynamically
+        let rerollBtn = modal.querySelector('.btn-reroll-quest');
+        if (!rerollBtn) {
+            const questTitle = modal.querySelector('.modal-quest-title');
+            if (questTitle) {
+                questTitle.style.display = 'flex';
+                questTitle.style.justifyContent = 'space-between';
+                questTitle.style.alignItems = 'center';
+                questTitle.style.width = '100%';
+
+
+                rerollBtn = document.createElement('button');
+                rerollBtn.type = 'button';
+                rerollBtn.className = 'btn-reroll-quest thai';
+                rerollBtn.style.cssText = 'background: transparent; border: none; color: rgba(255, 255, 255, 0.85); cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 4px; font-family: "IBM Plex Sans Thai Looped", "Nunito", sans-serif; font-weight: normal; transition: color 0.2s ease; margin-left: auto; padding: 0;';
+                rerollBtn.innerHTML = '<i class="fa-solid fa-rotate"></i>';
+
+                rerollBtn.addEventListener('mouseenter', () => { rerollBtn.style.color = '#ffffff'; });
+                rerollBtn.addEventListener('mouseleave', () => { rerollBtn.style.color = 'rgba(255, 255, 255, 0.85)'; });
+
+                rerollBtn.addEventListener('click', () => {
+                    const randomIndex = Math.floor(Math.random() * randomQuests.length);
+                    const newQuest = randomQuests[randomIndex];
+                    localStorage.setItem(cacheKey, newQuest);
+                    questDesc.textContent = newQuest;
+                });
+
+                questTitle.appendChild(rerollBtn);
+            }
+        }
     }
 
     const isLoggedIn = !!localStorage.getItem('authToken');
@@ -317,7 +376,7 @@ async function _populateModalAsync(menu, modal) {
         const res = await fetch(`http://localhost:4000/api/history?menuName=${encodeURIComponent(menu.menuName)}&userId=${CURRENT_USER_ID}`);
         if (res.ok) {
             const historyData = await res.json();
-            
+
             // Render History Modal
             renderHistory(historyData);
 
@@ -336,7 +395,7 @@ async function _populateModalAsync(menu, modal) {
                     submitBtn.dataset.isResubmit = 'true';
                 } else {
                     submitBtn.textContent = 'Submit';
-                    submitBtn.style.backgroundColor = ''; 
+                    submitBtn.style.backgroundColor = '';
                     submitBtn.style.color = '';
                     submitBtn.disabled = false;
                     submitBtn.dataset.isResubmit = 'false';
@@ -367,7 +426,7 @@ function renderHistory(historyData) {
             const req = sub.requestId || {};
             const statusLabel = sub.status === 'pending' ? 'Pending ...' : (sub.status === 'approved' ? 'Approved' : 'Rejected');
             const statusClass = sub.status;
-            
+
             const allTags = ["หวาน", "เค็ม", "เปรี้ยว", "ขม", "อูมามิ", "เผ็ด"];
             const tasteTagsHtml = allTags.map(tag => {
                 const isSelected = sub.tasteTags && sub.tasteTags.includes(tag);
@@ -395,7 +454,7 @@ function renderHistory(historyData) {
                 <div class="history-body">
                     <p class="thai history-desc">${req.randomQuests || ''}</p>
                     <div class="history-photo-wrap">
-                        <img src="${sub.imageURL || '../../assets/img/emptymenu.jpg'}" alt="submitted" class="history-photo" id="historyPhoto${index}">
+                        <img src="${sub.imageURL || '../../assets/img/emptyfood.jpg'}" alt="submitted" class="history-photo" id="historyPhoto${index}">
                     </div>
                     <div class="history-photo-actions hidden" id="historyPhotoActions${index}">
                         <label class="btn-change-img thai" for="historyFileInput${index}">
@@ -420,6 +479,7 @@ function renderHistory(historyData) {
                         ${sub.status === 'pending' ? `
                         <div class="history-view-actions" id="historyViewActions${index}">
                             <button class="btn-edit-history thai" onclick="enterEditMode(${index})">Edit</button>
+                            <button class="btn-delete-history thai" onclick="deleteHistorySubmission('${sub._id}')">Delete</button>
                         </div>
                         <div class="history-edit-actions hidden" id="historyEditActions${index}">
                             <button class="btn-submit thai" onclick="saveHistoryEdit(${index}, '${sub._id}', this)">Save</button>
@@ -510,18 +570,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Collect data
             const preview = document.getElementById('uploadPreview');
             const imageURL = preview.src && !preview.classList.contains('hidden') ? preview.src : '';
-            
+
             const activeStars = document.querySelectorAll('#tasteStars .taste-star.active');
             let tasteRating = 0;
             if (activeStars.length > 0) {
                 tasteRating = parseInt(activeStars[activeStars.length - 1].dataset.val);
             }
-            
+
             const activeTags = document.querySelectorAll('#tasteTags .taste-tag.selected');
             const tasteTags = Array.from(activeTags).map(t => t.dataset.taste);
-            
+
             const review = document.getElementById('reviewText').value.trim();
-            
+
             if (!imageURL || tasteRating === 0 || tasteTags.length === 0 || !review) {
                 alert('กรุณากรอกข้อมูลให้ครบถ้วนก่อนส่ง (รูปถ่าย, รสชาติ, รูปแบบรสชาติ, รีวิว)');
                 window.isQuestSubmitting = false;
@@ -531,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitBtn.textContent = originalText;
                 return;
             }
-            
+
             if (submitBtn.dataset.isResubmit === 'true') {
                 const confirmResubmit = confirm('การส่งใหม่จะไม่ได้ EXP เพิ่มเติม จะถูกบันทึกเป็นประวัติเท่านั้น ยืนยันที่จะส่งหรือไม่?');
                 if (!confirmResubmit) {
@@ -543,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
             }
-            
+
             const randomQuests = modal.querySelector('.modal-quest-desc').textContent;
             const menuName = menuData.menuName;
 
@@ -553,8 +613,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ menuName, randomQuests, imageURL, tasteRating, tasteTags, review, createdBy: CURRENT_USER_ID })
                 });
-                
+
                 if (res.ok) {
+                    // Clear the persisted random quest for this menu so a new one gets rolled next time
+                    localStorage.removeItem(`cookquest_random_quest_${menuId}`);
+
                     // Clear form
                     removeUpload();
                     document.querySelectorAll('#tasteStars .taste-star').forEach(s => {
@@ -564,14 +627,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     document.querySelectorAll('#tasteTags .taste-tag').forEach(t => t.classList.remove('selected'));
                     document.getElementById('reviewText').value = '';
-                    
+
                     // Change button to pending
                     submitBtn.textContent = 'Pending';
                     submitBtn.style.backgroundColor = '#f1c40f'; // สีเหลือง
                     submitBtn.style.color = '#fff';
                     submitBtn.disabled = true;
                     submitBtn.dataset.isResubmit = 'false';
-                    
+
                     // Update history UI dynamically
                     try {
                         const historyRes = await fetch(`http://localhost:4000/api/history?menuName=${encodeURIComponent(menuName)}&userId=${CURRENT_USER_ID}`);
@@ -591,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         card.classList.remove('status-approved', 'status-rejected');
                         card.classList.add('status-pending');
                     }
-                    
+
                     alert('ส่ง Quest สำเร็จ! รอการตรวจสอบจากแอดมิน');
                 } else {
                     alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
@@ -639,6 +702,7 @@ async function loadQuestDetails(questId) {
 
     const renderFromData = (quests, menus, fState, mStatusMap, profile) => {
         window.currentUserProfile = profile;
+        window.currentMenuStatusMap = mStatusMap;
         for (let key in favState) delete favState[key];
         Object.assign(favState, fState);
         const currentQuest = quests.find(q => q._id === questId);
@@ -651,7 +715,7 @@ async function loadQuestDetails(questId) {
                 <span class="category-title thai">${currentQuest.name}</span>
             `;
         }
-        
+
         const relatedMenus = menus.filter(menu => {
             const hasQuestId = menu.questIds && menu.questIds.includes(questId);
             const hasTagMatch = currentQuest.tags && currentQuest.tags.some(tag => tag.toLowerCase() === (menu.menuName || '').toLowerCase());
@@ -659,12 +723,13 @@ async function loadQuestDetails(questId) {
         });
 
         window.allRelatedMenus = relatedMenus; // เก็บไว้ใช้ใน Modal
-        renderMenus(relatedMenus, mStatusMap);
+        applySearchAndRender();
     };
 
     if (cachedData) {
         try {
             const data = JSON.parse(cachedData);
+            window.currentMenuStatusMap = data.menuStatusMap;
             renderFromData(data.quests, data.menus, data.favState, data.menuStatusMap, data.profile);
         } catch (e) {
             console.error('Cache parsing failed', e);
@@ -692,7 +757,7 @@ async function loadQuestDetails(questId) {
 
     workerPort.postMessage({ userId: CURRENT_USER_ID, token });
 
-    workerPort.onmessage = function(e) {
+    workerPort.onmessage = function (e) {
         const data = e.data;
         if (!data.success) {
             console.error('Worker error:', data.error);
@@ -700,6 +765,7 @@ async function loadQuestDetails(questId) {
         }
 
         const { quests, menus, favState: newFavState, menuStatusMap, profile } = data;
+        window.currentMenuStatusMap = menuStatusMap;
         try {
             sessionStorage.setItem(cacheKey, JSON.stringify({
                 quests, menus, favState: newFavState, menuStatusMap, profile
@@ -707,12 +773,12 @@ async function loadQuestDetails(questId) {
         } catch (e) {
             console.warn('Could not cache data in sessionStorage. Quota might be exceeded:', e);
         }
-        
+
         renderFromData(quests, menus, newFavState, menuStatusMap, profile);
     };
 
     if (typeof SharedWorker === 'undefined') {
-        worker.onerror = function(error) {
+        worker.onerror = function (error) {
             console.error('Worker failed:', error);
         };
     }
@@ -721,9 +787,9 @@ async function loadQuestDetails(questId) {
 function renderMenus(menus, menuStatusMap = {}) {
     const menuList = document.getElementById('menuList');
     if (!menuList) return;
-    
+
     menuList.innerHTML = '';
-    
+
     menus.forEach(menu => {
         const card = document.createElement('div');
         card.className = 'quest-card menu-card';
@@ -749,7 +815,7 @@ function renderMenus(menus, menuStatusMap = {}) {
             'bronze': 1, 'silver': 2, 'gold': 3,
             'platinum': 4, 'diamond': 5, 'master': 6
         };
-        
+
         let userRankStr = 'bronze';
         if (window.currentUserProfile && window.currentUserProfile.rank) {
             const cleanRank = window.currentUserProfile.rank.toLowerCase();
@@ -760,7 +826,7 @@ function renderMenus(menus, menuStatusMap = {}) {
             else if (cleanRank.includes('diamond')) userRankStr = 'diamond';
             else if (cleanRank.includes('master')) userRankStr = 'master';
         }
-        
+
         const requiredVal = rankOrder[requiredRank] || 1;
         const userVal = rankOrder[userRankStr] || 1;
         const isLocked = userVal < requiredVal;
@@ -769,9 +835,9 @@ function renderMenus(menus, menuStatusMap = {}) {
             card.classList.add('locked');
         }
 
-        const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
-        const lazyImageAttr = menu.hasImage ? ` data-lazy-menu-id="${menu._id}"` : '';
-        const rankValue = (menu.rank || 'bronze').toLowerCase();
+        const imageUrl = menu.imageURL || '../../assets/img/emptyfood.jpg';
+        const lazyImageAttr = menu._id ? ` data-lazy-menu-id="${menu._id}"` : '';
+        const rankValue = requiredRank.toLowerCase();
         const rankDisplay = rankValue.toUpperCase();
         const prepTimeStr = menu.prepTime || '0';
         const cookTimeStr = menu.cookTime || '0';
@@ -785,7 +851,7 @@ function renderMenus(menus, menuStatusMap = {}) {
                 <i class="${isFavorited ? 'fa-solid' : 'fa-regular'} fa-star" style="cursor:pointer; color: white;"></i>
             </span>
             <figure class="quest-image">
-                <img src="${imageUrl}" alt="${menu.menuName}"${lazyImageAttr}>
+                <img src="${imageUrl}" alt="${menu.menuName}" loading="lazy"${lazyImageAttr}>
                 ${isLocked ? `
                 <div class="lock-overlay">
                     <i class="fa-solid fa-lock"></i><span class="rank-label rank-text" data-rank="${rankValue}">${rankDisplay}</span>
@@ -839,14 +905,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
- 
+
     // ─── Modal & History: Taste tag toggle ───
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('taste-tag')) {
             if (e.target.classList.contains('disabled')) return; // block ถ้า disabled
             e.target.classList.toggle('selected');
         }
-        
+
         // ─── History: Taste star rating (Event Delegation) ───
         if (e.target.classList.contains('taste-star') && e.target.closest('#historyModal')) {
             const star = e.target;
@@ -857,11 +923,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const val = parseInt(star.dataset.val);
             group.querySelectorAll('.taste-star').forEach(s => {
                 if (parseInt(s.dataset.val) <= val) {
-                    s.classList.replace('fa-regular','fa-solid');
+                    s.classList.replace('fa-regular', 'fa-solid');
                     s.classList.add('active');
                     s.style.color = '#FFD700';
                 } else {
-                    s.classList.replace('fa-solid','fa-regular');
+                    s.classList.replace('fa-solid', 'fa-regular');
                     s.classList.remove('active');
                     s.style.color = 'white';
                 }
@@ -869,7 +935,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
- // ─── Modal tags: show partial / show all ───
+// ─── Modal tags: show partial / show all ───
 document.addEventListener('DOMContentLoaded', () => {
     const tagsContainer = document.querySelector('.modal-tags');
     if (!tagsContainer) return;
@@ -899,28 +965,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── History Modal ───
 document.addEventListener('DOMContentLoaded', () => {
-  const historyModal = document.getElementById('historyModal');
-  const closeHistoryBtn = document.getElementById('closeHistoryModal');
-  const openHistoryBtn = document.querySelector('.btn-history');
+    const historyModal = document.getElementById('historyModal');
+    const closeHistoryBtn = document.getElementById('closeHistoryModal');
+    const openHistoryBtn = document.querySelector('.btn-history');
 
-  // เปิด
-  if (openHistoryBtn) {
-    openHistoryBtn.addEventListener('click', () => {
-      historyModal.classList.remove('hidden');
+    // เปิด
+    if (openHistoryBtn) {
+        openHistoryBtn.addEventListener('click', () => {
+            historyModal.classList.remove('hidden');
+        });
+    }
+
+    // ปิดด้วย X
+    if (closeHistoryBtn) {
+        closeHistoryBtn.addEventListener('click', () => {
+            historyModal.classList.add('hidden');
+        });
+    }
+
+    // ปิดเมื่อคลิกพื้นหลัง
+    historyModal.addEventListener('click', (e) => {
+        if (e.target === historyModal) historyModal.classList.add('hidden');
     });
-  }
-
-  // ปิดด้วย X
-  if (closeHistoryBtn) {
-    closeHistoryBtn.addEventListener('click', () => {
-      historyModal.classList.add('hidden');
-    });
-  }
-
-  // ปิดเมื่อคลิกพื้นหลัง
-  historyModal.addEventListener('click', (e) => {
-    if (e.target === historyModal) historyModal.classList.add('hidden');
-  });
 
 });
 
@@ -957,71 +1023,132 @@ function cancelEditMode(idx) {
 }
 
 async function saveHistoryEdit(idx, submissionId, btn) {
-  if (btn) {
-      if (btn.getAttribute('data-saving') === 'true' || btn.disabled) return;
-      btn.setAttribute('data-saving', 'true');
-      btn.disabled = true;
-      btn.style.pointerEvents = 'none';
-  }
+    if (btn) {
+        if (btn.getAttribute('data-saving') === 'true' || btn.disabled) return;
+        btn.setAttribute('data-saving', 'true');
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+    }
 
-  const input = document.getElementById(`historyReviewInput${idx}`);
-  const text = document.getElementById(`historyReviewText${idx}`);
-  
-  // รวบรวมข้อมูลใหม่
-  const review = input.value.trim();
-  const activeStars = document.querySelectorAll(`#historyTasteStars${idx} .taste-star.active`);
-  const tasteRating = activeStars.length > 0 ? parseInt(activeStars[activeStars.length - 1].dataset.val) : 0;
-  
-  const activeTags = document.querySelectorAll(`#historyTasteTags${idx} .taste-tag.selected`);
-  const tasteTags = Array.from(activeTags).map(t => t.dataset.taste);
-  
-  const photoImg = document.getElementById(`historyPhoto${idx}`);
-  const imageURL = photoImg.src; // อาจจะเป็น base64 หากเพิ่งเปลี่ยน
+    const input = document.getElementById(`historyReviewInput${idx}`);
+    const text = document.getElementById(`historyReviewText${idx}`);
 
-  if (tasteRating === 0 || tasteTags.length === 0 || !review) {
-      alert('กรุณากรอกข้อมูลดาว รสชาติ และรีวิวให้ครบถ้วน');
-      if (btn) {
-          btn.removeAttribute('data-saving');
-          btn.disabled = false;
-          btn.style.pointerEvents = '';
-      }
-      return;
-  }
+    // รวบรวมข้อมูลใหม่
+    const review = input.value.trim();
+    const activeStars = document.querySelectorAll(`#historyTasteStars${idx} .taste-star.active`);
+    const tasteRating = activeStars.length > 0 ? parseInt(activeStars[activeStars.length - 1].dataset.val) : 0;
 
-  try {
-      const res = await fetch(`http://localhost:4000/api/submissions/${submissionId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ review, tasteRating, tasteTags, imageURL })
-      });
+    const activeTags = document.querySelectorAll(`#historyTasteTags${idx} .taste-tag.selected`);
+    const tasteTags = Array.from(activeTags).map(t => t.dataset.taste);
 
-      if (res.ok) {
-          text.textContent = review; // อัปเดตใน UI
-          cancelEditMode(idx);
-          alert('บันทึกการแก้ไขสำเร็จ!');
-      } else {
-          alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-      }
-  } catch (err) {
-      console.error(err);
-      alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
-  } finally {
-      if (btn) {
-          btn.removeAttribute('data-saving');
-          btn.disabled = false;
-          btn.style.pointerEvents = '';
-      }
-  }
+    const photoImg = document.getElementById(`historyPhoto${idx}`);
+    const imageURL = photoImg.src; // อาจจะเป็น base64 หากเพิ่งเปลี่ยน
+
+    if (tasteRating === 0 || tasteTags.length === 0 || !review) {
+        alert('กรุณากรอกข้อมูลดาว รสชาติ และรีวิวให้ครบถ้วน');
+        if (btn) {
+            btn.removeAttribute('data-saving');
+            btn.disabled = false;
+            btn.style.pointerEvents = '';
+        }
+        return;
+    }
+
+    try {
+        const res = await fetch(`http://localhost:4000/api/submissions/${submissionId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ review, tasteRating, tasteTags, imageURL })
+        });
+
+        if (res.ok) {
+            text.textContent = review; // อัปเดตใน UI
+            cancelEditMode(idx);
+            alert('บันทึกการแก้ไขสำเร็จ!');
+        } else {
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    } finally {
+        if (btn) {
+            btn.removeAttribute('data-saving');
+            btn.disabled = false;
+            btn.style.pointerEvents = '';
+        }
+    }
+}
+
+// Helper เพื่อลดขนาดและบีบอัดรูปภาพก่อนส่งขึ้น Server
+function compressImage(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+            const MAX_WIDTH = 1000;
+            const MAX_HEIGHT = 1000;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height = Math.round(height * (MAX_WIDTH / width));
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width = Math.round(width * (MAX_HEIGHT / height));
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // บีบอัดเป็น JPEG ที่คุณภาพ 80% (ลดขนาดไฟล์ได้มหาศาล)
+            callback(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 
 function changeHistoryPhoto(event, idx) {
     const file = event.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById(`historyPhoto${idx}`).src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    compressImage(file, (compressedDataUrl) => {
+        document.getElementById(`historyPhoto${idx}`).src = compressedDataUrl;
+    });
+}
+
+async function deleteHistorySubmission(submissionId) {
+    const confirmDelete = confirm('คุณต้องการลบการส่งเควสนี้ใช่หรือไม่?');
+    if (!confirmDelete) return;
+
+    try {
+        const res = await fetch(`http://localhost:4000/api/submissions/${submissionId}`, {
+            method: 'DELETE'
+        });
+        if (res.ok) {
+            alert('ลบการส่งสำเร็จแล้ว!');
+            // Clear session cache to force re-fetch
+            const cacheKey = `cookquest_cache_v2_${CURRENT_USER_ID}`;
+            sessionStorage.removeItem(cacheKey);
+
+            // Reload page to refresh UI
+            window.location.reload();
+        } else {
+            const errData = await res.json();
+            alert(`เกิดข้อผิดพลาด: ${errData.error || 'ไม่สามารถลบได้'}`);
+        }
+    } catch (error) {
+        console.error(error);
+        alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
 }
 // ─── Upload preview ───
 function previewUpload(event) {
@@ -1031,15 +1158,14 @@ function previewUpload(event) {
     const icon = document.getElementById('uploadIcon');
     const label = document.getElementById('uploadLabel');
     const actions = document.getElementById('uploadActions');
-    const reader = new FileReader();
-    reader.onload = e => {
-        preview.src = e.target.result;
+
+    compressImage(file, (compressedDataUrl) => {
+        preview.src = compressedDataUrl;
         preview.classList.remove('hidden');
         icon.classList.add('hidden');
         label.classList.add('hidden');
         actions.classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
+    });
 }
 
 function removeUpload() {
@@ -1056,47 +1182,79 @@ function removeUpload() {
 }
 
 function getRankColor(rank) {
-  switch (rank.toLowerCase()) {
-    case 'bronze': return '#ffa954ff'; // ทองแดง
-    case 'silver': return '#e3e3e3ff'; // เงิน
-    case 'gold': return '#FFD700'; // ทอง
-    case 'platinum': return '#ff25ffff'; // แพลตินัม
-    case 'diamond': return '#34d0ffff'; // เพชร
-    case 'master': return 'rainbow'; // ปรมาจารย์ (สีรุ้ง)
-    default: return '#fff';
-  }
+    switch (rank.toLowerCase()) {
+        case 'bronze': return '#ffa954ff'; // ทองแดง
+        case 'silver': return '#e3e3e3ff'; // เงิน
+        case 'gold': return '#FFD700'; // ทอง
+        case 'platinum': return '#ff25ffff'; // แพลตินัม
+        case 'diamond': return '#34d0ffff'; // เพชร
+        case 'master': return 'rainbow'; // ปรมาจารย์ (สีรุ้ง)
+        default: return '#fff';
+    }
 }
 
 function applyRankColors() {
-  const textEls = document.querySelectorAll('.rank-text'); // หรือ class ที่คุณใช้
-  textEls.forEach(el => {
-    const rank = el.textContent.trim().toLowerCase();
-    
-    // Reset previous inline styles or rainbow class
-    el.style.color = '';
-    el.classList.remove('rank-rainbow');
-    
-    const lockOverlay = el.closest('.lock-overlay');
-    let lockIcon = null;
-    if (lockOverlay) {
-        lockIcon = lockOverlay.querySelector('.fa-lock');
-        if (lockIcon) {
-            lockIcon.style.color = '';
-            lockIcon.classList.remove('rank-rainbow');
+    const textEls = document.querySelectorAll('.rank-text'); // หรือ class ที่คุณใช้
+    textEls.forEach(el => {
+        const rank = el.textContent.trim().toLowerCase();
+
+        // Reset previous inline styles or rainbow class
+        el.style.color = '';
+        el.classList.remove('rank-rainbow');
+
+        const lockOverlay = el.closest('.lock-overlay');
+        let lockIcon = null;
+        if (lockOverlay) {
+            lockIcon = lockOverlay.querySelector('.fa-lock');
+            if (lockIcon) {
+                lockIcon.style.color = '';
+                lockIcon.classList.remove('rank-rainbow');
+            }
         }
+
+        const color = getRankColor(rank);
+        if (color === 'rainbow') {
+            el.classList.add('rank-rainbow');
+            if (lockIcon) {
+                lockIcon.classList.add('rank-rainbow');
+            }
+        } else {
+            el.style.color = color;
+            if (lockIcon) {
+                lockIcon.style.color = color;
+            }
+        }
+    });
+}
+
+// ─── Search and Render Related Menus ───
+function applySearchAndRender() {
+    const searchInput = document.querySelector('.search-input');
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+    let filteredMenus = window.allRelatedMenus || [];
+    if (query) {
+        filteredMenus = filteredMenus.filter(menu => {
+            const nameMatch = (menu.menuName || '').toLowerCase().includes(query);
+            const tagMatch = menu.tags && menu.tags.some(tag => tag.toLowerCase().includes(query));
+            const ingMatch = menu.ingredients && menu.ingredients.some(ing => (ing.name || '').toLowerCase().includes(query));
+            return nameMatch || tagMatch || ingMatch;
+        });
     }
 
-    const color = getRankColor(rank);
-    if (color === 'rainbow') {
-        el.classList.add('rank-rainbow');
-        if (lockIcon) {
-            lockIcon.classList.add('rank-rainbow');
-        }
-    } else {
-        el.style.color = color;
-        if (lockIcon) {
-            lockIcon.style.color = color;
-        }
-    }
-  });
+    renderMenus(filteredMenus, window.currentMenuStatusMap || {});
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.querySelector('.search-input');
+    const searchBtn = document.querySelector('.search-button');
+    if (searchInput) {
+        searchInput.addEventListener('input', applySearchAndRender);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') applySearchAndRender();
+        });
+    }
+    if (searchBtn) {
+        searchBtn.addEventListener('click', applySearchAndRender);
+    }
+});

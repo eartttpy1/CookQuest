@@ -4,6 +4,10 @@
     --dark-grey: #333;
 }
 
+body.darkmode {
+    --red-main: #3D4459;
+}
+
 /* 2. Category Dropdown Styling */
 .category-header {
     border: 2px solid var(--red-main);
@@ -187,6 +191,7 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
     position: relative;
     width: 100%;
 }
@@ -267,8 +272,12 @@
 
 .quest-title {
     margin-top: 0;
-    padding-bottom: 15px;
+    padding: 0 32px 15px;
     font-size: 24px;
+    width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .quest-image {
@@ -834,10 +843,23 @@
     .dropdown summary span {
         font-size: 1.2rem;
     }
-
 }
 
-@media(max-width: 768px) {}
+@media(max-width: 768px) {
+    .quest-section {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .quest-title {
+        font-size: 20px;
+        padding: 0 28px 10px;
+    }
+    .quest-card {
+        padding: 15px;
+        border-radius: 16px;
+        margin-bottom: 15px;
+    }
+}
 
 @media(max-width: 500px) {
     .category-header {
@@ -851,9 +873,19 @@
     .quest-section {
         display: flex;
         flex-direction: column;
-
+        gap: 12px;
     }
 
+    .quest-title {
+        font-size: 18px;
+        padding: 0 24px 8px;
+    }
+
+    .quest-card {
+        padding: 12px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+    }
 }
 
 @media(max-width: 320px) {
@@ -1084,6 +1116,28 @@
     background: #1976d2;
 }
 
+.history-view-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-delete-history {
+    background: #c0392b;
+    border: none;
+    color: white;
+    border-radius: 24px;
+    padding: 8px 28px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease;
+}
+
+.btn-delete-history:hover {
+    background: #a93226;
+}
+
 .btn-cancel-history {
     background: #c0392b;
     border: none;
@@ -1153,5 +1207,232 @@
 }
 
 .quest-card.quest-complete {
-    border: 4px solid #2ecc71 !important;
+    background-color: #2ecc71 !important;
+}
+
+/* ─── q-all / quest pages: red boxes → navbar color in dark mode ─── */
+body.darkmode .category-header {
+    background-color: #3D4459;
+    color: #ffffff;
+    border-color: #576082;
+}
+
+body.darkmode .sort-container .sort-btn {
+    background-color: #3D4459;
+}
+
+body.darkmode .sort-dropdown {
+    background: #3D4459;
+    border-color: #576082;
+    color: #ffffff;
+}
+
+body.darkmode .sort-label {
+    color: #ffffff;
+}
+
+body.darkmode .custom-select-trigger,
+body.darkmode .custom-options {
+    background: #4a5168;
+    border-color: #576082;
+    color: #ffffff;
+}
+
+body.darkmode .custom-select-trigger i {
+    color: #ffffff;
+}
+
+body.darkmode .custom-select-trigger:hover,
+body.darkmode .custom-option:hover {
+    background-color: #576082;
+    color: #ffffff;
+}
+
+body.darkmode .custom-option {
+    color: #ffffff;
+}
+
+body.darkmode .dropdown summary i {
+    color: #3D4459;
+}
+
+body.darkmode .dropdown-list li a:hover {
+    color: #3D4459;
+}
+
+body.darkmode .quest-card:not(.status-pending):not(.status-approved):not(.status-rejected) {
+    background-color: #3D4459 !important;
+}
+
+body.darkmode .quest-card.locked {
+    background-color: #3D4459 !important;
+}
+
+body.darkmode .modal-content,
+body.darkmode .history-header,
+body.darkmode .history-body {
+    background: #3D4459;
+}
+
+body.darkmode .modal-tag {
+    color: #3D4459;
+}
+
+body.darkmode .modal-chevron,
+body.darkmode .history-chevron {
+    color: #3D4459;
+}
+
+body.darkmode .step-tip {
+    background: rgba(87, 96, 130, 0.35);
+    border-left-color: #576082;
+    color: #ffffff !important;
+}
+
+body.darkmode .btn-change-img {
+    background: #3D4459;
+}
+
+@keyframes skeleton-loading-dark {
+    0% {
+        background-color: #3D4459;
+    }
+
+    50% {
+        background-color: #4a5168;
+    }
+
+    100% {
+        background-color: #3D4459;
+    }
+}
+
+body.darkmode .skeleton-card {
+    background-color: #3D4459;
+    animation: skeleton-loading-dark 1.5s infinite ease-in-out;
+}
+
+.status-info-trigger-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+.status-info-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1.5px solid var(--red-main, #800002);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--red-main, #800002);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.status-info-btn i {
+    color: var(--red-main, #800002);
+}
+
+.status-info-btn:hover i {
+    color: white;
+}
+
+.status-info-btn:hover {
+    background: var(--red-main, #800002);
+    color: white;
+}
+
+body.darkmode .status-info-btn {
+    background: rgba(61, 68, 89, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+body.darkmode .status-info-btn:hover {
+    background: #3D4459;
+    border-color: #3D4459;
+}
+
+.status-tooltip {
+    position: absolute;
+    top: 130%;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 0, 2, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    padding: 12px 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: max-content;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.status-info-trigger-wrapper:hover .status-tooltip {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+body.darkmode .status-tooltip {
+    background: rgba(45, 50, 65, 0.98);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.status-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 1.5px 3px rgba(0,0,0,0.15);
+}
+
+/* Theme - plain */
+.status-color-dot.status-dot-plain {
+    background-color: var(--red-main, #800002);
+}
+
+/* Yellow - pending */
+.status-color-dot.status-dot-pending {
+    background-color: #f1c40f;
+}
+
+/* Green - success */
+.status-color-dot.status-dot-approved {
+    background-color: #2ecc71;
+}
+
+/* Black - reject */
+.status-color-dot.status-dot-rejected {
+    background-color: #333333;
+}
+
+.status-text-label {
+    font-family: 'IBM Plex Sans Thai Looped', 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333333;
+}
+
+body.darkmode .status-text-label {
+    color: #ffffff;
 }

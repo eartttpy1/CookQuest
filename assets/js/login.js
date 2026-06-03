@@ -1,6 +1,6 @@
 const login = async () => {
     try {
-        const username = document.querySelector('.inputbox input[name="username"]').value;
+        const username = document.querySelector('.inputbox input[name="username"]').value.trim();
         const password = document.querySelector('.inputbox input[name="password"]').value;
         const response = await axios.post('http://localhost:4000/api/login', {
             username,
@@ -105,4 +105,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- เรียกครั้งแรกตอนโหลดหน้าเว็บ ---
     checkLoginStatus();
+
+    // --- Toggle Password Visibility ---
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('passwordInput');
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', () => {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                togglePassword.classList.replace('fa-eye-slash', 'fa-eye');
+            } else {
+                passwordInput.type = 'password';
+                togglePassword.classList.replace('fa-eye', 'fa-eye-slash');
+            }
+        });
+    }
 });

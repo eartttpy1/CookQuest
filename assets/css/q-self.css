@@ -27,7 +27,6 @@ body {
 
 /* ════ PAGE WRAP ════ */
 .page-wrap {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 24px 16px 100px;
   display: flex;
@@ -44,8 +43,8 @@ body {
 
 /* ════ MENU CARD ════ */
 .menu-card {
-  background: var(--card-blue);
-  border: 3px solid var(--card-blue-border);
+  background: var(--red-main);
+  border: none;
   border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
@@ -128,7 +127,7 @@ body {
 
 /* ════ POPUP ════ */
 .am-popup {
-  background: var(--bg-color);
+  background: var(--white);
   border-radius: 16px;
   width: 100%;
   max-width: 500px;
@@ -138,14 +137,14 @@ body {
   transform: translateY(22px);
   transition: transform 0.22s ease;
   scrollbar-width: thin;
-  scrollbar-color: var(--red-main) var(--bg-color);
+  scrollbar-color: var(--red-main) var(--white);
 }
 .am-overlay.show .am-popup { transform: translateY(0); }
 
 .am-popup-header {
   position: sticky;
   top: 0;
-  background: var(--bg-color);
+  background: var(--white);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -363,7 +362,7 @@ body {
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  background: var(--bg-color);
+  background: var(--red-soft);
   color: var(--red-main);
   font-size: 0.82rem;
   margin-bottom: 7px;
@@ -520,3 +519,11 @@ body {
 /* ════ UTILITY ════ */
 .hidden { display: none !important; }
 .thai   { font-family: 'IBM Plex Sans Thai Looped', sans-serif; }
+
+/* ════ CUSTOM POPUP STYLES ════ */
+.am-popup i {
+  color: var(--red-main) !important;
+}
+.am-popup i.am-star.active {
+  color: var(--star-gold) !important;
+}

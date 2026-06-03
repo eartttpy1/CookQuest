@@ -54,8 +54,7 @@ function openAddMenu(menuId = null) {
         document.getElementById('amMainBox').style.minHeight = 'auto';
       }
 
-      amTags = [...(menu.tags || [])];
-      amRenderTags();
+
 
       // Ingredients
       document.getElementById('amIngList').innerHTML = '';
@@ -179,25 +178,16 @@ function openViewMenu(index) {
 
   // จำนวน / เวลา
   const qtyEl   = document.getElementById('viewQtyInfo');
-  const timeEl  = document.getElementById('viewTimeInfo');
+  const prepEl  = document.getElementById('viewPrepTimeInfo');
+  const cookEl  = document.getElementById('viewCookTimeInfo');
   const infoRow = document.getElementById('viewInfoRow');
 
   qtyEl.innerHTML  = menu.servings  ? `<i class="fa-solid fa-utensils"></i> ${menu.servings} จาน` : '';
-  const totalTime  = (parseInt(menu.prepTime) || 0) + (parseInt(menu.cookTime) || 0);
-  timeEl.innerHTML = totalTime  ? `<i class="fa-regular fa-clock"></i> ${totalTime} นาที` : '';
-  infoRow.style.display = (menu.servings || totalTime) ? '' : 'none';
-
-  // Tags
-  const tagsSec  = document.getElementById('viewTagsSection');
-  const tagsWrap = document.getElementById('viewTagsWrap');
-  if (menu.tags && menu.tags.length > 0) {
-    tagsWrap.innerHTML = menu.tags.map(t =>
-      `<span class="am-tag-pill"><span>${t}</span></span>`
-    ).join('');
-    tagsSec.classList.remove('hidden');
-  } else {
-    tagsSec.classList.add('hidden');
-  }
+  const prepTime = parseInt(menu.prepTime) || 0;
+  const cookTime = parseInt(menu.cookTime) || 0;
+  prepEl.innerHTML = prepTime  ? `<i class="fa-regular fa-clock"></i> เตรียม ${prepTime} นาที` : '';
+  cookEl.innerHTML = cookTime  ? `<i class="fa-regular fa-clock"></i> ปรุง ${cookTime} นาที` : '';
+  infoRow.style.display = (menu.servings || prepTime || cookTime) ? '' : 'none';
 
   // วัตถุดิบ
   const ingSection = document.getElementById('viewIngSection');
@@ -294,9 +284,8 @@ function renderMenuCards() {
   if (query) {
       filteredMenus = filteredMenus.filter(menu => {
           const nameMatch = (menu.menuName || '').toLowerCase().includes(query);
-          const tagMatch = menu.tags && menu.tags.some(tag => tag.toLowerCase().includes(query));
           const ingMatch = menu.ingredients && menu.ingredients.some(ing => (ing.name || '').toLowerCase().includes(query));
-          return nameMatch || tagMatch || ingMatch;
+          return nameMatch || ingMatch;
       });
   }
   
@@ -308,12 +297,11 @@ function renderMenuCards() {
   grid.innerHTML = filteredMenus.map((menu) => {
     const idx = menuList.indexOf(menu);
     const totalTime = (parseInt(menu.prepTime) || 0) + (parseInt(menu.cookTime) || 0);
-    const imgHTML   = menu.imageURL
-      ? `<figure class="quest-image"><img src="${menu.imageURL}" alt="${menu.menuName}"></figure>`
-      : `<figure class="quest-image" style="background:#eee; display:flex; align-items:center; justify-content:center;"><i class="fa-regular fa-image fa-3x" style="color:#ccc"></i></figure>`;
-    
+    const imageUrl = menu.imageURL || '../../assets/img/emptymenu.jpg';
+    const imgHTML = `<figure class="quest-image"><img src="${imageUrl}" alt="${menu.menuName || 'ไม่มีชื่อ'}" loading="lazy"></figure>`;
+
     return `
-      <div class="quest-card menu-card" onclick="openViewMenu(${idx})" style="cursor: pointer; margin:0; background-color: #5BC8E0; border: 3px solid #3aafca;">
+      <div class="quest-card menu-card" onclick="openViewMenu(${idx})" style="cursor: pointer; margin:0;">
         <div class="menu-card-header">
             <h3 class="quest-title">${menu.menuName || 'ไม่มีชื่อ'}</h3>
         </div>
@@ -334,13 +322,36 @@ function previewMainImg(event) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
-    mainImgSrc = e.target.result;
-    document.getElementById('amMainPreview').src = mainImgSrc;
-    document.getElementById('amMainPreview').classList.remove('hidden');
-    document.getElementById('amMainIcon').classList.add('hidden');
-    document.getElementById('amMainLabel').classList.add('hidden');
-    document.getElementById('amMainActions').classList.remove('hidden');
-    document.getElementById('amMainBox').style.minHeight = 'auto';
+    const img = new Image();
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+        } else if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        mainImgSrc = canvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('amMainPreview').src = mainImgSrc;
+        document.getElementById('amMainPreview').classList.remove('hidden');
+        document.getElementById('amMainIcon').classList.add('hidden');
+        document.getElementById('amMainLabel').classList.add('hidden');
+        document.getElementById('amMainActions').classList.remove('hidden');
+        document.getElementById('amMainBox').style.minHeight = 'auto';
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -356,29 +367,7 @@ function removeMainImg() {
   document.getElementById('amMainFile').value = '';
 }
 
-// ─── Tags ────────────────────────────────────────────────────
-let amTags = [];
 
-function amRenderTags() {
-  document.getElementById('amTagsWrap').innerHTML = amTags.map((t, i) =>
-    `<span class="am-tag-pill">
-       <span>${t}</span>
-       <span class="am-tag-rm" onclick="amRemoveTag(${i})">✕</span>
-     </span>`
-  ).join('');
-}
-
-function amAddTag() {
-  const inp = document.getElementById('amTagInput');
-  const val = inp.value.trim();
-  if (val) { amTags.push(val); inp.value = ''; amRenderTags(); }
-}
-
-function amRemoveTag(i) { amTags.splice(i, 1); amRenderTags(); }
-
-function amTagKeydown(e) {
-  if (e.key === 'Enter') { e.preventDefault(); amAddTag(); }
-}
 
 // ─── Ingredients ─────────────────────────────────────────────
 let amIngCount = 0;
@@ -449,13 +438,36 @@ function amPreviewStep(event, n) {
   const reader  = new FileReader();
   const fileId  = 'amStepFile_' + n;
   reader.onload = function(e) {
-    stepImgSrcs[n] = e.target.result;
-    const box = document.getElementById('amStepBox_' + n);
-    box.innerHTML = `
-      <img src="${e.target.result}" alt="step">
-      <input type="file" id="${fileId}" accept="image/*" style="display:none"
-             onchange="amPreviewStep(event, ${n})">
-    `;
+    const img = new Image();
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+        } else if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        stepImgSrcs[n] = canvas.toDataURL('image/jpeg', 0.8);
+        const box = document.getElementById('amStepBox_' + n);
+        box.innerHTML = `
+          <img src="${stepImgSrcs[n]}" alt="step">
+          <input type="file" id="${fileId}" accept="image/*" style="display:none"
+                 onchange="amPreviewStep(event, ${n})">
+        `;
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -515,16 +527,13 @@ function amResetForm() {
   document.getElementById('amPrepTime').value  = '';
   document.getElementById('amCookTime').value  = '';
   document.getElementById('amReview').value    = '';
-  document.getElementById('amTagInput').value  = '';
 
-  amTags      = [];
   amIngCount  = 0;
   amStepCount = 0;
   stepImgSrcs = {};
   amStarValue = 0;
   editingMenuId = null;
 
-  amRenderTags();
   amUpdateStars(0);
   document.querySelectorAll('#amTasteTags .am-ttag').forEach(b => b.classList.remove('selected'));
   document.getElementById('amIngList').innerHTML  = '';
@@ -558,7 +567,6 @@ async function amSubmit() {
     servings   : parseInt(qty) || 1,
     prepTime   : prepTime,
     cookTime   : cookTime,
-    tags       : [...amTags],
     ingredients: ingredients,
     instructions: steps,
     tasteRating: amStarValue,
@@ -602,7 +610,6 @@ async function amSubmit() {
 
 // ─── Init ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  amRenderTags();
   amInitStars();
   amInitTasteTags();
   fetchUserMenus(); // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ

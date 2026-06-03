@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,8 +8,25 @@ const { Server } = require('socket.io');
 const dns = require("dns");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'cookquest_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET;
 const nodemailer = require('nodemailer');
+const setupSwagger = require('./swagger');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Multer memory storage initialization
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
 
 // ผมไม่สามารถเข้าปกติได้ ต้องset dns ไว้
 dns.setServers([
@@ -17,7 +35,7 @@ dns.setServers([
 ]);
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT;
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
@@ -25,21 +43,163 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+// Prevent API caching middleware
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 app.use(express.static('.'));
+
+// Setup Swagger Documentation
+setupSwagger(app, PORT);
 
 // Import models at the top
 const Menu = require('./serializer/menu');
 const Quest = require('./serializer/quest');
-const Tag = require('./serializer/tag');
 const Request = require('./serializer/request');
 const Submission = require('./serializer/submission');
 const Favorite = require('./serializer/favorite');
 const UserMenu = require('./serializer/usermenu');
 const User = require('./serializer/user');
 
+const PRESET_CATEGORIES = [
+    // วัตถุดิบ
+    "เมนูไข่", "เมนูไก่", "เมนูหมู", "เมนูเป็ด", "เมนูเนื้อวัว", "เมนูไส้กรอก", "เมนูเบคอน", "เมนูอาหารทะเล", "เมนูเส้น", "เมนูเห็ด", "เมนูเต้าหู้", "เมนูข้าว", "เมนูผัก", "เมนูผลไม้",
+    // ประเภทอาหาร
+    "เมนูอาหารเช้า", "เมนูอาหารจานเดียว", "เมนูกับแกล้ม/อาหารว่าง", "เมนูมังสวิรัติ", "เมนูอาหารไทย", "เมนูอาหารเหนือ", "เมนูอาหารอีสาน", "เมนูอาหารใต้", "เมนูอาหารญี่ปุ่น", "เมนูอาหารจีน", "เมนูอาหารเกาหลี", "เมนูอาหารฝรั่ง", "เมนูอาหารอิตาเลียน", "เมนูสเต๊ก", "เมนูแกง", "สูตรน้ำจิ้ม", "เมนูอาหารฟิวชัน", "เมนูซุป", "อาหารนานาชาติ", "เมนูแซนด์วิช", "เมนูอาหารเย็น", "เมนูน้ำพริก", "เมนูกับข้าว", "เมนูก๋วยเตี๋ยว",
+    // วิธีการ
+    "เมนูไมโครเวฟ", "เมนูต้ม", "เมนูผัด", "เมนูทอด", "เมนูอบ", "เมนูนึ่ง", "เมนูยำ", "เมนูย่าง", "เมนูหม้ออบลมร้อน", "เมนูหม้อหุงข้าว",
+    // ของหวาน/เบเกอรี่
+    "เมนูไอศกรีม", "เมนูขนมไทย", "เมนูเบเกอรี", "เมนูเค้ก", "เมนูของหวาน", "เมนูช็อคโกแลต",
+    // เมนูพิเศษ
+    "เมนูทำง่ายไม่เกิน 15 นาที", "เมนูประหยัด", "เมนูเด็กหอ", "เมนูสร้างอาชีพ", "เมนูข้าวกล่อง", "เมนูวาเลนไทน์", "เมนูฮาโลวีน", "เมนูคริสต์มาส"
+];
+
 function isBase64DataUrl(value) {
   return typeof value === 'string' && value.startsWith('data:');
 }
+
+// Helper to normalize nested multipart form data (strings starting with [ or { into objects)
+const normalizeMultipartBody = (body) => {
+  const normalized = { ...body };
+  for (const key in normalized) {
+    if (typeof normalized[key] === 'string') {
+      const trimmed = normalized[key].trim();
+      if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+        try {
+          normalized[key] = JSON.parse(trimmed);
+        } catch (e) {
+          // Ignore parse errors, keep as string
+        }
+      }
+    }
+  }
+  return normalized;
+};
+
+// Helper to upload a buffer to Cloudinary
+const uploadBufferToCloudinary = (fileBuffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }
+    );
+    stream.end(fileBuffer);
+  });
+};
+
+// Helper to upload a base64 string to Cloudinary
+const uploadBase64ToCloudinary = async (base64Str, folder) => {
+  if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:')) {
+    return base64Str; // Return as-is if not base64
+  }
+  try {
+    const result = await cloudinary.uploader.upload(base64Str, { folder });
+    return result.secure_url;
+  } catch (error) {
+    console.error('Error uploading base64 to Cloudinary:', error.message);
+    throw error;
+  }
+};
+
+// Helper to process menu and userMenu image uploads
+const processMenuImages = async (req, folder) => {
+  const body = normalizeMultipartBody(req.body);
+
+  // 1. Process files from Multer
+  if (req.files && req.files.length > 0) {
+    for (const file of req.files) {
+      if (file.fieldname === 'image' || file.fieldname === 'imageURL') {
+        body.imageURL = await uploadBufferToCloudinary(file.buffer, folder);
+      } else if (file.fieldname.startsWith('stepImage_')) {
+        const parts = file.fieldname.split('_');
+        const stepNum = parseInt(parts[1], 10);
+        const secureUrl = await uploadBufferToCloudinary(file.buffer, folder);
+        
+        if (body.instructions && Array.isArray(body.instructions)) {
+          let stepObj = body.instructions.find(inst => inst.stepNumber === stepNum);
+          if (!stepObj) {
+            // Fallback: match by index
+            stepObj = body.instructions[stepNum];
+          }
+          if (stepObj) {
+            stepObj.stepImageURL = secureUrl;
+          }
+        }
+      }
+    }
+  }
+
+  // 2. Process base64 strings in payload
+  if (body.imageURL && isBase64DataUrl(body.imageURL)) {
+    body.imageURL = await uploadBase64ToCloudinary(body.imageURL, folder);
+  }
+  if (body.instructions && Array.isArray(body.instructions)) {
+    for (const inst of body.instructions) {
+      if (inst.stepImageURL && isBase64DataUrl(inst.stepImageURL)) {
+        inst.stepImageURL = await uploadBase64ToCloudinary(inst.stepImageURL, folder);
+      }
+    }
+  }
+
+  return body;
+};
+
+// Helper to process requests/submissions image uploads
+const processSubmissionImages = async (req) => {
+  const body = normalizeMultipartBody(req.body);
+  let submissionImageUrl = body.imageURL || '';
+  let requestImageUrl = body.imageURL || '';
+
+  // 1. Process files from Multer
+  if (req.files && req.files.length > 0) {
+    const file = req.files.find(f => f.fieldname === 'image' || f.fieldname === 'imageURL');
+    if (file) {
+      submissionImageUrl = await uploadBufferToCloudinary(file.buffer, 'CookQuest/submissions');
+      requestImageUrl = await uploadBufferToCloudinary(file.buffer, 'CookQuest/requests');
+    }
+  }
+
+  // 2. Process base64 strings
+  if (isBase64DataUrl(submissionImageUrl)) {
+    submissionImageUrl = await uploadBase64ToCloudinary(submissionImageUrl, 'CookQuest/submissions');
+    requestImageUrl = await uploadBase64ToCloudinary(body.imageURL, 'CookQuest/requests');
+  }
+
+  return {
+    body,
+    submissionImageUrl,
+    requestImageUrl
+  };
+};
+
 
 function toMenuListItem(menu) {
   if (!menu) return menu;
@@ -57,11 +217,12 @@ function toRequestListItem(request) {
   return request;
 }
 // MongoDB connection
-const mongoURI = 'mongodb+srv://CookQuestProject:3xmBT5S7w2Y054b0@cluster0.zz1bawk.mongodb.net/CookQuest?appName=Cluster0';
+const mongoURI = process.env.MONGODB_URI;
 
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
 })
 .then(async () => {
   console.log('✓ MongoDB connected successfully');
@@ -71,12 +232,17 @@ mongoose.connect(mongoURI, {
     Favorite.syncIndexes(),
   ]);
   console.log('✓ Database indexes synced');
-})
-.catch(err => {
-  console.error('✗ MongoDB connection error:', err.message);
-  console.error('Connection string:', mongoURI);
-  process.exit(1);
-});
+
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Check server at http://localhost:${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('✗ MongoDB connection error:', err.message);
+    console.error('Connection string:', mongoURI);
+    process.exit(1);
+  });
 
 // Handle connection events
 mongoose.connection.on('disconnected', () => {
@@ -91,8 +257,8 @@ mongoose.connection.on('error', (err) => {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'theripper754@gmail.com',
-    pass: 'vbfjgtqzlbidhmhx'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
@@ -103,11 +269,26 @@ app.post('/api/register', async (req, res) => {
 
     const { username, email, password } = req.body;
 
-    // เช็ค user ซ้ำ
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        msg: 'Password must be at least 6 characters'
+      });
+    }
+
+    const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    if (!email || !gmailRegex.test(String(email).trim())) {
+      return res.status(400).json({
+        msg: 'Email must be a valid Gmail address (e.g. user@gmail.com)'
+      });
+    }
+
+    // เช็ค user ซ้ำ (case-insensitive)
+    const escapedUsername = String(username || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedEmail = String(email || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const exist = await User.findOne({
       $or: [
-        { username },
-        { email }
+        { username: { $regex: '^' + escapedUsername + '$', $options: 'i' } },
+        { email: { $regex: '^' + escapedEmail + '$', $options: 'i' } }
       ]
     });
 
@@ -127,24 +308,24 @@ app.post('/api/register', async (req, res) => {
       password: hashedPassword,
       level: 1,
       rank: 'BRONZE Chef',
-      xp: 0
+      exp: 0
     });
-    
+
     //OTP
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-      user.otp = otp;
-      user.otpExpire = Date.now() + 5 * 60 * 1000;
+    user.otp = otp;
+    user.otpExpire = Date.now() + 5 * 60 * 1000;
 
-      await user.save();
- 
-      await transporter.sendMail({
-        from: 'CookQuest',
-        to: user.email,
-        subject: 'Your OTP Code',
-        text: `Your OTP is ${otp}`
-     });
+    await user.save();
+
+    await transporter.sendMail({
+      from: 'CookQuest',
+      to: user.email,
+      subject: 'Your OTP Code',
+      text: `Your OTP is ${otp}`
+    });
 
     res.json({
       msg: 'Register success',
@@ -171,10 +352,14 @@ app.post('/api/verify-otp', async (req, res) => {
   console.log("BODY:", req.body);
 
   const { email, otp } = req.body;
+  const normalizedEmail = String(email || '').trim();
+  const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  const user = await User.findOne({ email });
-    console.log("email:", email);
-    console.log("otp:", otp);
+  const user = await User.findOne({
+    email: { $regex: '^' + escapedEmail + '$', $options: 'i' }
+  });
+  console.log("email:", email);
+  console.log("otp:", otp);
 
   if (!user) {
     return res.status(404).json({
@@ -207,17 +392,148 @@ app.post('/api/verify-otp', async (req, res) => {
 
 });
 
+app.post('/api/resend-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const normalizedEmail = String(email || '').trim();
+    if (!normalizedEmail) {
+      return res.status(400).json({ msg: 'Email is required' });
+    }
+    const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const user = await User.findOne({
+      email: { $regex: '^' + escapedEmail + '$', $options: 'i' }
+    });
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ msg: 'User is already verified' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpire = Date.now() + 5 * 60 * 1000;
+    await user.save();
+
+    await transporter.sendMail({
+      from: 'CookQuest',
+      to: user.email,
+      subject: 'Your OTP Code',
+      text: `Your new OTP code is ${otp}. It expires in 5 minutes.`
+    });
+
+    res.json({ msg: 'OTP has been resent successfully' });
+  } catch (error) {
+    console.error('Error resending OTP:', error);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+app.post('/api/forgot-password', async (req, res) => {
+  try {
+    const { identity } = req.body;
+    const normalizedIdentity = String(identity || '').trim();
+
+    if (!normalizedIdentity) {
+      return res.status(400).json({ msg: 'Please provide username or email' });
+    }
+
+    const escapedIdentity = normalizedIdentity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const user = await User.findOne({
+      $or: [
+        { email: { $regex: '^' + escapedIdentity + '$', $options: 'i' } },
+        { username: { $regex: '^' + escapedIdentity + '$', $options: 'i' } }
+      ]
+    });
+
+    // Do not expose whether account exists
+    if (!user) {
+      return res.json({ msg: 'If this account exists, we sent a reset OTP to the registered email.' });
+    }
+
+    const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordOtp = resetOtp;
+    user.resetPasswordOtpExpire = Date.now() + (10 * 60 * 1000);
+    await user.save();
+
+    await transporter.sendMail({
+      from: 'CookQuest',
+      to: user.email,
+      subject: 'CookQuest password reset OTP',
+      text: `Your password reset OTP is ${resetOtp}. It expires in 10 minutes.`
+    });
+
+    return res.json({ msg: 'If this account exists, we sent a reset OTP to the registered email.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+app.post('/api/reset-password', async (req, res) => {
+  try {
+    const { identity, otp, newPassword } = req.body;
+    const normalizedIdentity = String(identity || '').trim();
+    const normalizedOtp = String(otp || '').trim();
+    const password = String(newPassword || '');
+
+    if (!normalizedIdentity || !normalizedOtp || !password) {
+      return res.status(400).json({ msg: 'Identity, OTP and new password are required' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ msg: 'New password must be at least 6 characters' });
+    }
+
+    const escapedIdentity = normalizedIdentity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const user = await User.findOne({
+      $or: [
+        { email: { $regex: '^' + escapedIdentity + '$', $options: 'i' } },
+        { username: { $regex: '^' + escapedIdentity + '$', $options: 'i' } }
+      ]
+    });
+
+    if (!user || !user.resetPasswordOtp || !user.resetPasswordOtpExpire) {
+      return res.status(400).json({ msg: 'Invalid reset request' });
+    }
+
+    if (user.resetPasswordOtp !== normalizedOtp) {
+      return res.status(400).json({ msg: 'Invalid OTP' });
+    }
+
+    if (user.resetPasswordOtpExpire < Date.now()) {
+      return res.status(400).json({ msg: 'OTP expired' });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordOtp = null;
+    user.resetPasswordOtpExpire = null;
+    await user.save();
+
+    return res.json({ msg: 'Password reset successful' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return res.status(500).json({ msg: 'Server error' });
+  }
+});
+
 app.post('/api/login', async (req, res) => {
 
   try {
 
     const { username, password } = req.body;
 
-    // หา user
+    const normalizedUsername = String(username || '').trim();
+    const escapedUsername = normalizedUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // หา user (case-insensitive & trim-robust)
     const user = await User.findOne({
       $or: [
-        { username },
-        { email: username }
+        { username: { $regex: '^' + escapedUsername + '$', $options: 'i' } },
+        { email: { $regex: '^' + escapedUsername + '$', $options: 'i' } }
       ]
     });
 
@@ -239,13 +555,13 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-   if (!user.isVerified) {
+    if (!user.isVerified) {
       return res.status(400).json({
         msg: 'Please verify OTP first',
         needsOtp: true,  // เพิ่ม flag เพื่อบอก front-end
         email: user.email // ส่ง email กลับไปเพื่อใช้ในหน้า verify-otp
       });
-}
+    }
 
     // สร้าง TOKEN
     const token = jwt.sign(
@@ -362,49 +678,156 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
 
 });
 
-app.post('/api/profile/add-xp', authMiddleware, async (req, res) => {
+app.put('/api/profile', authMiddleware, async (req, res) => {
   try {
-    const { xpToAdd } = req.body;
-    const user = await User.findById(req.user.id);
-    
+    const { username, email, otp } = req.body;
+    const currentUserId = req.user.id;
+
+    if (!username || !email) {
+      return res.status(400).json({ msg: 'Username and email are required' });
+    }
+
+    const trimmedUsername = String(username).trim();
+    const trimmedEmail = String(email).trim();
+
+    if (!trimmedUsername || !trimmedEmail) {
+      return res.status(400).json({ msg: 'Username and email cannot be empty' });
+    }
+
+    const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    if (!gmailRegex.test(trimmedEmail)) {
+      return res.status(400).json({ msg: 'Email must be a valid Gmail address (e.g. user@gmail.com)' });
+    }
+
+    const escapedUsername = trimmedUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedEmail = trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Check for duplicate username or email with other users
+    const duplicate = await User.findOne({
+      _id: { $ne: currentUserId },
+      $or: [
+        { username: { $regex: '^' + escapedUsername + '$', $options: 'i' } },
+        { email: { $regex: '^' + escapedEmail + '$', $options: 'i' } }
+      ]
+    });
+
+    if (duplicate) {
+      const isUsernameDuplicate = duplicate.username.toLowerCase() === trimmedUsername.toLowerCase();
+      const isEmailDuplicate = duplicate.email.toLowerCase() === trimmedEmail.toLowerCase();
+      
+      if (isUsernameDuplicate && isEmailDuplicate) {
+        return res.status(400).json({ msg: 'Username and email are already in use' });
+      } else if (isUsernameDuplicate) {
+        return res.status(400).json({ msg: 'Username is already in use' });
+      } else {
+        return res.status(400).json({ msg: 'Email is already in use' });
+      }
+    }
+
+    // Update user profile
+    const user = await User.findById(currentUserId);
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    // Add XP
-    user.xp = (user.xp || 0) + Number(xpToAdd);
+    const isEmailChanging = user.email.toLowerCase() !== trimmedEmail.toLowerCase();
+
+    if (isEmailChanging) {
+      if (!otp) {
+        const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.otp = emailOtp;
+        user.otpExpire = Date.now() + 5 * 60 * 1000;
+        await user.save();
+
+        await transporter.sendMail({
+          from: 'CookQuest',
+          to: trimmedEmail,
+          subject: 'Verify Your New Email Address - CookQuest',
+          text: `Your verification OTP for changing email to ${trimmedEmail} is ${emailOtp}. It will expire in 5 minutes.`
+        });
+
+        return res.json({
+          status: 'OTP_SENT',
+          msg: 'Verification OTP has been sent to your new email address. Please enter it to complete the update.'
+        });
+      } else {
+        const normalizedOtp = String(otp).trim();
+        if (user.otp !== normalizedOtp) {
+          return res.status(400).json({ msg: 'Invalid OTP' });
+        }
+        if (user.otpExpire < Date.now()) {
+          return res.status(400).json({ msg: 'OTP has expired' });
+        }
+        user.otp = null;
+        user.otpExpire = null;
+      }
+    }
+
+    user.username = trimmedUsername;
+    user.email = trimmedEmail;
+    await user.save();
+
+    res.json({
+      msg: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+async function addExpToProfile(req, res, expToAdd) {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    const currentExp = Number(user.exp || 0);
+    user.exp = currentExp + Number(expToAdd || 0);
 
     // Re-calculate Level and Rank
     const levelSystem = {
-        1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
-        2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
-        3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
-        4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
-        5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
-        6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
+      1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
+      2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+      3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+      4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
+      5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
+      6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
     };
 
     for (let level = 6; level >= 1; level--) {
-        if (user.xp >= levelSystem[level].minXP) {
-            user.level = level;
-            user.rank = levelSystem[level].rank;
-            break;
-        }
+      if (user.exp >= levelSystem[level].minXP) {
+        user.level = level;
+        user.rank = levelSystem[level].rank;
+        break;
+      }
     }
 
     await user.save();
-    res.json({ msg: 'XP & Level updated successfully', user });
+    res.json({ msg: 'EXP & Level updated successfully', user });
   } catch (err) {
-    console.error('Error updating XP:', err);
+    console.error('Error updating EXP:', err);
     res.status(500).json({ msg: 'Server error' });
   }
+}
+
+app.post('/api/profile/add-exp', authMiddleware, async (req, res) => {
+  return addExpToProfile(req, res, req.body.expToAdd);
 });
 
 app.post('/api/profile/add-badge', authMiddleware, async (req, res) => {
   try {
     const { badgeName, badgeIcon } = req.body;
     const user = await User.findById(req.user.id);
-    
+
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
@@ -494,9 +917,10 @@ app.get('/api/menus/:id', async (req, res) => {
   }
 });
 
-app.post('/api/menus', async (req, res) => {
+app.post('/api/menus', upload.any(), async (req, res) => {
   try {
-    const menu = new Menu(req.body);
+    const processedBody = await processMenuImages(req, 'CookQuest/menu');
+    const menu = new Menu(processedBody);
     await menu.save();
     res.status(201).json(menu);
   } catch (error) {
@@ -505,9 +929,10 @@ app.post('/api/menus', async (req, res) => {
   }
 });
 
-app.put('/api/menus/:id', async (req, res) => {
+app.put('/api/menus/:id', upload.any(), async (req, res) => {
   try {
-    const menu = await Menu.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const processedBody = await processMenuImages(req, 'CookQuest/menu');
+    const menu = await Menu.findByIdAndUpdate(req.params.id, processedBody, { new: true, runValidators: true });
     if (!menu) {
       return res.status(404).json({ error: 'Menu not found' });
     }
@@ -518,7 +943,7 @@ app.put('/api/menus/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/menus/:id', authMiddleware, adminMiddleware,async (req, res) => {
+app.delete('/api/menus/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const menu = await Menu.findByIdAndDelete(req.params.id);
     if (!menu) {
@@ -526,6 +951,16 @@ app.delete('/api/menus/:id', authMiddleware, adminMiddleware,async (req, res) =>
     }
 
     const menuName = (menu.menuName || '').trim();
+
+    // Also delete requests and submissions with this menuName
+    const requestsToDelete = await Request.find({ menuName: menuName }).select('_id').lean();
+    const reqIdsToDelete = requestsToDelete.map(r => r._id);
+    await Submission.deleteMany({ requestId: { $in: reqIdsToDelete } });
+    await Request.deleteMany({ _id: { $in: reqIdsToDelete } });
+
+    // Also delete favorites pointing to this menu
+    await Favorite.deleteMany({ menuId: req.params.id });
+
     const escapedName = menuName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const questQuery = {
       tags: { $elemMatch: { $regex: `^${escapedName}$`, $options: 'i' } }
@@ -562,11 +997,14 @@ app.delete('/api/menus/:id', authMiddleware, adminMiddleware,async (req, res) =>
   }
 });
 
-app.get('/api/tags', async (req, res) => {
+app.get('/api/tags', (req, res) => {
   try {
-    const search = req.query.search || '';
-    const query = search ? { name: { $regex: search, $options: 'i' } } : {};
-    const tags = await Tag.find(query).sort({ name: 1 }).limit(50);
+    const search = (req.query.search || '').trim().toLowerCase();
+    const tags = PRESET_CATEGORIES.map(name => ({ name }));
+    if (search) {
+      const filtered = tags.filter(t => t.name.toLowerCase().includes(search));
+      return res.json(filtered);
+    }
     res.json(tags);
   } catch (error) {
     console.error('Error fetching tags:', error.message);
@@ -574,23 +1012,13 @@ app.get('/api/tags', async (req, res) => {
   }
 });
 
-app.post('/api/tags', async (req, res) => {
+app.post('/api/tags', (req, res) => {
   try {
     const names = Array.isArray(req.body.name) ? req.body.name : [req.body.name];
-    const createdTags = [];
-
-    for (const name of names) {
-      if (!name || typeof name !== 'string') continue;
-      const trimmed = name.trim();
-      if (!trimmed) continue;
-      const tag = await Tag.findOneAndUpdate(
-        { name: trimmed },
-        { name: trimmed },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-      createdTags.push(tag);
-    }
-
+    const createdTags = names
+      .map(n => typeof n === 'string' ? n.trim() : '')
+      .filter(Boolean)
+      .map(name => ({ name }));
     res.status(201).json(createdTags.length === 1 ? createdTags[0] : createdTags);
   } catch (error) {
     console.error('Error creating tag:', error.message);
@@ -607,9 +1035,10 @@ app.get('/api/requests', async (req, res) => {
       return res.status(400).json({ error: 'Invalid status filter' });
     }
 
-    const query = status === 'all' ? {} : { status };
-    const requests = await Request.find(query).sort({ _id: -1 });
-    res.json(requests);
+        const query = status === 'all' ? {} : { status };
+    const requests = await Request.find(query).sort({ _id: -1 }).lean();
+    const mappedRequests = requests.map(toRequestListItem);
+    res.json(mappedRequests);
   } catch (error) {
     console.error('Error fetching requests:', error.message);
     res.status(500).json({ error: error.message });
@@ -663,31 +1092,37 @@ app.put('/api/requests/:id/status', async (req, res) => {
 
     // Give XP and increment completed recipes if approved
     if (normalizedStatus === 'approved' && creatorId) {
-      const user = await User.findById(creatorId);
-      if (user) {
-        let xpReward = 100; // Default XP fallback
+      // Fetch all required database items in parallel
+      const [user, menu, questModel, userMenu, allQuests, allMenus, userSubmissions] = await Promise.all([
+        User.findById(creatorId),
+        Menu.findOne({ menuName: request.menuName }).select('EXP').lean(),
+        Quest.findOne({ name: request.menuName }).select('exp').lean(),
+        UserMenu.findOne({ menuName: request.menuName }).select('EXP').lean(),
+        Quest.find().select('_id name exp tags').lean(),
+        Menu.find().select('menuName questIds').lean(),
+        Submission.find({ createdBy: creatorId, status: 'approved' })
+          .select('requestId')
+          .populate({ path: 'requestId', select: 'menuName' }).lean()
+      ]);
 
-        // Try to find the exact EXP from the database models
-        const menu = await Menu.findOne({ menuName: request.menuName });
-        if (menu && menu.EXP) { xpReward = menu.EXP; }
-        else {
-          const quest = await Quest.findOne({ name: request.menuName });
-          if (quest && quest.exp) { xpReward = quest.exp; }
-          else {
-            const userMenu = await UserMenu.findOne({ menuName: request.menuName });
-            if (userMenu && userMenu.EXP) { xpReward = userMenu.EXP; }
-          }
+      if (user) {
+        let expReward = 100; // Default EXP fallback
+
+        // Determine the EXP reward from parallel fetches
+        if (menu && menu.EXP) {
+          expReward = menu.EXP;
+        } else if (questModel && questModel.exp) {
+          expReward = questModel.exp;
+        } else if (userMenu && userMenu.EXP) {
+          expReward = userMenu.EXP;
         }
 
-        user.xp = (user.xp || 0) + xpReward;
+        const currentExp = Number(user.exp || 0);
+        user.exp = currentExp + expReward;
         user.completedRecipes = (user.completedRecipes || 0) + 1;
 
         // Check Quest completion and award Quest EXP
         try {
-          const allQuests = await Quest.find();
-          const allMenus = await Menu.find();
-          const userSubmissions = await Submission.find({ createdBy: creatorId, status: 'approved' }).populate('requestId');
-          
           const approvedMenuNames = new Set();
           userSubmissions.forEach(sub => {
             if (sub.requestId && sub.requestId.menuName) {
@@ -697,19 +1132,20 @@ app.put('/api/requests/:id/status', async (req, res) => {
           if (request.menuName) {
             approvedMenuNames.add(request.menuName.toLowerCase().trim());
           }
-          
+
           for (const quest of allQuests) {
             const questIdStr = quest._id.toString();
-            if (user.completedQuests && user.completedQuests.includes(questIdStr)) {
+            const hasCompleted = user.completedQuests && user.completedQuests.map(q => q.toString()).includes(questIdStr);
+            if (hasCompleted) {
               continue;
             }
-            
+
             const relatedMenus = allMenus.filter(m => {
               const hasQuestId = m.questIds && m.questIds.includes(questIdStr);
               const hasTagMatch = quest.tags && quest.tags.some(tag => tag.toLowerCase() === (m.menuName || '').toLowerCase());
               return hasQuestId || hasTagMatch;
             });
-            
+
             if (relatedMenus.length > 0) {
               let questCompleted = true;
               for (const m of relatedMenus) {
@@ -718,14 +1154,15 @@ app.put('/api/requests/:id/status', async (req, res) => {
                   break;
                 }
               }
-              
+
               if (questCompleted) {
                 const questExp = quest.exp || 0;
-                user.xp = (user.xp || 0) + questExp;
+                user.exp = Number(user.exp || 0) + questExp;
                 if (!user.completedQuests) {
                   user.completedQuests = [];
                 }
                 user.completedQuests.push(questIdStr);
+                user.markModified('completedQuests');
                 console.log(`User ${user.username} completed quest: ${quest.name}. Awarded ${questExp} EXP.`);
               }
             }
@@ -736,32 +1173,35 @@ app.put('/api/requests/:id/status', async (req, res) => {
 
         // Re-calculate Level and Rank
         const levelSystem = {
-            1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
-            2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
-            3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
-            4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
-            5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
-            6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
+          1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
+          2: { rank: 'SILVER Chef', minXP: 1501, maxXP: 3000 },
+          3: { rank: 'GOLD Chef', minXP: 3001, maxXP: 5000 },
+          4: { rank: 'PLATINUM Chef', minXP: 5001, maxXP: 8000 },
+          5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
+          6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
         };
 
         for (let level = 6; level >= 1; level--) {
-            if (user.xp >= levelSystem[level].minXP) {
-                user.level = level;
-                user.rank = levelSystem[level].rank;
-                break;
-            }
+          if (user.exp >= levelSystem[level].minXP) {
+            user.level = level;
+            user.rank = levelSystem[level].rank;
+            break;
+          }
         }
 
         // Check and award Milestone Badges directly to the database
-        const earnedBadges = user.badges.map(b => b.name);
+        if (!Array.isArray(user.badges)) {
+          user.badges = [];
+        }
+        const earnedBadges = user.badges.map((b) => b.name);
         if (user.completedRecipes >= 1 && !earnedBadges.includes('First Dish')) {
-            user.badges.push({ name: 'First Dish', icon: '👨‍🍳' });
+          user.badges.push({ name: 'First Dish', icon: '👨‍🍳' });
         }
         if (user.completedRecipes >= 5 && !earnedBadges.includes('5 Dishes')) {
-            user.badges.push({ name: '5 Dishes', icon: '🔥' });
+          user.badges.push({ name: '5 Dishes', icon: '🔥' });
         }
         if (user.completedRecipes >= 10 && !earnedBadges.includes('10 Dishes')) {
-            user.badges.push({ name: '10 Dishes', icon: '👑' });
+          user.badges.push({ name: '10 Dishes', icon: '👑' });
         }
 
         await user.save();
@@ -824,14 +1264,15 @@ app.delete('/api/quests/:id', async (req, res) => {
   }
 });
 
-app.post('/api/submissions', async (req, res) => {
+app.post('/api/submissions', upload.any(), async (req, res) => {
   try {
-    const { menuName, randomQuests, imageURL, tasteRating, tasteTags, review, createdBy } = req.body;
-    
+    const { body, submissionImageUrl, requestImageUrl } = await processSubmissionImages(req);
+    const { menuName, randomQuests, tasteRating, tasteTags, review, createdBy } = body;
+
     const request = new Request({
       menuName,
       randomQuests,
-      imageURL,
+      imageURL: requestImageUrl,
       tasteRating,
       tasteTags,
       review,
@@ -843,7 +1284,7 @@ app.post('/api/submissions', async (req, res) => {
 
     const submission = new Submission({
       requestId: request._id,
-      imageURL,
+      imageURL: submissionImageUrl,
       tasteRating,
       tasteTags,
       review,
@@ -861,15 +1302,17 @@ app.post('/api/submissions', async (req, res) => {
   }
 });
 
-app.put('/api/submissions/:id', async (req, res) => {
+app.put('/api/submissions/:id', upload.any(), async (req, res) => {
   try {
-    const { imageURL, tasteRating, tasteTags, review } = req.body;
+    const { body, submissionImageUrl, requestImageUrl } = await processSubmissionImages(req);
+    const { tasteRating, tasteTags, review } = body;
+
     const submission = await Submission.findByIdAndUpdate(
       req.params.id,
-      { imageURL, tasteRating, tasteTags, review, editedAt: new Date() },
+      { imageURL: submissionImageUrl, tasteRating, tasteTags, review, editedAt: new Date() },
       { new: true, runValidators: true }
     );
-    
+
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
     }
@@ -878,10 +1321,10 @@ app.put('/api/submissions/:id', async (req, res) => {
     if (submission.requestId) {
       const request = await Request.findByIdAndUpdate(
         submission.requestId,
-        { imageURL, tasteRating, tasteTags, review },
+        { imageURL: requestImageUrl, tasteRating, tasteTags, review },
         { new: true }
       );
-      
+
       // Emit socket event so that admin page reloads immediately
       io.emit('new_submission', { request, submission });
     }
@@ -893,6 +1336,35 @@ app.put('/api/submissions/:id', async (req, res) => {
   }
 });
 
+app.delete('/api/submissions/:id', async (req, res) => {
+  try {
+    const submission = await Submission.findById(req.params.id);
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    if (submission.status !== 'pending') {
+      return res.status(400).json({ error: 'Only pending submissions can be deleted' });
+    }
+
+    const requestId = submission.requestId;
+
+    // Delete submission and request
+    await Submission.findByIdAndDelete(req.params.id);
+    if (requestId) {
+      await Request.findByIdAndDelete(requestId);
+    }
+
+    // Emit socket event to notify other clients (e.g. admin page)
+    io.emit('status_updated', { requestId: requestId, status: 'deleted' });
+
+    res.json({ message: 'Submission deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting submission:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/history', async (req, res) => {
   try {
     const { requestId, menuName, userId, summary } = req.query;
@@ -900,23 +1372,31 @@ app.get('/api/history', async (req, res) => {
     if (requestId) query.requestId = requestId;
     if (userId) query.createdBy = userId;
 
+    // Filter by menuName at database level rather than populating and filtering in memory
+    if (menuName) {
+      const reqQuery = { menuName };
+      if (userId) reqQuery.createdBy = userId;
+      const requests = await Request.find(reqQuery).select('_id').lean();
+      const requestIds = requests.map(r => r._id);
+      query.requestId = { $in: requestIds };
+    }
+
     const useSummary = summary === 'true' || (userId && !menuName && !requestId);
 
-    let matchQuery = {};
-    if (menuName) {
-      matchQuery.menuName = menuName;
+    let historyQuery = Submission.find(query);
+    if (useSummary) {
+      historyQuery = historyQuery.select('-imageURL');
     }
-    
-    const history = await Submission.find(query)
+
+    const history = await historyQuery
       .populate({
-          path: 'requestId',
-          select: 'menuName randomQuests status',
-          match: matchQuery
+        path: 'requestId',
+        select: 'menuName randomQuests status'
       })
       .sort({ _id: -1 });
-      
-    // Filter out submissions where requestId didn't match (if we filtered by menuName)
-    const filteredHistory = menuName ? history.filter(sub => sub.requestId != null) : history;
+
+    // Filter out submissions where requestId didn't match
+    const filteredHistory = history.filter(sub => sub.requestId != null);
 
     res.json(filteredHistory);
   } catch (error) {
@@ -977,9 +1457,10 @@ app.get('/api/usermenus', async (req, res) => {
   }
 });
 
-app.post('/api/usermenus', async (req, res) => {
+app.post('/api/usermenus', upload.any(), async (req, res) => {
   try {
-    const menu = new UserMenu(req.body);
+    const processedBody = await processMenuImages(req, 'CookQuest/userMenu');
+    const menu = new UserMenu(processedBody);
     await menu.save();
     res.status(201).json(menu);
   } catch (error) {
@@ -988,9 +1469,10 @@ app.post('/api/usermenus', async (req, res) => {
   }
 });
 
-app.put('/api/usermenus/:id', async (req, res) => {
+app.put('/api/usermenus/:id', upload.any(), async (req, res) => {
   try {
-    const menu = await UserMenu.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const processedBody = await processMenuImages(req, 'CookQuest/userMenu');
+    const menu = await UserMenu.findByIdAndUpdate(req.params.id, processedBody, { new: true, runValidators: true });
     if (!menu) {
       return res.status(404).json({ error: 'UserMenu not found' });
     }
@@ -1012,9 +1494,4 @@ app.delete('/api/usermenus/:id', async (req, res) => {
     console.error('Error deleting usermenu:', error.message);
     res.status(500).json({ error: error.message });
   }
-});
-
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Check server at http://localhost:${PORT}`);
 });

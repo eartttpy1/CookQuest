@@ -21,13 +21,24 @@
     <link rel="stylesheet" href="../../quest-style.css">
     <link rel="stylesheet" href="../../assets/css/quest.css">
     <!-- ============== Start  Script ============== -->
+    <script>
+        // Force unregister all Service Workers and clear caches to bypass old cached files
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let r of registrations) r.unregister();
+            });
+        }
+        if (window.caches) {
+            caches.keys().then(keys => { for (let key of keys) caches.delete(key); });
+        }
+    </script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
     <script src="../../assets/js/menu-images.js" defer></script>
-    <script src="../../assets/js/q-all.js" defer></script>
-    <script src="../../assets/js/q-detail.js" defer></script>
+    <script src="../../assets/js/q-all.js?v=4" defer></script>
+    <script src="../../assets/js/q-detail.js?v=12" defer></script>
     <script src="../../assets/js/sort.js" defer></script>
 
 </head>
@@ -116,17 +127,42 @@
         </div>
 
         <nav class="top-nav">
-            <a href="#" data-filter="all" class="nav-link active"><span class="thai">ทั้งหมด</span></a>
-            <a href="#" data-filter="pending" class="nav-link"><span class="thai">รอดำเนินการ</span></a>
-            <a href="#" data-filter="complete" class="nav-link"><span class="thai">เสร็จสิ้น</span></a>
+            <a href="q-all.html" data-filter="all" class="nav-link active"><span class="thai">ทั้งหมด</span></a>
+            <a href="q-all.html?tab=pending" data-filter="pending" class="nav-link"><span class="thai">รอดำเนินการ</span></a>
+            <a href="q-all.html?tab=complete" data-filter="complete" class="nav-link"><span class="thai">เสร็จสิ้น</span></a>
             <a href="q-self.html" class="nav-link"><span class="thai">บันทึกสูตร</span></a>
         </nav>
 
         <main class="content-container">
             <div id="questSectionWrapper">
-                <section class ="category-container">
-                        <span class="category-header">Category</span>
-            </section>
+                <section class="category-container">
+                    <span class="category-header">Category</span>
+                    <!-- Status Color Legend Tooltip -->
+                    <div class="status-info-trigger-wrapper">
+                        <button class="status-info-btn">
+                            <i class="fa-regular fa-circle-question"></i>
+                            <span class="thai">คำอธิบายสีการ์ด</span>
+                        </button>
+                        <div class="status-tooltip">
+                            <div class="status-legend-item">
+                                <span class="status-color-dot status-dot-plain"></span>
+                                <span class="status-text-label thai">ยังไม่ส่ง</span>
+                            </div>
+                            <div class="status-legend-item">
+                                <span class="status-color-dot status-dot-pending"></span>
+                                <span class="status-text-label thai">รอดำเนินการ</span>
+                            </div>
+                            <div class="status-legend-item">
+                                <span class="status-color-dot status-dot-approved"></span>
+                                <span class="status-text-label thai">เสร็จสิ้น</span>
+                            </div>
+                            <div class="status-legend-item">
+                                <span class="status-color-dot status-dot-rejected"></span>
+                                <span class="status-text-label thai">ปฏิเสธ</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
             <section class="category-grid">
                 <details class="dropdown">
@@ -234,7 +270,16 @@
             </section>
 
             <section class ="category-container">
-                    <span class="category-header">Quest</span>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <span class="category-header" style="margin-bottom: 0;">Quest</span>
+                    <a href="#menuSection" class="goto-menu-btn thai" onclick="document.getElementById('menuSection').scrollIntoView({ behavior: 'smooth' }); return false;" 
+                    style="text-decoration: none; background: white; color: var(--red-main); border: 2px solid var(--red-main); padding: 6px 14px; border-radius: 10px; font-weight: bold; font-size: 0.95rem; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 0;" 
+                    onmouseover="this.style.background='var(--red-main)'; this.style.color='white'; this.querySelector('i').style.color='white';" 
+                    onmouseout="this.style.background='white'; this.style.color='var(--red-main)'; this.querySelector('i').style.color='var(--red-main)';"
+                    >
+                        <i class="fa-solid fa-circle-chevron-down" style="color: var(--red-main); transition: all 0.2s ease;"></i> ไปที่ส่วนเมนูอาหาร (Go to Menus)
+                    </a>
+                </div>
                 <div class="sort-container">
                     <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
                     <div class="sort-dropdown hidden" id="sortDropdown">
@@ -276,7 +321,7 @@
             </section>
             <section id="questList" class="quest-section"></section>
             </div>
-            <section class ="category-container">
+            <section class ="category-container" id="menuSection">
                     <span class="category-header">Menu</span>
                 <div class="sort-container">
                     <button class="sort-btn" id="menu-sortBtn"><i class="fa-solid fa-list"></i></button>
@@ -566,6 +611,29 @@
     </div>
   
     <!-- ==============All Quest page content ============== -->
+
+    <!-- Floating Back to Top Button -->
+    <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' });" class="floating-back-to-top" 
+            style="position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; color: var(--red-main); border: 2px solid var(--red-main); cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.15); transition: opacity 0.3s ease, background 0.2s ease, color 0.2s ease; z-index: 9999; opacity: 0; pointer-events: none;" 
+            onmouseover="this.style.background='var(--red-main)'; this.style.color='white'; this.querySelector('i').style.color='white';" 
+            onmouseout="this.style.background='white'; this.style.color='var(--red-main)'; this.querySelector('i').style.color='var(--red-main)';"
+    >
+        <i class="fa-solid fa-arrow-up" style="font-size: 1.3rem; color: var(--red-main); transition: color 0.2s ease;"></i>
+    </button>
+    <script>
+        window.addEventListener('scroll', () => {
+            const btn = document.querySelector('.floating-back-to-top');
+            if (btn) {
+                if (window.scrollY > 300) {
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                } else {
+                    btn.style.opacity = '0';
+                    btn.style.pointerEvents = 'none';
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>

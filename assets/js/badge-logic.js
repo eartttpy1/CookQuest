@@ -25,10 +25,13 @@ window.evaluateBadges = function(profile, historyData, approvedDishes) {
     });
     const hasFireStarter = maxStreak >= 3;
     
-    // Logic Challenge: Cook 5 healthy meals (Check if menu name has Salad/Veg keywords)
+    // Logic Challenge: Cook 5 healthy meals (Check if menu tags have Salad/Veg keywords)
+    const allMenus = window.allRelatedMenus || [];
     const healthyCount = approvedDishes.filter(d => {
-        const name = d.requestId?.menuName || '';
-        return name.includes('สลัด') || name.includes('ผัก') || name.includes('คลีน');
+        const menuName = d.requestId?.menuName || '';
+        const menu = allMenus.find(m => m.menuName === menuName);
+        const tags = menu?.tags || [];
+        return tags.some(t => typeof t === 'string' && (t.includes('สลัด') || t.includes('ผัก') || t.includes('คลีน')));
     }).length;
     const hasHealthyEats = healthyCount >= 5;
 

@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let chartInstance = null;
       
-      const renderView = (profile, historyData) => {
+      const renderView = (profile, historyData, quests = []) => {
           // 2. Calculate and display Level, Rank, and XP Bar
           const levelSystem = {
             1: { rank: 'BRONZE Chef', minXP: 0, maxXP: 1500 },
@@ -18,24 +18,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             5: { rank: 'DIAMOND Chef', minXP: 8001, maxXP: 12000 },
             6: { rank: 'MASTER Chef', minXP: 12001, maxXP: Infinity }
           };
-          const xp = profile.xp || 0;
+          const exp = profile.exp || 0;
           
           let lvl = 1;
           for (let l = 6; l >= 1; l--) {
-              if (xp >= levelSystem[l].minXP) {
+              if (exp >= levelSystem[l].minXP) {
                   lvl = l;
                   break;
               }
           }
           const currentLevelData = levelSystem[lvl];
           const tierSize = currentLevelData.maxXP - currentLevelData.minXP;
-          const progressInTier = xp - currentLevelData.minXP;
+          const progressInTier = exp - currentLevelData.minXP;
           const xpPercentage = tierSize === Infinity ? 100 : Math.min((progressInTier / tierSize) * 100, 100);
           const maxDisplay = currentLevelData.maxXP === Infinity ? 'MAX' : currentLevelData.maxXP;
 
           document.getElementById('view-level-title').textContent = `Level ${lvl} ${currentLevelData.rank}`;
-          document.getElementById('view-xp-text').textContent = `${xp}/${maxDisplay} EXP`;
+          document.getElementById('view-xp-text').textContent = `${exp} / ${maxDisplay}`;
           document.querySelector('.xp-fill').style.width = `${xpPercentage}%`;
+          const xpProgress = document.getElementById('xp-progress');
+          if (xpProgress) {
+              xpProgress.setAttribute('aria-valuenow', String(Math.round(xpPercentage)));
+              xpProgress.setAttribute('aria-label', `Experience: ${exp} of ${maxDisplay}`);
+          }
 
           // 1. Filter only 'approved' dishes and sort them by date (oldest to newest)
           const approvedDishes = historyData.filter(item => item.status === 'approved');
@@ -59,12 +64,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
 
           const isDarkMode = document.body.classList.contains('darkmode');
-          const textColor = isDarkMode ? '#bbb' : '#666';
-          const gridColor = isDarkMode ? '#444' : '#eaeaea';
+          const textColor = isDarkMode ? '#b8c2d8' : '#4a4540';
+          const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e0dcd4';
+          const accentColor = isDarkMode ? '#8fa4e8' : '#800002';
+          const fillColor = isDarkMode ? 'rgba(143, 164, 232, 0.2)' : 'rgba(128, 0, 2, 0.12)';
 
           // 4. Render the Chart
           const ctx = document.getElementById('progressChart').getContext('2d');
-          if (chartInstance) chartInstance.destroy(); // destroy old chart if re-rendering
+          if (chartInstance) chartInstance.destroy();
           chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
@@ -72,13 +79,13 @@ document.addEventListener('DOMContentLoaded', async () => {
               datasets: [{
                 label: 'Total Completed Dishes',
                 data: cumulativeData.length ? cumulativeData : [0],
-                borderColor: '#800002',
-                backgroundColor: 'rgba(128, 0, 2, 0.15)',
+                borderColor: accentColor,
+                backgroundColor: fillColor,
                 borderWidth: 3,
                 fill: true,
-                tension: 0.4, 
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#800002',
+                tension: 0.4,
+                pointBackgroundColor: isDarkMode ? '#3D4459' : '#fff',
+                pointBorderColor: accentColor,
                 pointBorderWidth: 2,
                 pointRadius: 5,
                 pointHoverRadius: 7
@@ -86,13 +93,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
             options: {
               responsive: true,
-              scales: { 
-                  x: { ticks: { color: textColor }, grid: { color: gridColor } }, 
-                  y: { beginAtZero: true, ticks: { stepSize: 1, color: textColor }, grid: { color: gridColor } } 
+              maintainAspectRatio: false,
+              scales: {
+                  x: { ticks: { color: textColor, maxRotation: 45, minRotation: 0 }, grid: { color: gridColor } },
+                  y: { beginAtZero: true, ticks: { stepSize: 1, color: textColor }, grid: { color: gridColor } }
               },
               plugins: { legend: { display: false } }
             }
           });
+          window.chartInstance = chartInstance;
 
           // 4. Render All Badges (Locked/Unlocked) from Database
           const badgeGrid = document.getElementById('view-badge-grid');
@@ -132,11 +141,45 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
           
           badgeGrid.innerHTML = badgeHTML;
+
+          const unlockedCount = evaluatedBadges.filter(b => b.isUnlocked).length;
+          const badgeCountEl = document.getElementById('badge-count');
+          if (badgeCountEl) {
+              badgeCountEl.textContent = `${unlockedCount} / ${evaluatedBadges.length}`;
+              badgeCountEl.hidden = evaluatedBadges.length === 0;
+          }
+
+          // 5. Render Completed Quests
+          const questsContainer = document.getElementById('view-completed-quests');
+          if (questsContainer) {
+              const completedQuests = profile.completedQuests || [];
+              if (completedQuests.length === 0) {
+                  questsContainer.innerHTML = '<p class="thai" style="color: var(--profile-stat-text-muted); opacity: 0.8; font-size: 0.95rem;">ยังไม่มีเควสที่ทำสำเร็จ (No completed quests yet)</p>';
+              } else {
+                  questsContainer.innerHTML = completedQuests.map(qId => {
+                      const questObj = quests.find(q => q._id === qId);
+                      const questName = questObj ? questObj.name : 'Unknown Quest';
+                      return `
+                          <div class="completed-quest-tag" style="background: linear-gradient(135deg, #FFD700, #ffa954ff); color: #000; font-weight: bold; padding: 6px 12px; border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-bottom: 5px;">
+                              <i class="fa-solid fa-trophy" style="font-size: 0.85rem; color: #800002;"></i>
+                              <span class="thai">${questName}</span>
+                          </div>
+                      `;
+                  }).join('');
+              }
+          }
       };
 
       const showSkeletonLoadersInView = () => {
           document.getElementById('view-level-title').innerHTML = '<div class="skeleton-bg" style="height: 24px; width: 150px; border-radius: 4px; margin-bottom: 8px;"></div>';
           document.getElementById('view-xp-text').innerHTML = '<div class="skeleton-bg" style="height: 16px; width: 80px; border-radius: 4px; float: right;"></div>';
+          
+          const questsContainer = document.getElementById('view-completed-quests');
+          if (questsContainer) {
+              questsContainer.innerHTML = `
+                  <div class="skeleton-bg" style="height: 30px; width: 120px; border-radius: 20px; display: inline-block; margin-right: 10px;"></div>
+              `.repeat(3);
+          }
           
           const badgeGrid = document.getElementById('view-badge-grid');
           if (badgeGrid) {
@@ -155,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (cachedData) {
           try {
               const parsed = JSON.parse(cachedData);
-              renderView(parsed.profile, parsed.historyData);
+              renderView(parsed.profile, parsed.historyData, parsed.quests || []);
           } catch (e) {
               console.error('Cache parsing failed', e);
               showSkeletonLoadersInView();
@@ -188,17 +231,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
               const freshProfile = data.profile || null;
               const freshHistoryData = data.history || [];
+              const freshQuests = data.quests || [];
 
               if (freshProfile) {
                   try {
                       sessionStorage.setItem(cacheKey, JSON.stringify({
                           profile: freshProfile,
-                          historyData: freshHistoryData
+                          historyData: freshHistoryData,
+                          quests: freshQuests
                       }));
                   } catch (err) {
                       console.warn('Quota exceeded for session storage', err);
                   }
-                  renderView(freshProfile, freshHistoryData);
+                  renderView(freshProfile, freshHistoryData, freshQuests);
               }
           };
 
@@ -293,12 +338,18 @@ document.addEventListener('DOMContentLoaded', async () => {
               // Force Chart.js to recalculate its text colors based on the new theme
               if (window.chartInstance) {
                   const isDarkMode = document.body.classList.contains('darkmode');
-                  const textColor = isDarkMode ? '#bbb' : '#666';
-                  const gridColor = isDarkMode ? '#444' : '#eaeaea';
+                  const textColor = isDarkMode ? '#b8c2d8' : '#4a4540';
+                  const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e0dcd4';
                   window.chartInstance.options.scales.x.ticks.color = textColor;
                   window.chartInstance.options.scales.x.grid.color = gridColor;
                   window.chartInstance.options.scales.y.ticks.color = textColor;
                   window.chartInstance.options.scales.y.grid.color = gridColor;
+                  const accent = isDarkMode ? '#8fa4e8' : '#800002';
+                  const fill = isDarkMode ? 'rgba(143, 164, 232, 0.2)' : 'rgba(128, 0, 2, 0.12)';
+                  window.chartInstance.data.datasets[0].borderColor = accent;
+                  window.chartInstance.data.datasets[0].backgroundColor = fill;
+                  window.chartInstance.data.datasets[0].pointBorderColor = accent;
+                  window.chartInstance.data.datasets[0].pointBackgroundColor = isDarkMode ? '#3D4459' : '#fff';
                   window.chartInstance.update();
               }
           }, 50); 
