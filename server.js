@@ -11,6 +11,22 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 const nodemailer = require('nodemailer');
 const setupSwagger = require('./swagger');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Multer memory storage initialization
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
 
 // ผมไม่สามารถเข้าปกติได้ ต้องset dns ไว้
 dns.setServers([
@@ -54,6 +70,124 @@ const User = require('./serializer/user');
 function isBase64DataUrl(value) {
   return typeof value === 'string' && value.startsWith('data:');
 }
+
+// Helper to normalize nested multipart form data (strings starting with [ or { into objects)
+const normalizeMultipartBody = (body) => {
+  const normalized = { ...body };
+  for (const key in normalized) {
+    if (typeof normalized[key] === 'string') {
+      const trimmed = normalized[key].trim();
+      if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+        try {
+          normalized[key] = JSON.parse(trimmed);
+        } catch (e) {
+          // Ignore parse errors, keep as string
+        }
+      }
+    }
+  }
+  return normalized;
+};
+
+// Helper to upload a buffer to Cloudinary
+const uploadBufferToCloudinary = (fileBuffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }
+    );
+    stream.end(fileBuffer);
+  });
+};
+
+// Helper to upload a base64 string to Cloudinary
+const uploadBase64ToCloudinary = async (base64Str, folder) => {
+  if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:')) {
+    return base64Str; // Return as-is if not base64
+  }
+  try {
+    const result = await cloudinary.uploader.upload(base64Str, { folder });
+    return result.secure_url;
+  } catch (error) {
+    console.error('Error uploading base64 to Cloudinary:', error.message);
+    throw error;
+  }
+};
+
+// Helper to process menu and userMenu image uploads
+const processMenuImages = async (req, folder) => {
+  const body = normalizeMultipartBody(req.body);
+
+  // 1. Process files from Multer
+  if (req.files && req.files.length > 0) {
+    for (const file of req.files) {
+      if (file.fieldname === 'image' || file.fieldname === 'imageURL') {
+        body.imageURL = await uploadBufferToCloudinary(file.buffer, folder);
+      } else if (file.fieldname.startsWith('stepImage_')) {
+        const parts = file.fieldname.split('_');
+        const stepNum = parseInt(parts[1], 10);
+        const secureUrl = await uploadBufferToCloudinary(file.buffer, folder);
+        
+        if (body.instructions && Array.isArray(body.instructions)) {
+          let stepObj = body.instructions.find(inst => inst.stepNumber === stepNum);
+          if (!stepObj) {
+            // Fallback: match by index
+            stepObj = body.instructions[stepNum];
+          }
+          if (stepObj) {
+            stepObj.stepImageURL = secureUrl;
+          }
+        }
+      }
+    }
+  }
+
+  // 2. Process base64 strings in payload
+  if (body.imageURL && isBase64DataUrl(body.imageURL)) {
+    body.imageURL = await uploadBase64ToCloudinary(body.imageURL, folder);
+  }
+  if (body.instructions && Array.isArray(body.instructions)) {
+    for (const inst of body.instructions) {
+      if (inst.stepImageURL && isBase64DataUrl(inst.stepImageURL)) {
+        inst.stepImageURL = await uploadBase64ToCloudinary(inst.stepImageURL, folder);
+      }
+    }
+  }
+
+  return body;
+};
+
+// Helper to process requests/submissions image uploads
+const processSubmissionImages = async (req) => {
+  const body = normalizeMultipartBody(req.body);
+  let submissionImageUrl = body.imageURL || '';
+  let requestImageUrl = body.imageURL || '';
+
+  // 1. Process files from Multer
+  if (req.files && req.files.length > 0) {
+    const file = req.files.find(f => f.fieldname === 'image' || f.fieldname === 'imageURL');
+    if (file) {
+      submissionImageUrl = await uploadBufferToCloudinary(file.buffer, 'CookQuest/submissions');
+      requestImageUrl = await uploadBufferToCloudinary(file.buffer, 'CookQuest/requests');
+    }
+  }
+
+  // 2. Process base64 strings
+  if (isBase64DataUrl(submissionImageUrl)) {
+    submissionImageUrl = await uploadBase64ToCloudinary(submissionImageUrl, 'CookQuest/submissions');
+    requestImageUrl = await uploadBase64ToCloudinary(body.imageURL, 'CookQuest/requests');
+  }
+
+  return {
+    body,
+    submissionImageUrl,
+    requestImageUrl
+  };
+};
+
 
 function toMenuListItem(menu) {
   if (!menu) return menu;
@@ -771,9 +905,10 @@ app.get('/api/menus/:id', async (req, res) => {
   }
 });
 
-app.post('/api/menus', async (req, res) => {
+app.post('/api/menus', upload.any(), async (req, res) => {
   try {
-    const menu = new Menu(req.body);
+    const processedBody = await processMenuImages(req, 'CookQuest/menu');
+    const menu = new Menu(processedBody);
     await menu.save();
     res.status(201).json(menu);
   } catch (error) {
@@ -782,9 +917,10 @@ app.post('/api/menus', async (req, res) => {
   }
 });
 
-app.put('/api/menus/:id', async (req, res) => {
+app.put('/api/menus/:id', upload.any(), async (req, res) => {
   try {
-    const menu = await Menu.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const processedBody = await processMenuImages(req, 'CookQuest/menu');
+    const menu = await Menu.findByIdAndUpdate(req.params.id, processedBody, { new: true, runValidators: true });
     if (!menu) {
       return res.status(404).json({ error: 'Menu not found' });
     }
@@ -894,9 +1030,10 @@ app.get('/api/requests', async (req, res) => {
       return res.status(400).json({ error: 'Invalid status filter' });
     }
 
-    const query = status === 'all' ? {} : { status };
-    const requests = await Request.find(query).select('-imageURL').sort({ _id: -1 }).lean();
-    res.json(requests);
+        const query = status === 'all' ? {} : { status };
+    const requests = await Request.find(query).sort({ _id: -1 }).lean();
+    const mappedRequests = requests.map(toRequestListItem);
+    res.json(mappedRequests);
   } catch (error) {
     console.error('Error fetching requests:', error.message);
     res.status(500).json({ error: error.message });
@@ -1121,14 +1258,15 @@ app.delete('/api/quests/:id', async (req, res) => {
   }
 });
 
-app.post('/api/submissions', async (req, res) => {
+app.post('/api/submissions', upload.any(), async (req, res) => {
   try {
-    const { menuName, randomQuests, imageURL, tasteRating, tasteTags, review, createdBy } = req.body;
+    const { body, submissionImageUrl, requestImageUrl } = await processSubmissionImages(req);
+    const { menuName, randomQuests, tasteRating, tasteTags, review, createdBy } = body;
 
     const request = new Request({
       menuName,
       randomQuests,
-      imageURL,
+      imageURL: requestImageUrl,
       tasteRating,
       tasteTags,
       review,
@@ -1140,7 +1278,7 @@ app.post('/api/submissions', async (req, res) => {
 
     const submission = new Submission({
       requestId: request._id,
-      imageURL,
+      imageURL: submissionImageUrl,
       tasteRating,
       tasteTags,
       review,
@@ -1158,12 +1296,14 @@ app.post('/api/submissions', async (req, res) => {
   }
 });
 
-app.put('/api/submissions/:id', async (req, res) => {
+app.put('/api/submissions/:id', upload.any(), async (req, res) => {
   try {
-    const { imageURL, tasteRating, tasteTags, review } = req.body;
+    const { body, submissionImageUrl, requestImageUrl } = await processSubmissionImages(req);
+    const { tasteRating, tasteTags, review } = body;
+
     const submission = await Submission.findByIdAndUpdate(
       req.params.id,
-      { imageURL, tasteRating, tasteTags, review, editedAt: new Date() },
+      { imageURL: submissionImageUrl, tasteRating, tasteTags, review, editedAt: new Date() },
       { new: true, runValidators: true }
     );
 
@@ -1175,7 +1315,7 @@ app.put('/api/submissions/:id', async (req, res) => {
     if (submission.requestId) {
       const request = await Request.findByIdAndUpdate(
         submission.requestId,
-        { imageURL, tasteRating, tasteTags, review },
+        { imageURL: requestImageUrl, tasteRating, tasteTags, review },
         { new: true }
       );
 
@@ -1311,9 +1451,10 @@ app.get('/api/usermenus', async (req, res) => {
   }
 });
 
-app.post('/api/usermenus', async (req, res) => {
+app.post('/api/usermenus', upload.any(), async (req, res) => {
   try {
-    const menu = new UserMenu(req.body);
+    const processedBody = await processMenuImages(req, 'CookQuest/userMenu');
+    const menu = new UserMenu(processedBody);
     await menu.save();
     res.status(201).json(menu);
   } catch (error) {
@@ -1322,9 +1463,10 @@ app.post('/api/usermenus', async (req, res) => {
   }
 });
 
-app.put('/api/usermenus/:id', async (req, res) => {
+app.put('/api/usermenus/:id', upload.any(), async (req, res) => {
   try {
-    const menu = await UserMenu.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const processedBody = await processMenuImages(req, 'CookQuest/userMenu');
+    const menu = await UserMenu.findByIdAndUpdate(req.params.id, processedBody, { new: true, runValidators: true });
     if (!menu) {
       return res.status(404).json({ error: 'UserMenu not found' });
     }
