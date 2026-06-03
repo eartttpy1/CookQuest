@@ -67,16 +67,16 @@ const UserMenu = require('./serializer/usermenu');
 const User = require('./serializer/user');
 
 const PRESET_CATEGORIES = [
-    // วัตถุดิบ
-    "เมนูไข่", "เมนูไก่", "เมนูหมู", "เมนูเป็ด", "เมนูเนื้อวัว", "เมนูไส้กรอก", "เมนูเบคอน", "เมนูอาหารทะเล", "เมนูเส้น", "เมนูเห็ด", "เมนูเต้าหู้", "เมนูข้าว", "เมนูผัก", "เมนูผลไม้",
-    // ประเภทอาหาร
-    "เมนูอาหารเช้า", "เมนูอาหารจานเดียว", "เมนูกับแกล้ม/อาหารว่าง", "เมนูมังสวิรัติ", "เมนูอาหารไทย", "เมนูอาหารเหนือ", "เมนูอาหารอีสาน", "เมนูอาหารใต้", "เมนูอาหารญี่ปุ่น", "เมนูอาหารจีน", "เมนูอาหารเกาหลี", "เมนูอาหารฝรั่ง", "เมนูอาหารอิตาเลียน", "เมนูสเต๊ก", "เมนูแกง", "สูตรน้ำจิ้ม", "เมนูอาหารฟิวชัน", "เมนูซุป", "อาหารนานาชาติ", "เมนูแซนด์วิช", "เมนูอาหารเย็น", "เมนูน้ำพริก", "เมนูกับข้าว", "เมนูก๋วยเตี๋ยว",
-    // วิธีการ
-    "เมนูไมโครเวฟ", "เมนูต้ม", "เมนูผัด", "เมนูทอด", "เมนูอบ", "เมนูนึ่ง", "เมนูยำ", "เมนูย่าง", "เมนูหม้ออบลมร้อน", "เมนูหม้อหุงข้าว",
-    // ของหวาน/เบเกอรี่
-    "เมนูไอศกรีม", "เมนูขนมไทย", "เมนูเบเกอรี", "เมนูเค้ก", "เมนูของหวาน", "เมนูช็อคโกแลต",
-    // เมนูพิเศษ
-    "เมนูทำง่ายไม่เกิน 15 นาที", "เมนูประหยัด", "เมนูเด็กหอ", "เมนูสร้างอาชีพ", "เมนูข้าวกล่อง", "เมนูวาเลนไทน์", "เมนูฮาโลวีน", "เมนูคริสต์มาส"
+  // วัตถุดิบ
+  "เมนูไข่", "เมนูไก่", "เมนูหมู", "เมนูเป็ด", "เมนูเนื้อวัว", "เมนูไส้กรอก", "เมนูเบคอน", "เมนูอาหารทะเล", "เมนูเส้น", "เมนูเห็ด", "เมนูเต้าหู้", "เมนูข้าว", "เมนูผัก", "เมนูผลไม้",
+  // ประเภทอาหาร
+  "เมนูอาหารเช้า", "เมนูอาหารจานเดียว", "เมนูกับแกล้ม/อาหารว่าง", "เมนูมังสวิรัติ", "เมนูอาหารไทย", "เมนูอาหารเหนือ", "เมนูอาหารอีสาน", "เมนูอาหารใต้", "เมนูอาหารญี่ปุ่น", "เมนูอาหารจีน", "เมนูอาหารเกาหลี", "เมนูอาหารฝรั่ง", "เมนูอาหารอิตาเลียน", "เมนูสเต๊ก", "เมนูแกง", "สูตรน้ำจิ้ม", "เมนูอาหารฟิวชัน", "เมนูซุป", "อาหารนานาชาติ", "เมนูแซนด์วิช", "เมนูอาหารเย็น", "เมนูน้ำพริก", "เมนูกับข้าว", "เมนูก๋วยเตี๋ยว",
+  // วิธีการ
+  "เมนูไมโครเวฟ", "เมนูต้ม", "เมนูผัด", "เมนูทอด", "เมนูอบ", "เมนูนึ่ง", "เมนูยำ", "เมนูย่าง", "เมนูหม้ออบลมร้อน", "เมนูหม้อหุงข้าว",
+  // ของหวาน/เบเกอรี่
+  "เมนูไอศกรีม", "เมนูขนมไทย", "เมนูเบเกอรี", "เมนูเค้ก", "เมนูของหวาน", "เมนูช็อคโกแลต",
+  // เมนูพิเศษ
+  "เมนูทำง่ายไม่เกิน 15 นาที", "เมนูประหยัด", "เมนูเด็กหอ", "เมนูสร้างอาชีพ", "เมนูข้าวกล่อง", "เมนูวาเลนไทน์", "เมนูฮาโลวีน", "เมนูคริสต์มาส"
 ];
 
 function isBase64DataUrl(value) {
@@ -142,7 +142,7 @@ const processMenuImages = async (req, folder) => {
         const parts = file.fieldname.split('_');
         const stepNum = parseInt(parts[1], 10);
         const secureUrl = await uploadBufferToCloudinary(file.buffer, folder);
-        
+
         if (body.instructions && Array.isArray(body.instructions)) {
           let stepObj = body.instructions.find(inst => inst.stepNumber === stepNum);
           if (!stepObj) {
@@ -224,14 +224,14 @@ mongoose.connect(mongoURI, {
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000,
 })
-.then(async () => {
-  console.log('✓ MongoDB connected successfully');
-  await Promise.all([
-    Request.syncIndexes(),
-    Submission.syncIndexes(),
-    Favorite.syncIndexes(),
-  ]);
-  console.log('✓ Database indexes synced');
+  .then(async () => {
+    console.log('✓ MongoDB connected successfully');
+    await Promise.all([
+      Request.syncIndexes(),
+      Submission.syncIndexes(),
+      Favorite.syncIndexes(),
+    ]);
+    console.log('✓ Database indexes synced');
 
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
@@ -262,12 +262,169 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+function generateOtpRef() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 4; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+async function sendOtpEmailHtml({ to, subject, purpose, otp, refCode, expireMinutes }) {
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #f7f9fc;
+      padding: 40px 0;
+    }
+    .container {
+      max-width: 550px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+    }
+    .header {
+      background: linear-gradient(135deg, #ffa954, #ff8c2b);
+      padding: 30px;
+      text-align: center;
+      color: #ffffff;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .content {
+      padding: 40px 30px;
+      color: #333333;
+      line-height: 1.6;
+    }
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #222222;
+      text-align: center;
+    }
+    .desc {
+      font-size: 15px;
+      color: #666666;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .otp-box {
+      background-color: #fff8f0;
+      border: 2px dashed #ffa954;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin: 25px 0;
+    }
+    .otp-code {
+      font-size: 36px;
+      font-weight: 800;
+      color: #ff8c2b;
+      letter-spacing: 8px;
+      margin: 0;
+      padding-left: 8px;
+    }
+    .ref-code {
+      font-size: 14px;
+      font-weight: 600;
+      color: #888888;
+      margin-top: 10px;
+    }
+    .ref-code span {
+      background-color: #ffa954;
+      color: #ffffff;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 15px;
+      letter-spacing: 1px;
+    }
+    .info {
+      font-size: 13px;
+      color: #999999;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .footer {
+      background-color: #fafbfc;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #aaaaaa;
+      border-top: 1px solid #eeeeee;
+    }
+    .footer a {
+      color: #ffa954;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <h1>🍳 CookQuest</h1>
+      </div>
+      <div class="content">
+        <div class="title">${purpose}</div>
+        <div class="desc">Please use the verification code below to complete your action.</div>
+        <div class="otp-box">
+          <div class="otp-code">${otp}</div>
+          <div class="ref-code">Reference Code: <span>${refCode}</span></div>
+        </div>
+        <div class="info">
+          This verification code is valid for <strong>${expireMinutes} minutes</strong>.<br>
+          If you did not request this code, please secure your account immediately.
+        </div>
+      </div>
+      <div class="footer">
+        © 2026 CookQuest. All rights reserved.<br>
+        Let's cook your path to culinary glory!
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  await transporter.sendMail({
+    from: '"CookQuest" <' + process.env.EMAIL_USER + '>',
+    to,
+    subject,
+    html: htmlContent
+  });
+}
+
 // Routes
 app.post('/api/register', async (req, res) => {
 
   try {
 
     const { username, email, password } = req.body;
+
+    if (!username || username.trim().length > 10) {
+      return res.status(400).json({
+        msg: 'Username must not exceed 10 characters'
+      });
+    }
 
     if (!password || password.length < 6) {
       return res.status(400).json({
@@ -312,23 +469,27 @@ app.post('/api/register', async (req, res) => {
     });
 
     //OTP
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpRef = generateOtpRef();
 
     user.otp = otp;
+    user.otpRef = otpRef;
     user.otpExpire = Date.now() + 5 * 60 * 1000;
 
     await user.save();
 
-    await transporter.sendMail({
-      from: 'CookQuest',
+    await sendOtpEmailHtml({
       to: user.email,
-      subject: 'Your OTP Code',
-      text: `Your OTP is ${otp}`
+      subject: 'Welcome to CookQuest - Verify Your Account',
+      purpose: 'Account Verification',
+      otp,
+      refCode: otpRef,
+      expireMinutes: 5
     });
 
     res.json({
       msg: 'Register success',
+      otpRef,
       user: {
         id: user._id,
         username: user.username,
@@ -414,18 +575,25 @@ app.post('/api/resend-otp', async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpRef = generateOtpRef();
     user.otp = otp;
+    user.otpRef = otpRef;
     user.otpExpire = Date.now() + 5 * 60 * 1000;
     await user.save();
 
-    await transporter.sendMail({
-      from: 'CookQuest',
+    await sendOtpEmailHtml({
       to: user.email,
-      subject: 'Your OTP Code',
-      text: `Your new OTP code is ${otp}. It expires in 5 minutes.`
+      subject: 'Your New CookQuest OTP Code',
+      purpose: 'Account Verification (Resend)',
+      otp,
+      refCode: otpRef,
+      expireMinutes: 5
     });
 
-    res.json({ msg: 'OTP has been resent successfully' });
+    res.json({
+      msg: 'OTP has been resent successfully',
+      otpRef
+    });
   } catch (error) {
     console.error('Error resending OTP:', error);
     res.status(500).json({ msg: 'Server error' });
@@ -451,22 +619,33 @@ app.post('/api/forgot-password', async (req, res) => {
 
     // Do not expose whether account exists
     if (!user) {
-      return res.json({ msg: 'If this account exists, we sent a reset OTP to the registered email.' });
+      const dummyRef = generateOtpRef();
+      return res.json({
+        msg: 'If this account exists, we sent a reset OTP to the registered email.',
+        otpRef: dummyRef
+      });
     }
 
     const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetPasswordOtpRef = generateOtpRef();
     user.resetPasswordOtp = resetOtp;
+    user.resetPasswordOtpRef = resetPasswordOtpRef;
     user.resetPasswordOtpExpire = Date.now() + (10 * 60 * 1000);
     await user.save();
 
-    await transporter.sendMail({
-      from: 'CookQuest',
+    await sendOtpEmailHtml({
       to: user.email,
-      subject: 'CookQuest password reset OTP',
-      text: `Your password reset OTP is ${resetOtp}. It expires in 10 minutes.`
+      subject: 'CookQuest Password Reset OTP',
+      purpose: 'Password Reset Verification',
+      otp: resetOtp,
+      refCode: resetPasswordOtpRef,
+      expireMinutes: 10
     });
 
-    return res.json({ msg: 'If this account exists, we sent a reset OTP to the registered email.' });
+    return res.json({
+      msg: 'If this account exists, we sent a reset OTP to the registered email.',
+      otpRef: resetPasswordOtpRef
+    });
   } catch (error) {
     console.error('Forgot password error:', error);
     return res.status(500).json({ msg: 'Server error' });
@@ -556,10 +735,15 @@ app.post('/api/login', async (req, res) => {
     }
 
     if (!user.isVerified) {
+      if (!user.otpRef) {
+        user.otpRef = generateOtpRef();
+        await user.save();
+      }
       return res.status(400).json({
         msg: 'Please verify OTP first',
         needsOtp: true,  // เพิ่ม flag เพื่อบอก front-end
-        email: user.email // ส่ง email กลับไปเพื่อใช้ในหน้า verify-otp
+        email: user.email, // ส่ง email กลับไปเพื่อใช้ในหน้า verify-otp
+        otpRef: user.otpRef
       });
     }
 
@@ -694,6 +878,10 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
       return res.status(400).json({ msg: 'Username and email cannot be empty' });
     }
 
+    if (trimmedUsername.length > 10) {
+      return res.status(400).json({ msg: 'Username must not exceed 10 characters' });
+    }
+
     const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
     if (!gmailRegex.test(trimmedEmail)) {
       return res.status(400).json({ msg: 'Email must be a valid Gmail address (e.g. user@gmail.com)' });
@@ -714,7 +902,7 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
     if (duplicate) {
       const isUsernameDuplicate = duplicate.username.toLowerCase() === trimmedUsername.toLowerCase();
       const isEmailDuplicate = duplicate.email.toLowerCase() === trimmedEmail.toLowerCase();
-      
+
       if (isUsernameDuplicate && isEmailDuplicate) {
         return res.status(400).json({ msg: 'Username and email are already in use' });
       } else if (isUsernameDuplicate) {
@@ -735,19 +923,24 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
     if (isEmailChanging) {
       if (!otp) {
         const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpRef = generateOtpRef();
         user.otp = emailOtp;
+        user.otpRef = otpRef;
         user.otpExpire = Date.now() + 5 * 60 * 1000;
         await user.save();
 
-        await transporter.sendMail({
-          from: 'CookQuest',
+        await sendOtpEmailHtml({
           to: trimmedEmail,
           subject: 'Verify Your New Email Address - CookQuest',
-          text: `Your verification OTP for changing email to ${trimmedEmail} is ${emailOtp}. It will expire in 5 minutes.`
+          purpose: 'Email Update Verification',
+          otp: emailOtp,
+          refCode: otpRef,
+          expireMinutes: 5
         });
 
         return res.json({
           status: 'OTP_SENT',
+          otpRef,
           msg: 'Verification OTP has been sent to your new email address. Please enter it to complete the update.'
         });
       } else {
@@ -759,6 +952,7 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
           return res.status(400).json({ msg: 'OTP has expired' });
         }
         user.otp = null;
+        user.otpRef = null;
         user.otpExpire = null;
       }
     }
@@ -1035,7 +1229,7 @@ app.get('/api/requests', async (req, res) => {
       return res.status(400).json({ error: 'Invalid status filter' });
     }
 
-        const query = status === 'all' ? {} : { status };
+    const query = status === 'all' ? {} : { status };
     const requests = await Request.find(query).sort({ _id: -1 }).lean();
     const mappedRequests = requests.map(toRequestListItem);
     res.json(mappedRequests);

@@ -54,7 +54,7 @@ async function updateProfile(field, value, emailOtp = null) {
 
     if (data.status === 'OTP_SENT') {
         alert(data.msg);
-        return 'OTP_SENT';
+        return { status: 'OTP_SENT', otpRef: data.otpRef };
     }
 
     alert("บันทึกสำเร็จ");
@@ -84,11 +84,17 @@ editButtons.forEach(btn => {
                     return;
                 }
                 const result = await updateProfile(target, emailVal);
-                if (result === 'OTP_SENT') {
+                if (result && result.status === 'OTP_SENT') {
                     // Keep input editable, show inline OTP container
                     const otpContainer = document.getElementById("email-otp-container");
                     if (otpContainer) {
                         otpContainer.classList.remove("hidden");
+                    }
+                    const refWrapper = document.getElementById("email-otp-ref-wrapper");
+                    const refCodeSpan = document.getElementById("email-otp-ref-code");
+                    if (refWrapper && refCodeSpan && result.otpRef) {
+                        refCodeSpan.textContent = result.otpRef;
+                        refWrapper.classList.remove("hidden");
                     }
                     btn.textContent = "Save";
                 } else if (result === true) {
@@ -102,6 +108,12 @@ editButtons.forEach(btn => {
                     }
                 }
             } else {
+                const val = input.value.trim();
+                if (target === "username" && val.length > 10) {
+                    alert("ชื่อผู้ใช้ต้องมีความยาวไม่เกิน 10 ตัวอักษร");
+                    input.focus();
+                    return;
+                }
                 const result = await updateProfile(target, input.value);
                 if (result === true) {
                     input.readOnly = true;
@@ -172,8 +184,14 @@ if (btnResendEmailOtp) {
         btnResendEmailOtp.textContent = "กำลังส่ง...";
 
         const result = await updateProfile("email", emailVal);
-        if (result === 'OTP_SENT') {
+        if (result && result.status === 'OTP_SENT') {
             alert("ส่ง OTP ใหม่สำเร็จแล้ว กรุณาตรวจสอบอีเมลของคุณ");
+            const refWrapper = document.getElementById("email-otp-ref-wrapper");
+            const refCodeSpan = document.getElementById("email-otp-ref-code");
+            if (refWrapper && refCodeSpan && result.otpRef) {
+                refCodeSpan.textContent = result.otpRef;
+                refWrapper.classList.remove("hidden");
+            }
             emailResendCountdown = 60;
             btnResendEmailOtp.textContent = `ส่งอีกครั้งใน (${emailResendCountdown}s)`;
             emailResendTimer = setInterval(() => {
@@ -253,6 +271,12 @@ if (btnSendOtp) {
             const data = await res.json();
             if (res.ok) {
                 alert(data.msg || "ส่ง OTP สำเร็จแล้ว กรุณาตรวจสอบอีเมลของคุณ");
+                const refWrapper = document.getElementById("password-otp-ref-wrapper");
+                const refCodeSpan = document.getElementById("password-otp-ref-code");
+                if (refWrapper && refCodeSpan && data.otpRef) {
+                    refCodeSpan.textContent = data.otpRef;
+                    refWrapper.classList.remove("hidden");
+                }
                 let seconds = 60;
                 btnSendOtp.textContent = `ส่งอีกครั้งใน (${seconds}s)`;
                 countdownTimer = setInterval(() => {

@@ -37,6 +37,10 @@ if (role === 'admin') {
             
             // เก็บ email ไว้ใช้ในหน้า otp.html
             localStorage.setItem('pendingEmail', error.response.data.email);
+            localStorage.setItem('otp_email', error.response.data.email);
+            if (error.response.data.otpRef) {
+                localStorage.setItem('otp_ref', error.response.data.otpRef);
+            }
             
             // ย้ายไปหน้า OTP
             window.location.href = 'otp.html'; 

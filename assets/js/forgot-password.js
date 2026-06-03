@@ -17,6 +17,14 @@ async function requestResetOtp() {
     try {
         const response = await axios.post('http://localhost:4000/api/forgot-password', { identity });
         alert(response.data.msg || 'If this account exists, reset OTP has been sent.');
+        if (response.data.otpRef) {
+            const refWrapper = document.getElementById('forgot-ref-wrapper');
+            const refCodeSpan = document.getElementById('forgot-ref-code');
+            if (refWrapper && refCodeSpan) {
+                refCodeSpan.textContent = response.data.otpRef;
+                refWrapper.classList.remove('hidden');
+            }
+        }
     } catch (error) {
         const message = error.response?.data?.msg || 'Unable to send reset OTP.';
         alert(message);
