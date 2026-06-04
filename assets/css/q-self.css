@@ -1,17 +1,9 @@
-/* ════════════════════════════════
-   ADD MENU — STYLES
-   --red-main : #800000
-   --bg-color : #FFF3C9
-   --card-blue: #5BC8E0  (card bg from screenshot)
-   ════════════════════════════════ */
 
 :root {
   --red-main  : #800002;
   --red-hover : #a00000;
   --red-soft  : #fde8e8;
   --bg-color  : #FFF3C9;
-  --card-blue : #5BC8E0;
-  --card-blue-border: #3aafca;
   --white     : #ffffff;
   --star-gold : #FFD700;
   --text-dark : #3a0000;
@@ -26,23 +18,24 @@ body {
 }
 
 /* ════ PAGE WRAP ════ */
-.page-wrap {
+/* .page-wrap {
   margin: 0 auto;
-  padding: 24px 16px 100px;
+  padding: 24px 0 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
+} */
 
 /* ════ MENU GRID ════ */
-.menu-grid {
+/* .menu-grid {
   display: flex;
+  max-width: none;
   flex-direction: column;
   gap: 16px;
-}
+} */
 
 /* ════ MENU CARD ════ */
-.menu-card {
+/* .menu-card {
   background: var(--red-main);
   border: none;
   border-radius: 18px;
@@ -89,7 +82,7 @@ body {
   font-weight: 600;
   text-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
-.menu-card-footer i { font-size: 1rem; }
+.menu-card-footer i { font-size: 1rem; } */
 
 /* ════ ADD BUTTON ════ */
 .btn-add-menu {
@@ -425,6 +418,9 @@ body {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 10px;
+}
+.quest-image {
+  margin: 0;
 }
 .am-btn-submit {
   background: #27ae60; color: var(--white);
