@@ -503,6 +503,16 @@ function removeTag(button) {
 async function saveRecipe() {
     const saveBtn = document.querySelector('.btn-save');
     if (window.isMenuSaving || (saveBtn && (saveBtn.disabled || saveBtn.getAttribute('data-saving') === 'true'))) return;
+
+    const resetSaveBtn = () => {
+        window.isMenuSaving = false;
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.removeAttribute('data-saving');
+            saveBtn.style.pointerEvents = '';
+        }
+    };
+
     window.isMenuSaving = true;
     if (saveBtn) {
         saveBtn.disabled = true;
@@ -533,53 +543,45 @@ async function saveRecipe() {
 
     if (!menuName.trim()) {
         alert('กรุณากรอกชื่อเมนูอาหาร');
-        window.isMenuSaving = false;
-        if (saveBtn) saveBtn.disabled = false;
+        resetSaveBtn();
         return;
     }
     if (isNaN(servings) || servings <= 0) {
         alert('กรุณากรอกจำนวนจานให้ถูกต้อง (มากกว่า 0)');
-        window.isMenuSaving = false;
-        if (saveBtn) saveBtn.disabled = false;
+        resetSaveBtn();
         return;
     }
     if (isNaN(EXP) || EXP <= 0) {
         alert('กรุณากรอกค่า EXP ให้ถูกต้อง (มากกว่า 0)');
-        window.isMenuSaving = false;
-        if (saveBtn) saveBtn.disabled = false;
+        resetSaveBtn();
         return;
     }
     if (!prepTime.trim() || isNaN(parseInt(prepTime)) || parseInt(prepTime) < 0) {
         alert('กรุณากรอกเวลาเตรียมอาหารให้ถูกต้อง');
-        window.isMenuSaving = false;
-        if (saveBtn) saveBtn.disabled = false;
+        resetSaveBtn();
         return;
     }
     if (!cookTime.trim() || isNaN(parseInt(cookTime)) || parseInt(cookTime) < 0) {
         alert('กรุณากรอกเวลาปรุงอาหารให้ถูกต้อง');
-        window.isMenuSaving = false;
-        if (saveBtn) saveBtn.disabled = false;
+        resetSaveBtn();
         return;
     }
     if (tags.length === 0) {
         alert('กรุณาเลือกอย่างน้อย 1 หมวดหมู่');
-        window.isMenuSaving = false;
-        if (saveBtn) saveBtn.disabled = false;
+        resetSaveBtn();
         return;
     }
     
     const menuImage = selectedImageData || (currentEditItem ? currentEditItem.imageURL : '');
     if (!menuImage) {
         alert('กรุณาอัปโหลดรูปภาพเมนูอาหาร');
-        window.isMenuSaving = false;
-        if (saveBtn) saveBtn.disabled = false;
+        resetSaveBtn();
         return;
     }
 
     if (ingredients.length === 0) {
         alert('กรุณาเพิ่มวัตถุดิบอย่างน้อย 1 รายการ');
-        window.isMenuSaving = false;
-        if (saveBtn) saveBtn.disabled = false;
+        resetSaveBtn();
         return;
     }
 
@@ -587,16 +589,14 @@ async function saveRecipe() {
         const ing = ingredients[i];
         if (!ing.name.trim() || isNaN(ing.amount) || ing.amount <= 0 || !ing.unit.trim()) {
             alert(`กรุณากรอกข้อมูลวัตถุดิบรายการที่ ${i + 1} ให้ครบถ้วน (ชื่อวัตถุดิบ, จำนวนที่มากกว่า 0, หน่วย)`);
-            window.isMenuSaving = false;
-            if (saveBtn) saveBtn.disabled = false;
+            resetSaveBtn();
             return;
         }
     }
 
     if (instructions.length === 0) {
         alert('กรุณาเพิ่มขั้นตอนการทำอย่างน้อย 1 ขั้นตอน');
-        window.isMenuSaving = false;
-        if (saveBtn) saveBtn.disabled = false;
+        resetSaveBtn();
         return;
     }
 
@@ -604,8 +604,7 @@ async function saveRecipe() {
         const step = instructions[i];
         if (!step.description.trim()) {
             alert(`กรุณากรอกวิธีทำของขั้นตอนที่ ${i + 1} ให้เรียบร้อย`);
-            window.isMenuSaving = false;
-            if (saveBtn) saveBtn.disabled = false;
+            resetSaveBtn();
             return;
         }
     }
