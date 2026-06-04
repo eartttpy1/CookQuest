@@ -27,7 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'dessert': 'เมนูของหวาน', 'chocolate': 'เมนูช็อคโกแลต',
         'quick-meal': 'เมนูทำง่ายไม่เกิน 15 นาที', 'budget': 'เมนูประหยัด',
         'dorm-life': 'เมนูเด็กหอ', 'business': 'เมนูสร้างอาชีพ', 'lunch-box': 'เมนูข้าวกล่อง',
-        'valentine': 'เมนูวาเลนไทน์', 'halloween': 'เมนูฮาโลวีน', 'christmas': 'เมนูคริสต์มาส'
+        'valentine': 'เมนูวาเลนไทน์', 'halloween': 'เมนูฮาโลวีน', 'christmas': 'เมนูคริสต์มาส',
+        'salad-dressing': 'สูตรน้ำสลัด', 'clean-food': 'เมนูอาหารคลีน', 'salad': 'เมนูสลัด',
+        'weight-loss': 'เมนูอาหารลดน้ำหนัก', 'low-calorie': 'เมนูอาหารแคลอรี่ต่ำ',
+        'low-fat': 'เมนูอาหารไขมันต่ำ', 'high-fiber': 'เมนูอาหารไฟเบอร์สูง'
     };
 
     const categoryName = categoryMap[categoryType] || decodeURIComponent(categoryType || '');
