@@ -1,5 +1,8 @@
 // ฟังก์ชันสร้างระบบเรียงลำดับอิสระสำหรับแต่ละส่วน (questList, menuList)
 function setupSortSystem(listId, triggerBtnId, dropdownId, nameTriggerId, nameOptionsId, nameTextId, expTriggerId, expOptionsId, expTextId) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+
     let currentSortName = 'none';
     let currentSortExp = 'none';
 
