@@ -13,6 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      if (username.length > 10) {
+        alert("ชื่อผู้ใช้ต้องมีความยาวไม่เกิน 10 ตัวอักษร");
+        return;
+      }
+
       const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
       if (!gmailRegex.test(email)) {
         alert("กรุณากรอก Gmail ที่ถูกต้อง (เช่น user@gmail.com)");
@@ -37,6 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // ❌ ไม่ login ตรงนี้
       localStorage.setItem("otp_email", email);
+      if (response.data.otpRef) {
+        localStorage.setItem("otp_ref", response.data.otpRef);
+      }
 
       alert("สมัครสมาชิกสำเร็จ! กรุณายืนยัน OTP");
 

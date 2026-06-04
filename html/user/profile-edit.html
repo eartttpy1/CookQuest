@@ -134,6 +134,9 @@
                         <input type="text" id="email-otp" placeholder="Enter OTP sent to new email" style="flex-grow: 1;">
                         <button class="btn-action" id="btn-confirm-email-otp" style="min-width: 80px;">Confirm</button>
                     </div>
+                    <div id="email-otp-ref-wrapper" class="hidden" style="font-size: 0.85rem; color: #555; text-align: left;">
+                        Reference Code: <span id="email-otp-ref-code" style="background-color: #ffa954; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-family: monospace;"></span>
+                    </div>
                     <button class="btn-action" id="btn-resend-email-otp" style="align-self: flex-start; min-width: 100px; font-size: 0.85rem; padding: 5px 10px;">Resend OTP</button>
                 </div>
             </div>
@@ -160,6 +163,9 @@
                     <div class="input-row">
                         <input type="text" id="password-otp" placeholder="Enter 6-digit OTP">
                         <button class="btn-action" id="btn-send-otp">Send OTP</button>
+                    </div>
+                    <div id="password-otp-ref-wrapper" class="hidden" style="margin-top: 5px; font-size: 0.85rem; color: #555; text-align: left;">
+                        Reference Code: <span id="password-otp-ref-code" style="background-color: #ffa954; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-family: monospace;"></span>
                     </div>
                 </div>
                 <div class="button-group">

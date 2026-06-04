@@ -1,9 +1,21 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   // ✅ ใช้ตัวเดียวพอ
-  const email = localStorage.getItem("otp_email");
+  const email = localStorage.getItem("otp_email") || localStorage.getItem("pendingEmail");
+  if (email) {
+    localStorage.setItem("otp_email", email);
+    localStorage.setItem("pendingEmail", email);
+  }
 
   console.log("email:", email);
+
+  const refWrapper = document.getElementById("otp-ref-wrapper");
+  const refCodeSpan = document.getElementById("otp-ref-code");
+  const otpRef = localStorage.getItem("otp_ref");
+  if (otpRef && refWrapper && refCodeSpan) {
+    refCodeSpan.textContent = otpRef;
+    refWrapper.classList.remove("hidden");
+  }
 
   const inputs = document.querySelectorAll(".otp-input input");
   const button = document.querySelector(".btn-send");
@@ -63,6 +75,13 @@ document.addEventListener("DOMContentLoaded", () => {
           try {
               const res = await axios.post("http://localhost:4000/api/resend-otp", { email });
               alert(res.data.msg || "ส่ง OTP สำเร็จแล้ว");
+              if (res.data.otpRef) {
+                  localStorage.setItem("otp_ref", res.data.otpRef);
+                  if (refWrapper && refCodeSpan) {
+                      refCodeSpan.textContent = res.data.otpRef;
+                      refWrapper.classList.remove("hidden");
+                  }
+              }
               resendCountdown = 60;
               resendBtn.textContent = `Resend OTP in (${resendCountdown}s)`;
               const timer = setInterval(() => {
