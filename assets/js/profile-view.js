@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               labels: labels.length ? labels : ['No Data'],
               datasets: [
                 {
-                  label: 'Approved (Cumulative)',
+                  label: 'Approved',
                   data: approvedCumulative.length ? approvedCumulative : [0],
                   borderColor: approvedColor,
                   backgroundColor: approvedFill,
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   pointHoverRadius: 7
                 },
                 {
-                  label: 'Rejected (Cumulative)',
+                  label: 'Rejected',
                   data: rejectedCumulative.length ? rejectedCumulative : [0],
                   borderColor: rejectedColor,
                   backgroundColor: rejectedFill,

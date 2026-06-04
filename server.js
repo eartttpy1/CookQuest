@@ -174,7 +174,7 @@ async function checkAndAwardBadges(user) {
       user.completedRecipes = uniqueCount;
       userUpdated = true;
     }
-    
+
     if (!user.badges) {
       user.badges = [];
     }
@@ -205,7 +205,7 @@ async function checkAndAwardBadges(user) {
         case 'cooking_streak': {
           const uniqueDays = [...new Set(approvedDishes.map(d => {
             const dateVal = d.submittedAt || d.createdAt;
-            return new Date(dateVal).setHours(0,0,0,0);
+            return new Date(dateVal).setHours(0, 0, 0, 0);
           }))].sort((a, b) => a - b);
 
           let maxStreak = 0;
@@ -257,7 +257,7 @@ async function checkAndAwardBadges(user) {
           }
           const targetCategory = (badge.ruleCategory || '').toLowerCase().trim();
           const targetCount = badge.ruleValue || 0;
-          
+
           if (!targetCategory) break;
 
           const matchingCount = approvedDishes.filter(d => {
