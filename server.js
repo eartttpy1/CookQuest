@@ -1294,7 +1294,7 @@ app.put('/api/requests/:id/status', async (req, res) => {
         UserMenu.findOne({ menuName: request.menuName }).select('EXP').lean(),
         Quest.find().select('_id name exp tags').lean(),
         Menu.find().select('menuName questIds').lean(),
-        Submission.find({ createdBy: creatorId, status: 'approved' })
+        Submission.find({ createdBy: creatorId, status: 'approved', requestId: { $ne: request._id } })
           .select('requestId')
           .populate({ path: 'requestId', select: 'menuName' }).lean()
       ]);
@@ -1311,18 +1311,27 @@ app.put('/api/requests/:id/status', async (req, res) => {
           expReward = userMenu.EXP;
         }
 
-        const currentExp = Number(user.exp || 0);
-        user.exp = currentExp + expReward;
-        user.completedRecipes = (user.completedRecipes || 0) + 1;
+        // Build set of already approved menu names for this user (excluding the current request)
+        const approvedMenuNames = new Set();
+        userSubmissions.forEach(sub => {
+          if (sub.requestId && sub.requestId.menuName) {
+            approvedMenuNames.add(sub.requestId.menuName.toLowerCase().trim());
+          }
+        });
+
+        const isMenuAlreadyCompleted = request.menuName && approvedMenuNames.has(request.menuName.toLowerCase().trim());
+
+        if (!isMenuAlreadyCompleted) {
+          const currentExp = Number(user.exp || 0);
+          user.exp = currentExp + expReward;
+          user.completedRecipes = (user.completedRecipes || 0) + 1;
+          console.log(`User ${user.username} completed menu: ${request.menuName}. Awarded ${expReward} EXP.`);
+        } else {
+          console.log(`User ${user.username} already completed menu: ${request.menuName}. No extra EXP awarded.`);
+        }
 
         // Check Quest completion and award Quest EXP
         try {
-          const approvedMenuNames = new Set();
-          userSubmissions.forEach(sub => {
-            if (sub.requestId && sub.requestId.menuName) {
-              approvedMenuNames.add(sub.requestId.menuName.toLowerCase().trim());
-            }
-          });
           if (request.menuName) {
             approvedMenuNames.add(request.menuName.toLowerCase().trim());
           }

@@ -222,7 +222,7 @@ function createRecipeCard(data, isMenu = false) {
     else if (status === 'rejected') statusClass = 'status-rejected';
 
     const completedCount = (typeof userHistoryData !== 'undefined' ? userHistoryData : []).filter(
-        h => h.requestId && h.requestId.menuName === menu.menuName && h.status === 'approved'
+        h => h.requestId && h.requestId.menuName === menu.menuName
     ).length;
 
     return `
@@ -268,7 +268,7 @@ async function loadCompletedRecipes() {
         userHistoryData = response.data || [];
 
         // Sync exact completed count dynamically from actual history 
-        const actualCompletedCount = userHistoryData.filter(r => r.status === 'approved').length;
+        const actualCompletedCount = userHistoryData.length;
         document.getElementById('profile-completed').textContent = actualCompletedCount;
 
         if (userHistoryData.length === 0) {
@@ -666,8 +666,9 @@ async function loadUserProfile() {
             if (rankEl) rankEl.textContent = levelData.rank;
             
             updateXPDisplay();
+            const actualCompletedCount = (userHistoryData || []).length;
             const compEl = document.getElementById('profile-completed');
-            if (compEl) compEl.textContent = mockUserData.completedRecipes;
+            if (compEl) compEl.textContent = actualCompletedCount;
             const questsCompEl = document.getElementById('profile-quests-completed');
             if (questsCompEl) questsCompEl.textContent = (mockUserData.completedQuests || []).length;
             
