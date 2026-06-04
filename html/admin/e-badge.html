@@ -114,6 +114,7 @@
                 </div>
                 <div class="bar-actions">
                     <button class="btn-add" id="addBtn" onclick="openAddForm()"><i class="fa-solid fa-plus"></i></button>
+                    <button class="btn-delete-mode" id="deleteModeBtn" onclick="toggleDeleteMode()"><i class="fa-solid fa-minus"></i></button>
                 </div>
             </div>
  
@@ -162,11 +163,10 @@
 
                     <div class="form-row">
                         <label class="form-label thai" for="ruleType">เงื่อนไขการได้รับ:</label>
-                        <select class="form-input thai" id="ruleType" onchange="toggleRuleValueInput()">
+                    <select class="form-input thai" id="ruleType" onchange="toggleRuleValueInput()">
                             <option value="level">ระดับเลเวลของโปรไฟล์</option>
                             <option value="recipes_count">จำนวนเมนูอาหารที่ปรุงสำเร็จทั้งหมด</option>
                             <option value="cooking_streak">จำนวนวันที่ปรุงอาหารติดต่อกัน (Streak)</option>
-                            <option value="star_rating">คะแนนรีวิวรสชาติต่ำสุดที่ได้รับ</option>
                             <option value="category_count">จำนวนเมนูสำเร็จในหมวดหมู่เฉพาะ</option>
                         </select>
                     </div>

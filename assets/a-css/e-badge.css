@@ -110,12 +110,59 @@ body.darkmode .list-panel {
 .btn-add:hover { opacity: 0.85; }
 .btn-add i { color: white; font-size: 1.2rem; }
 
+.btn-delete-mode {
+    background: #FFAAAA;
+    color: var(--base-color);
+    border: none;
+    border-radius: 6px;
+    width: 42px;
+    height: 42px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    font-weight: bold;
+}
+.btn-delete-mode:hover { opacity: 0.85; }
+.btn-delete-mode i { font-size: 1.2rem; }
+.btn-delete-mode.active {
+    background: var(--base-color);
+    color: var(--text-color);
+}
+.btn-delete-mode.active i { color: var(--text-color); }
+
+/* ---- Item delete button (shown in delete mode) ---- */
+.item-delete-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: var(--base-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 6px;
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition: opacity 0.2s;
+}
+.item-delete-btn:hover { opacity: 0.8; }
+.item-delete-btn i { color: var(--text-color); font-size: 1rem; }
+
 /* ---- Badge List ---- */
 .badge-list {
     display: flex;
     flex-direction: column;
 }
 
+/* ---- Badge Item ---- */
 .badge-item {
     display: flex;
     align-items: center;
@@ -131,6 +178,22 @@ body.darkmode .badge-item {
     border-bottom: 1px solid #333;
 }
 .badge-item:last-child { border-bottom: none; }
+
+/* ---- Edit button (always visible on right) ---- */
+.btn-edit {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: "Inria Serif", serif;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+}
+.btn-edit:hover { opacity: 0.85; }
 
 .item-icon-circle {
     width: 60px;

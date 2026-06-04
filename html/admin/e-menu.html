@@ -201,9 +201,23 @@
                     <label class="form-label thai">จำนวน</label>
                     <input type="number" class="form-input small thai" id="menuServings" value="1" min="1">
                     <span class="thai unit-label">จาน</span>
-                    <label class="form-label thai" style="margin-left:20px;">EXP</label>
+                    <div class="exp-tooltip-wrapper" style="margin-left:20px;">
+                        <label class="form-label thai exp-label-hover">EXP <i class="fa-solid fa-circle-info" style="font-size:0.8rem;color:#000;"></i></label>
+                        <div class="exp-rank-tooltip">
+                            <div class="exp-tooltip-title">Rank Progression</div>
+                            <div class="exp-tooltip-grid">
+                                <div class="exp-tooltip-item"><span class="exp-rank-badge rank-bronze">Lv.1 BRONZE</span><span class="exp-rank-xp">0–1,500</span></div>
+                                <div class="exp-tooltip-item"><span class="exp-rank-badge rank-silver">Lv.2 SILVER</span><span class="exp-rank-xp">1,501–3,000</span></div>
+                                <div class="exp-tooltip-item"><span class="exp-rank-badge rank-gold">Lv.3 GOLD</span><span class="exp-rank-xp">3,001–5,000</span></div>
+                                <div class="exp-tooltip-item"><span class="exp-rank-badge rank-platinum">Lv.4 PLATINUM</span><span class="exp-rank-xp">5,001–8,000</span></div>
+                                <div class="exp-tooltip-item"><span class="exp-rank-badge rank-diamond">Lv.5 DIAMOND</span><span class="exp-rank-xp">8,001–12,000</span></div>
+                                <div class="exp-tooltip-item"><span class="exp-rank-badge rank-master">Lv.6 MASTER</span><span class="exp-rank-xp">12,001+</span></div>
+                            </div>
+                        </div>
+                    </div>
                     <input type="number" class="form-input small thai" id="menuExp" value="0" min="0">
                 </div>
+
  
                 <!-- Prep / Cook Time -->
                 <div class="form-row time-row">

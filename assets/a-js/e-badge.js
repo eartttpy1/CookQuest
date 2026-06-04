@@ -77,20 +77,16 @@ function renderBadges(badges) {
         const badgeItem = document.createElement('div');
         badgeItem.className = 'badge-item';
         badgeItem.innerHTML = `
+            <button class="item-delete-btn hidden" onclick="openDeleteModal('${badge._id}', '${badge.name}')">
+                <i class="fa-solid fa-minus"></i>
+            </button>
             <div class="item-icon-circle">${badge.icon}</div>
             <div class="item-info">
                 <span class="item-name">${badge.name}</span>
                 <span class="item-desc thai">${badge.desc}</span>
                 <span class="item-rule thai"><i class="fa-solid fa-gears"></i> เงื่อนไข: ${ruleLabel}</span>
             </div>
-            <div class="item-actions">
-                <button class="btn-item-edit thai" onclick="openEditForm('${badge._id}')">
-                    <i class="fa-solid fa-pen"></i> แก้ไข
-                </button>
-                <button class="btn-item-delete thai" onclick="openDeleteModal('${badge._id}', '${badge.name}')">
-                    <i class="fa-solid fa-trash"></i> ลบ
-                </button>
-            </div>
+            <button class="btn-edit" onclick="openEditForm('${badge._id}')">Edit</button>
         `;
         listContainer.appendChild(badgeItem);
     });
@@ -129,6 +125,17 @@ function setupSearch() {
             badge.ruleType.toLowerCase().includes(query)
         );
         renderBadges(filtered);
+    });
+}
+
+// Toggle delete mode (minus button) - mirrors e-menu behavior
+function toggleDeleteMode() {
+    const deleteBtn = document.getElementById('deleteModeBtn');
+    if (!deleteBtn) return;
+    deleteBtn.classList.toggle('active');
+    const isActive = deleteBtn.classList.contains('active');
+    document.querySelectorAll('.item-delete-btn').forEach(btn => {
+        btn.classList.toggle('hidden', !isActive);
     });
 }
 
