@@ -308,8 +308,12 @@ async function deleteItem(button) {
         console.log('Modal callback executed');
         try {
             console.log('Fetching delete for id:', id);
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`/api/quests/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
             console.log('Response status:', response.status);
             if (response.ok) {
@@ -459,12 +463,14 @@ async function saveQuest() {
     const questData = { name, exp, tags };
 
     try {
+        const token = localStorage.getItem('authToken');
         if (currentEditItem) {
             // Edit existing quest
             const response = await fetch(`/api/quests/${currentEditItem._id}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(questData)
             });
@@ -476,7 +482,8 @@ async function saveQuest() {
             await fetch('/api/quests', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(questData)
             });

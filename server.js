@@ -65,6 +65,224 @@ const Submission = require('./serializer/submission');
 const Favorite = require('./serializer/favorite');
 const UserMenu = require('./serializer/usermenu');
 const User = require('./serializer/user');
+const Badge = require('./serializer/badge');
+
+async function seedBadges() {
+  try {
+    const defaultBadges = [
+      {
+        name: 'First Blood',
+        icon: '🔪',
+        desc: 'Complete your first cooking quest',
+        ruleType: 'recipes_count',
+        ruleValue: 1
+      },
+      {
+        name: 'Master Chef',
+        icon: '👨‍🍳',
+        desc: 'Reach Level 5 (Platinum Chef)',
+        ruleType: 'level',
+        ruleValue: 5
+      },
+      {
+        name: 'Star Baker',
+        icon: '⭐',
+        desc: 'Get a 5-star taste rating on a quest',
+        ruleType: 'star_rating',
+        ruleValue: 5
+      },
+      {
+        name: 'Fire Starter',
+        icon: '🔥',
+        desc: 'Maintain a 3-day cooking streak',
+        ruleType: 'cooking_streak',
+        ruleValue: 3
+      },
+      {
+        name: 'Healthy Eats',
+        icon: '🥗',
+        desc: 'Cook 5 healthy meals (Salad/Veg)',
+        ruleType: 'healthy_meals',
+        ruleValue: 5
+      },
+      {
+        name: 'First Dish',
+        icon: '👨‍🍳',
+        desc: 'Complete 1 dish milestone',
+        ruleType: 'recipes_count',
+        ruleValue: 1
+      },
+      {
+        name: '5 Dishes',
+        icon: '🔥',
+        desc: 'Complete 5 dishes milestone',
+        ruleType: 'recipes_count',
+        ruleValue: 5
+      },
+      {
+        name: '10 Dishes',
+        icon: '👑',
+        desc: 'Complete 10 dishes milestone',
+        ruleType: 'recipes_count',
+        ruleValue: 10
+      }
+    ];
+
+    for (const defBadge of defaultBadges) {
+      const existing = await Badge.findOne({ name: defBadge.name });
+      if (existing) {
+        if (!existing.ruleType || existing.ruleType === 'manual' || existing.ruleValue !== defBadge.ruleValue) {
+          existing.ruleType = defBadge.ruleType;
+          existing.ruleValue = defBadge.ruleValue;
+          existing.desc = defBadge.desc;
+          existing.icon = defBadge.icon;
+          await existing.save();
+          console.log(`✓ Updated badge rules for: ${defBadge.name}`);
+        }
+      } else {
+        await Badge.create(defBadge);
+        console.log(`✓ Seeded new badge: ${defBadge.name}`);
+      }
+    }
+    console.log('✓ Seeding check completed');
+  } catch (err) {
+    console.error('✗ Error seeding badges:', err);
+  }
+}
+
+async function checkAndAwardBadges(user) {
+  try {
+    if (!user) return;
+    const approvedDishes = await Request.find({
+      $or: [
+        { createdBy: user._id.toString() },
+        { createdBy: user.username }
+      ],
+      status: 'approved'
+    }).lean();
+    const badges = await Badge.find().lean();
+    
+    if (!user.badges) {
+      user.badges = [];
+    }
+    const earnedBadgeNames = user.badges.map(b => b.name);
+    let userUpdated = false;
+
+    // Cache menus for healthy meals check
+    let allMenus = null;
+
+    for (const badge of badges) {
+      if (earnedBadgeNames.includes(badge.name)) {
+        continue;
+      }
+
+      let isUnlocked = false;
+
+      switch (badge.ruleType) {
+        case 'level':
+          if (user.level >= (badge.ruleValue || 0)) {
+            isUnlocked = true;
+          }
+          break;
+        case 'recipes_count':
+          const count = Math.max(user.completedRecipes || 0, approvedDishes.length);
+          if (count >= (badge.ruleValue || 0)) {
+            isUnlocked = true;
+          }
+          break;
+        case 'cooking_streak': {
+          const uniqueDays = [...new Set(approvedDishes.map(d => {
+            const dateVal = d.submittedAt || d.createdAt;
+            return new Date(dateVal).setHours(0,0,0,0);
+          }))].sort((a, b) => a - b);
+
+          let maxStreak = 0;
+          let currentStreak = 0;
+          let lastDate = null;
+          for (const day of uniqueDays) {
+            if (lastDate && day - lastDate === 86400000) {
+              currentStreak++;
+            } else {
+              currentStreak = 1;
+            }
+            maxStreak = Math.max(maxStreak, currentStreak);
+            lastDate = day;
+          }
+
+          if (maxStreak >= (badge.ruleValue || 0)) {
+            isUnlocked = true;
+          }
+          break;
+        }
+        case 'star_rating': {
+          const targetStar = badge.ruleValue || 5;
+          const hasStar = approvedDishes.some(d => d.tasteRating >= targetStar);
+          if (hasStar) {
+            isUnlocked = true;
+          }
+          break;
+        }
+        case 'healthy_meals': {
+          if (!allMenus) {
+            allMenus = await Menu.find().lean();
+          }
+          const targetCount = badge.ruleValue || 0;
+          const healthyCount = approvedDishes.filter(d => {
+            const menuName = d.menuName || '';
+            const menu = allMenus.find(m => (m.menuName || '').toLowerCase() === menuName.toLowerCase());
+            const tags = menu?.tags || [];
+            return tags.some(t => typeof t === 'string' && (t.includes('สลัด') || t.includes('ผัก') || t.includes('คลีน')));
+          }).length;
+
+          if (healthyCount >= targetCount) {
+            isUnlocked = true;
+          }
+          break;
+        }
+        case 'category_count': {
+          if (!allMenus) {
+            allMenus = await Menu.find().lean();
+          }
+          const targetCategory = (badge.ruleCategory || '').toLowerCase().trim();
+          const targetCount = badge.ruleValue || 0;
+          
+          if (!targetCategory) break;
+
+          const matchingCount = approvedDishes.filter(d => {
+            const menuName = d.menuName || '';
+            const menu = allMenus.find(m => (m.menuName || '').toLowerCase() === menuName.toLowerCase());
+            const tags = menu?.tags || [];
+            return tags.some(t => typeof t === 'string' && t.toLowerCase().includes(targetCategory));
+          }).length;
+
+          if (matchingCount >= targetCount) {
+            isUnlocked = true;
+          }
+          break;
+        }
+        case 'manual':
+        default:
+          break;
+      }
+
+      if (isUnlocked) {
+        user.badges.push({
+          name: badge.name,
+          icon: badge.icon,
+          earnedAt: new Date()
+        });
+        userUpdated = true;
+      }
+    }
+
+    if (userUpdated) {
+      await user.save();
+    }
+  } catch (err) {
+    console.error('Error in checkAndAwardBadges:', err);
+  }
+}
+
 
 const PRESET_CATEGORIES = [
   // วัตถุดิบ
@@ -234,6 +452,8 @@ mongoose.connect(mongoURI, {
       Favorite.syncIndexes(),
     ]);
     console.log('✓ Database indexes synced');
+
+    await seedBadges();
 
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
@@ -836,32 +1056,26 @@ const adminMiddleware = (req, res, next) => {
 };
 
 app.get('/api/profile', authMiddleware, async (req, res) => {
-
   try {
-
     const user = await User.findById(req.user.id)
       .select('-password');
 
     if (!user) {
-
       return res.status(404).json({
         msg: 'User not found'
       });
-
     }
 
+    // Evaluate dynamic badge rules and award qualifying badges
+    await checkAndAwardBadges(user);
+
     res.json(user);
-
   } catch (err) {
-
     console.error(err);
-
     res.status(500).json({
       msg: 'Server error'
     });
-
   }
-
 });
 
 app.put('/api/profile', authMiddleware, async (req, res) => {
@@ -1007,6 +1221,8 @@ async function addExpToProfile(req, res, expToAdd) {
       }
     }
 
+    await checkAndAwardBadges(user);
+
     await user.save();
     res.json({ msg: 'EXP & Level updated successfully', user });
   } catch (err) {
@@ -1019,10 +1235,11 @@ app.post('/api/profile/add-exp', authMiddleware, async (req, res) => {
   return addExpToProfile(req, res, req.body.expToAdd);
 });
 
-app.post('/api/profile/add-badge', authMiddleware, async (req, res) => {
+app.post('/api/profile/add-badge', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const { badgeName, badgeIcon } = req.body;
-    const user = await User.findById(req.user.id);
+    const { badgeName, badgeIcon, userId } = req.body;
+    const targetUserId = userId || req.user.id;
+    const user = await User.findById(targetUserId);
 
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
@@ -1044,6 +1261,80 @@ app.post('/api/profile/add-badge', authMiddleware, async (req, res) => {
     }
   } catch (err) {
     console.error('Error adding badge:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+app.get('/api/badges', async (req, res) => {
+  try {
+    const badges = await Badge.find().sort({ createdAt: -1 });
+    res.json(badges);
+  } catch (err) {
+    console.error('Error fetching badges:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+app.post('/api/badges', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { name, icon, desc, ruleType, ruleValue, ruleCategory } = req.body;
+    if (!name || !icon || !desc) {
+      return res.status(400).json({ msg: 'Please provide name, icon, and desc' });
+    }
+    const exists = await Badge.findOne({ name });
+    if (exists) {
+      return res.status(400).json({ msg: 'Badge with this name already exists' });
+    }
+    const badge = new Badge({ name, icon, desc, ruleType, ruleValue, ruleCategory });
+    await badge.save();
+    res.status(201).json(badge);
+  } catch (err) {
+    console.error('Error creating badge:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+app.put('/api/badges/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { name, icon, desc, ruleType, ruleValue, ruleCategory } = req.body;
+    const badge = await Badge.findById(req.params.id);
+    if (!badge) {
+      return res.status(404).json({ msg: 'Badge not found' });
+    }
+    if (name) badge.name = name;
+    if (icon) badge.icon = icon;
+    if (desc) badge.desc = desc;
+    if (ruleType) badge.ruleType = ruleType;
+    if (ruleValue !== undefined) badge.ruleValue = ruleValue;
+    if (ruleCategory !== undefined) badge.ruleCategory = ruleCategory;
+    await badge.save();
+    res.json(badge);
+  } catch (err) {
+    console.error('Error updating badge:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+app.delete('/api/badges/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const badge = await Badge.findById(req.params.id);
+    if (!badge) {
+      return res.status(404).json({ msg: 'Badge not found' });
+    }
+    await Badge.findByIdAndDelete(req.params.id);
+    res.json({ msg: 'Badge deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting badge:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+app.get('/api/admin/users', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const users = await User.find().select('-password').lean();
+    res.json(users);
+  } catch (err) {
+    console.error('Error fetching users:', err);
     res.status(500).json({ msg: 'Server error' });
   }
 });
@@ -1113,7 +1404,7 @@ app.get('/api/menus/:id', async (req, res) => {
   }
 });
 
-app.post('/api/menus', upload.any(), async (req, res) => {
+app.post('/api/menus', authMiddleware, adminMiddleware, upload.any(), async (req, res) => {
   try {
     const processedBody = await processMenuImages(req, 'CookQuest/menu');
     const menu = new Menu(processedBody);
@@ -1125,7 +1416,7 @@ app.post('/api/menus', upload.any(), async (req, res) => {
   }
 });
 
-app.put('/api/menus/:id', upload.any(), async (req, res) => {
+app.put('/api/menus/:id', authMiddleware, adminMiddleware, upload.any(), async (req, res) => {
   try {
     const processedBody = await processMenuImages(req, 'CookQuest/menu');
     const menu = await Menu.findByIdAndUpdate(req.params.id, processedBody, { new: true, runValidators: true });
@@ -1394,20 +1685,8 @@ app.put('/api/requests/:id/status', async (req, res) => {
           }
         }
 
-        // Check and award Milestone Badges directly to the database
-        if (!Array.isArray(user.badges)) {
-          user.badges = [];
-        }
-        const earnedBadges = user.badges.map((b) => b.name);
-        if (user.completedRecipes >= 1 && !earnedBadges.includes('First Dish')) {
-          user.badges.push({ name: 'First Dish', icon: '👨‍🍳' });
-        }
-        if (user.completedRecipes >= 5 && !earnedBadges.includes('5 Dishes')) {
-          user.badges.push({ name: '5 Dishes', icon: '🔥' });
-        }
-        if (user.completedRecipes >= 10 && !earnedBadges.includes('10 Dishes')) {
-          user.badges.push({ name: '10 Dishes', icon: '👑' });
-        }
+        // Evaluate dynamic badge rules and award qualifying badges
+        await checkAndAwardBadges(user);
 
         await user.save();
       }
@@ -1432,7 +1711,7 @@ app.get('/api/quests', async (req, res) => {
   }
 });
 
-app.post('/api/quests', async (req, res) => {
+app.post('/api/quests', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const quest = new Quest(req.body);
     await quest.save();
@@ -1443,7 +1722,7 @@ app.post('/api/quests', async (req, res) => {
   }
 });
 
-app.put('/api/quests/:id', async (req, res) => {
+app.put('/api/quests/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const quest = await Quest.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!quest) {
@@ -1456,7 +1735,7 @@ app.put('/api/quests/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/quests/:id', async (req, res) => {
+app.delete('/api/quests/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const quest = await Quest.findByIdAndDelete(req.params.id);
     if (!quest) {

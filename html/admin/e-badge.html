@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- ============== Page Title ============== -->
-    <title>Edit Quest</title>
+    <title>จัดการเหรียญตรา</title>
 
     <!-- ============== Font&Icon ============== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,12 +18,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
     <!-- ============== Start  Stylesheet ============== -->
     <link rel="stylesheet" href="../../style.css">
-    <link rel="stylesheet" href="../../assets/a-css/e-quest.css">
+    <link rel="stylesheet" href="../../assets/a-css/e-badge.css">
     <!-- ============== Start  Script ============== -->
     <script src="../../assets/js/sidebar.js" defer></script>
     <script src="../../assets/js/darkmode2press.js" defer></script>
     <script src="../../assets/js/login.js" defer></script>
-    <script src="../../assets/a-js/e-quest.js" defer></script>
+    <script src="../../assets/a-js/e-badge.js" defer></script>
 
 </head>
 <body>
@@ -100,128 +100,124 @@
         </ul>
     </nav>
 
-    <!-- ==============Edit Quest page content ============== -->
-   <main class="equest-container">
+    <!-- ==============Edit badge page content ============== -->
+   <main class="ebadge-container">
  
         <div class="list-panel">
  
-            <!-- Search / Sort / Add / Delete Bar -->
+            <!-- Search / Add Bar -->
             <div class="search-sort-bar">
                 <div class="search-box">
                     <span class="thai search-label">ค้นหา</span>
-                    <input type="text" class="search-input thai" placeholder="ค้นหาเควส..." id="searchInput">
+                    <input type="text" class="search-input thai" placeholder="ค้นหาเหรียญตรา (Badge)..." id="searchInput">
                     <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
                 <div class="bar-actions">
-                    <div class="sort-wrapper">
-                        <button class="sort-btn" id="sortBtn"><i class="fa-solid fa-list"></i></button>
-                        <div class="sort-dropdown hidden" id="sortDropdown">
-                            <!-- Sort Name -->
-                            <div class="sort-row">
-                                <span class="sort-label">Name</span>
-                                <div class="custom-select-wrapper">
-                                    <button class="custom-select-trigger" id="nameTrigger">
-                                        <span id="current-name-text">เลือก</span>
-                                        <i class="fa-solid fa-caret-down"></i>
-                                    </button>
-                                    <div class="custom-options hidden" id="nameOptions">
-                                        <div class="custom-option" data-value="none">เลือก</div>
-                                        <div class="custom-option" data-value="asc">ก → ฮ</div>
-                                        <div class="custom-option" data-value="desc">ฮ → ก</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Sort Exp -->
-                            <div class="sort-row">
-                                <span class="sort-label">Exp</span>
-                                <div class="custom-select-wrapper">
-                                    <button class="custom-select-trigger" id="expTrigger">
-                                        <span id="current-exp-text">เลือก</span>
-                                        <i class="fa-solid fa-caret-down"></i>
-                                    </button>
-                                    <div class="custom-options hidden" id="expOptions">
-                                        <div class="custom-option" data-value="none">เลือก</div>
-                                        <div class="custom-option" data-value="low">น้อย → มาก</div>
-                                        <div class="custom-option" data-value="high">มาก → น้อย</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <button class="btn-add" id="addBtn" onclick="openAddForm()"><i class="fa-solid fa-plus"></i></button>
-                    <button class="btn-delete-mode" id="deleteModeBtn" onclick="toggleDeleteMode()"><i class="fa-solid fa-minus"></i></button>
                 </div>
             </div>
  
-            <!-- Quest List -->
-            <div class="quest-list" id="questList">
-                <!-- Quest items rendered by JS -->
+            <!-- Badge List -->
+            <div class="badge-list" id="badgeList">
+                <!-- Badges rendered from MongoDB dynamic query -->
+            </div>
+        </div>
+
+        <!-- Manual Badge Assignment Section -->
+        <div class="manual-assign-panel">
+            <h2 class="panel-title thai" style="font-weight: 700;">มอบเหรียญตราด้วยตนเอง</h2>
+            <div class="assign-form">
+                <div class="assign-row">
+                    <label class="assign-label thai" for="assignBadgeSelect">เลือกเหรียญตรา:</label>
+                    <select class="assign-select thai" id="assignBadgeSelect">
+                        <option value="">-- เลือกเหรียญตรา --</option>
+                    </select>
+                </div>
+                <div class="assign-row">
+                    <label class="assign-label thai" for="assignUserSelect">เลือกผู้ใช้งาน:</label>
+                    <select class="assign-select thai" id="assignUserSelect">
+                        <option value="">-- เลือกผู้ใช้งาน --</option>
+                    </select>
+                </div>
+                <button class="btn-assign thai" onclick="assignBadgeToUser()">
+                    <i class="fa-solid fa-gift"></i> มอบเหรียญตรา
+                </button>
             </div>
         </div>
     </main>
- 
+
     <!-- ============== Delete Confirmation Modal ============== -->
     <div class="modal-overlay hidden" id="deleteModal">
         <div class="modal-box">
-            <div class="modal-icon">&#9888;</div>
-            <h2 class="modal-title">Confirm deletion?</h2>
+            <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="modal-title thai" id="deleteModalText">ลบเหรียญตรานี้ใช่หรือไม่?</div>
             <div class="modal-actions">
-                <button class="btn-modal-confirm" id="confirmDeleteBtn">Confirm</button>
-                <button class="btn-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-modal-confirm thai" id="confirmDeleteBtn">ใช่, ลบเหรียญตรา</button>
+                <button class="btn-modal-cancel thai" onclick="closeDeleteModal()">ยกเลิก</button>
             </div>
         </div>
     </div>
- 
-    <!-- ============== Add / Edit Quest Form ============== -->
-    <div class="form-overlay hidden" id="formOverlay">
+
+    <!-- ============== Add / Edit Form Modal Overlay ============== -->
+    <div class="form-overlay hidden" id="badgeFormModal">
         <div class="form-panel">
             <div class="form-header">
-                <h2 class="thaipattaya thai" id="formTitle">เพิ่มเควส</h2>
+                <h2 id="formTitle" class="thai">เพิ่มเหรียญตราใหม่</h2>
             </div>
             <div class="form-body">
- 
-                <!-- Image Upload (Hidden since quests do not have images in DB) -->
-                <div class="form-img-upload" id="formImgPreview" style="display: none;">
-                    <label class="img-upload-label thai">
-                        <i class="fa-solid fa-image"></i>
-                        <span>เพิ่มไฟล์รูปภาพ</span>
-                        <input type="file" accept="image/*" class="hidden" id="imgInput" onchange="previewImg(this)">
-                    </label>
-                </div>
- 
-                <!-- Quest Name -->
-                <div class="form-row">
-                    <label class="form-label thai">ชื่อเควส</label>
-                    <input type="text" class="form-input thai" id="questName" placeholder="ชื่อเควส">
-                </div>
- 
-                <!-- EXP -->
-                <div class="form-row">
-                    <label class="form-label thai">EXP ที่ได้</label>
-                    <input type="number" class="form-input small thai" id="questExp" placeholder="200">
-                </div>
- 
-                <!-- Menus used -->
-                <div class="form-section">
-                    <div class="form-section-header thaipattaya thai">เมนูที่ใช้</div>
-                    <div class="tags-area" id="menuTagsArea">
-                        <span class="tag removable thai">เสต็ก <button onclick="removeTag(this)">X</button></span>
+                <form id="badgeForm" onsubmit="saveBadge(event)">
+                    <div class="form-row">
+                        <label class="form-label thai" for="badgeName">ชื่อเหรียญตรา:</label>
+                        <input type="text" class="form-input thai" id="badgeName" required placeholder="เช่น ยอดเชฟเบเกอรี">
                     </div>
-                    <div class="tag-search-row">
-                        <span class="thai">ค้นหา:</span>
-                        <input type="text" class="tag-search-input thai" id="menuTagSearchInput" placeholder="ค้นหาเมนู...">
+                    
+                    <div class="form-row">
+                        <label class="form-label thai" for="badgeIcon">ไอคอน (อิโมจิ):</label>
+                        <input type="text" class="form-input small-icon-input" id="badgeIcon" required placeholder="เช่น ⭐" maxlength="5">
+                        <span class="helper-text thai">ใส่อิโมจิหรือตัวอักษร 1 ตัว</span>
                     </div>
-                    <div class="tag-search-results" id="menuTagSearchResults"></div>
-                </div>
- 
-            </div>
- 
-            <div class="form-footer">
-                <button class="btn-save">Save</button>
-                <button class="btn-cancel" onclick="closeForm()">Cancel</button>
+
+                    <div class="form-row">
+                        <label class="form-label thai" for="badgeDesc">คำอธิบาย:</label>
+                        <textarea class="form-input textarea-desc thai" id="badgeDesc" required placeholder="อธิบายวิธีการได้รับเหรียญตรานี้..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label thai" for="ruleType">เงื่อนไขการได้รับ:</label>
+                        <select class="form-input thai" id="ruleType" onchange="toggleRuleValueInput()">
+                            <option value="level">ระดับเลเวลของโปรไฟล์</option>
+                            <option value="recipes_count">จำนวนเมนูอาหารที่ปรุงสำเร็จทั้งหมด</option>
+                            <option value="cooking_streak">จำนวนวันที่ปรุงอาหารติดต่อกัน (Streak)</option>
+                            <option value="star_rating">คะแนนรีวิวรสชาติต่ำสุดที่ได้รับ</option>
+                            <option value="category_count">จำนวนเมนูสำเร็จในหมวดหมู่เฉพาะ</option>
+                            <option value="manual">มอบให้ด้วยตนเอง (ผู้ดูแลระบบเท่านั้น)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row hidden" id="ruleCategoryRow">
+                        <label class="form-label thai" for="ruleCategory">เลือกหมวดหมู่เป้าหมาย:</label>
+                        <select class="form-input thai" id="ruleCategory">
+                            <!-- Populated dynamically from JavaScript -->
+                        </select>
+                    </div>
+
+                    <div class="form-row" id="ruleValueRow">
+                        <label class="form-label thai" for="ruleValue">เป้าหมายค่าความต้องการ:</label>
+                        <input type="number" class="form-input" id="ruleValue" min="0" value="0">
+                        <span class="unit-label thai" id="ruleValueUnit">ค่าความต้องการ</span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save thai" id="saveBadgeBtn">บันทึก</button>
+                        <button type="button" class="btn-cancel thai" onclick="closeForm()">ยกเลิก</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer"></div>
   
 </body>
 </html>

@@ -1,0 +1,530 @@
+:root{
+  --base-color: #800002;
+  --text-color: white;
+  --background-theme: #FFF3C9;
+  --hover-color: rgb(162, 0, 3, 0.3);
+  --box-shadow-color: rgb(0, 0, 0, 0.7);
+  --border-bottom-color: rgba(255,255,255,0.2);
+  --option-color: #800002;
+}
+body.darkmode{
+  --base-color: #3D4459;
+  --text-color: white;
+  --background-theme: #FFF3C9;
+  --hover-color: rgba(87, 96, 130, 0.7);
+  --box-shadow-color: rgb(0, 0, 0, 0.7);
+  --border-bottom-color: rgba(255,255,255,0.2);
+  --option-color: #2d3241;
+}
+
+.ebadge-container {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ---- List Panel ---- */
+.list-panel {
+    background: white;
+    border-radius: 10px;
+    overflow: visible;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+body.darkmode .list-panel {
+    background: #252836;
+}
+
+/* ---- Search / Add Bar ---- */
+.search-sort-bar {
+    background-color: var(--base-color);
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    gap: 10px;
+    border-radius: 10px 10px 0 0;
+}
+
+.search-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    padding: 0 10px;
+    gap: 8px;
+}
+
+.search-label {
+    color: var(--base-color);
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    padding: 8px 0;
+    background: transparent;
+    color: #333;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+}
+
+.search-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+.search-btn i {
+    color: var(--base-color);
+    font-size: 1.1rem;
+}
+
+.bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-add {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 42px;
+    height: 42px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+.btn-add:hover { opacity: 0.85; }
+.btn-add i { color: white; font-size: 1.2rem; }
+
+/* ---- Badge List ---- */
+.badge-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.badge-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    background: white;
+    position: relative;
+    transition: background 0.2s;
+}
+body.darkmode .badge-item {
+    background: #252836;
+    border-bottom: 1px solid #333;
+}
+.badge-item:last-child { border-bottom: none; }
+
+.item-icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d32f2f, #9e0002);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+}
+
+.item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.item-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #222;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+}
+body.darkmode .item-name {
+    color: white;
+}
+
+.item-desc {
+    font-size: 1rem;
+    color: #666;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+}
+body.darkmode .item-desc {
+    color: #aaa;
+}
+
+.item-rule {
+    font-size: 0.9rem;
+    color: var(--base-color);
+    font-weight: 600;
+    font-family: "Inria Serif", serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+body.darkmode .item-rule {
+    color: #ffaa54;
+}
+
+.item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-item-edit {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.btn-item-edit:hover { opacity: 0.85; }
+
+.btn-item-delete {
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.btn-item-delete:hover { opacity: 0.85; }
+
+/* ---- Manual Assign Panel ---- */
+.manual-assign-panel {
+    background: white;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+}
+body.darkmode .manual-assign-panel {
+    background: #252836;
+}
+
+.panel-title {
+    font-size: 1.6rem;
+    color: var(--base-color);
+    margin: 0;
+}
+body.darkmode .panel-title {
+    color: white;
+}
+
+.assign-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+}
+
+.assign-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.assign-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+}
+body.darkmode .assign-label {
+    color: #ccc;
+}
+
+.assign-select {
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 1rem;
+    outline: none;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    background: white;
+    color: #333;
+}
+body.darkmode .assign-select {
+    background: #1f1f2e;
+    color: white;
+    border: 1.5px solid #444;
+}
+
+.btn-assign {
+    background: var(--base-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.2s;
+}
+.btn-assign:hover { opacity: 0.85; }
+
+/* ---- Form Overlay ---- */
+.form-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.form-panel {
+    background: var(--background-theme);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 8px 30px var(--box-shadow-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+body.darkmode .form-panel {
+    background: #1f1f2e;
+}
+
+.form-header {
+    background: var(--base-color);
+    padding: 18px 24px;
+}
+.form-header h2 {
+    color: var(--text-color);
+    font-size: 1.6rem;
+    margin: 0;
+    font-family: "Pattaya", sans-serif;
+}
+
+.form-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+}
+body.darkmode .form-label {
+    color: #ccc;
+}
+
+.form-input {
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    outline: none;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    background: white;
+    color: #333;
+    transition: border-color 0.2s;
+}
+body.darkmode .form-input {
+    background: #252836;
+    color: white;
+    border: 1.5px solid #444;
+}
+.form-input:focus { border-color: var(--base-color); }
+
+.small-icon-input {
+    width: 80px;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.textarea-desc {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.helper-text {
+    font-size: 0.85rem;
+    color: #666;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+}
+body.darkmode .helper-text {
+    color: #888;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.btn-save {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    flex: 1;
+}
+.btn-save:hover { opacity: 0.9; }
+
+.btn-cancel {
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    flex: 1;
+}
+.btn-cancel:hover { opacity: 0.9; }
+
+/* ---- Delete Modal ---- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-box {
+    background: var(--base-color);
+    border-radius: 20px;
+    padding: 24px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    min-width: 280px;
+    box-shadow: 0 8px 30px var(--box-shadow-color);
+}
+
+.modal-icon {
+    font-size: 2.2rem;
+    color: white;
+}
+
+.modal-title {
+    font-size: 1.4rem;
+    color: white;
+    font-family: "Inria Serif", serif;
+    text-align: center;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-modal-confirm {
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 10px 24px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-modal-confirm:hover { opacity: 0.9; }
+
+.btn-modal-cancel {
+    background: white;
+    color: #333;
+    border: none;
+    border-radius: 30px;
+    padding: 10px 24px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-modal-cancel:hover { opacity: 0.9; }
+
+/* ---- Toasts ---- */
+#toastContainer {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-family: "IBM Plex Sans Thai Looped", sans-serif;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.success { background: #2ecc71; }
+.toast.error { background: #e74c3c; }
+.toast.info { background: #3498db; }
+
+.hidden {
+    display: none !important;
+}

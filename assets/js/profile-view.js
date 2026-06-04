@@ -6,6 +6,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const userId = userData.user.id;
       const token = localStorage.getItem('authToken');
 
+      // Fetch all system badges dynamically from database
+      let allSystemBadges = [];
+      try {
+          const badgeRes = await fetch('/api/badges');
+          if (badgeRes.ok) {
+              allSystemBadges = await badgeRes.json();
+          }
+      } catch (err) {
+          console.error('Failed to load system badges', err);
+      }
+
       let chartInstance = null;
       
       const renderView = (profile, historyData, quests = []) => {
@@ -110,15 +121,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           profile.level = lvl;
           profile.rank = currentLevelData.rank;
 
-          // Use the logic from our separate file to evaluate badges
-          const evaluatedBadges = window.evaluateBadges 
-              ? window.evaluateBadges(profile, historyData, approvedDishes) 
-              : [];
-              
-          // Automatically save any newly unlocked badges to the database!
-          if (window.syncNewBadges && evaluatedBadges.length > 0) {
-              window.syncNewBadges(evaluatedBadges);
-          }
+          // Cross-reference all system badges with user's earned badges
+          const earnedBadges = profile.badges || [];
+          const evaluatedBadges = allSystemBadges.map(sysBadge => {
+              const isUnlocked = earnedBadges.some(b => b.name === sysBadge.name);
+              return {
+                  name: sysBadge.name,
+                  icon: sysBadge.icon,
+                  desc: sysBadge.desc,
+                  isUnlocked: isUnlocked
+              };
+          });
 
           let badgeHTML = ``;
           evaluatedBadges.forEach(badgeDef => {
@@ -154,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (questsContainer) {
               const completedQuests = profile.completedQuests || [];
               if (completedQuests.length === 0) {
-                  questsContainer.innerHTML = '<p class="thai" style="color: var(--profile-stat-text-muted); opacity: 0.8; font-size: 0.95rem;">ยังไม่มีเควสที่ทำสำเร็จ (No completed quests yet)</p>';
+                  questsContainer.innerHTML = '<p class="thai" style="color: var(--perf-text-muted); font-weight: 300; font-size: 0.95rem;">ยังไม่มีเควสที่ทำสำเร็จ (No completed quests yet)</p>';
               } else {
                   questsContainer.innerHTML = completedQuests.map(qId => {
                       const questObj = quests.find(q => q._id === qId);

@@ -562,7 +562,7 @@ async function saveRecipe() {
         return;
     }
     if (tags.length === 0) {
-        alert('กรุณาเลือกหรือเพิ่มอย่างน้อย 1 หมวดหมู่ (Tag)');
+        alert('กรุณาเลือกอย่างน้อย 1 หมวดหมู่');
         window.isMenuSaving = false;
         if (saveBtn) saveBtn.disabled = false;
         return;
@@ -626,12 +626,14 @@ async function saveRecipe() {
     };
 
     try {
+        const token = localStorage.getItem('authToken');
         if (currentEditItem) {
             // Edit existing menu
             const response = await fetch(`/api/menus/${currentEditItem._id}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(recipeData)
             });
@@ -643,7 +645,8 @@ async function saveRecipe() {
             await fetch('/api/menus', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(recipeData)
             });

@@ -59,19 +59,5 @@ window.evaluateBadges = function(profile, historyData, approvedDishes) {
  * @param {Array} evaluatedBadges - The array returned from evaluateBadges
  */
 window.syncNewBadges = async function(evaluatedBadges) {
-    const token = localStorage.getItem('authToken');
-    if (!token) return;
-
-    const newBadges = evaluatedBadges.filter(b => b.isNewlyUnlocked);
-    for (const badge of newBadges) {
-        try {
-            await axios.post('http://localhost:4000/api/profile/add-badge', 
-                { badgeName: badge.name, badgeIcon: badge.icon },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            console.log(`🎉 New badge permanently saved to database: ${badge.name}`);
-        } catch (err) {
-            console.error('Failed to sync new badge to database:', err);
-        }
-    }
+    // No-op: Badge checks and awarding are handled securely on the server-side
 };

@@ -456,96 +456,60 @@ function highlightCurrentRank() {
 /**
  * Load user badges from database
  */
-function loadUserBadges() {
+async function loadUserBadges() {
     const badgeList = document.getElementById('badge-list');
     if (!badgeList) return;
 
     badgeList.innerHTML = '';
 
-    const profile = {
-        level: getRankByXP(mockUserData.exp).level,
-        badges: mockUserData.badges || []
-    };
-    
-    const historyData = typeof userHistoryData !== 'undefined' ? userHistoryData : [];
-    const approvedDishes = historyData.filter(item => item.status === 'approved');
-
-    let evaluatedBadges = [];
-    
-    // Use the shared badge-logic if loaded, otherwise fallback to exact replica
-    if (typeof window.evaluateBadges === 'function') {
-        evaluatedBadges = window.evaluateBadges(profile, historyData, approvedDishes);
-        if (typeof window.syncNewBadges === 'function') {
-            window.syncNewBadges(evaluatedBadges);
+    try {
+        const response = await fetch('/api/badges');
+        if (!response.ok) {
+            throw new Error('Failed to fetch system badges');
         }
-    } else {
-        const lvl = profile.level || 1;
-        const earnedBadges = profile.badges || [];
-        
-        let maxStreak = 0, currentStreak = 0, lastDate = null;
-        const uniqueDays = [...new Set(approvedDishes.map(d => new Date(d.submittedAt || d.createdAt).setHours(0,0,0,0)))].sort();
-        uniqueDays.forEach(day => {
-            if (lastDate && day - lastDate === 86400000) currentStreak++;
-            else currentStreak = 1;
-            maxStreak = Math.max(maxStreak, currentStreak);
-            lastDate = day;
+        const allSystemBadges = await response.json();
+        const earnedBadges = mockUserData.badges || [];
+
+        const evaluatedBadges = allSystemBadges.map(sysBadge => {
+            const isUnlocked = earnedBadges.some(b => b.name === sysBadge.name);
+            return {
+                name: sysBadge.name,
+                icon: sysBadge.icon,
+                desc: sysBadge.desc,
+                isUnlocked: isUnlocked
+            };
         });
 
-        const healthyCount = approvedDishes.filter(d => {
-            const menuName = d.requestId?.menuName || '';
-            const menu = allMenusData.find(m => m.menuName === menuName);
-            const tags = menu?.tags || [];
-            return tags.some(t => typeof t === 'string' && (t.includes('สลัด') || t.includes('ผัก') || t.includes('คลีน')));
-        }).length;
+        badgeList.style.display = 'flex';
+        badgeList.style.flexWrap = 'nowrap';
+        badgeList.style.justifyContent = 'flex-start';
+        badgeList.style.gap = '20px';
+        badgeList.style.paddingLeft = '5px';
+        badgeList.style.overflowX = 'auto';
+        badgeList.style.paddingBottom = '10px';
 
-        const ALL_BADGES = [
-            { name: 'Master Chef', icon: '👨‍🍳', desc: 'Reach Level 5 (Platinum Chef)', logicUnlocked: lvl >= 5 },
-            { name: 'First Blood', icon: '🔪', desc: 'Complete your first cooking quest', logicUnlocked: approvedDishes.length > 0 },
-            { name: 'Star Baker', icon: '⭐', desc: 'Get a 5-star taste rating on a quest', logicUnlocked: historyData.some(dish => dish.tasteRating === 5) },
-            { name: 'Fire Starter', icon: '🔥', desc: 'Maintain a 3-day cooking streak', logicUnlocked: maxStreak >= 3 },
-            { name: 'Healthy Eats', icon: '🥗', desc: 'Cook 5 healthy meals (Salad/Veg)', logicUnlocked: healthyCount >= 5 }
-        ];
+        evaluatedBadges.forEach(badgeDef => {
+            const filterStyle = badgeDef.isUnlocked ? '' : 'filter: grayscale(100%) opacity(40%);';
+            const bgStyle = badgeDef.isUnlocked ? 'background: linear-gradient(135deg, #d32f2f, #9e0002); color: white;' : 'background: #444; color: #888;';
+            const title = badgeDef.isUnlocked ? badgeDef.name : `Locked: ${badgeDef.name}\n${badgeDef.desc}`;
 
-        evaluatedBadges = ALL_BADGES.map(badgeDef => {
-            const inDB = earnedBadges.some(b => b.name === badgeDef.name || b.icon === badgeDef.icon);
-            const isUnlocked = badgeDef.logicUnlocked || inDB;
-            
-            if (badgeDef.logicUnlocked && !inDB) {
-                const token = localStorage.getItem('authToken');
-                if (token && typeof axios !== 'undefined') {
-                    axios.post('http://localhost:4000/api/profile/add-badge', 
-                        { badgeName: badgeDef.name, badgeIcon: badgeDef.icon },
-                        { headers: { Authorization: `Bearer ${token}` } }
-                    ).catch(e => console.error(e));
-                }
-            }
-            
-            return { ...badgeDef, isUnlocked };
-        });
-    }
-
-    badgeList.style.display = 'flex';
-    badgeList.style.flexWrap = 'nowrap';
-    badgeList.style.justifyContent = 'flex-start';
-    badgeList.style.gap = '20px';
-    badgeList.style.paddingLeft = '5px';
-    badgeList.style.overflowX = 'auto';
-    badgeList.style.paddingBottom = '10px';
-
-    evaluatedBadges.forEach(badgeDef => {
-        const filterStyle = badgeDef.isUnlocked ? '' : 'filter: grayscale(100%) opacity(40%);';
-        const bgStyle = badgeDef.isUnlocked ? 'background: linear-gradient(135deg, #d32f2f, #9e0002); color: white;' : 'background: #444; color: #888;';
-        const title = badgeDef.isUnlocked ? badgeDef.name : `Locked: ${badgeDef.name}\n${badgeDef.desc}`;
-
-        badgeList.innerHTML += `
-            <div class="badge" style="display: flex; flex-direction: column; align-items: center; ${filterStyle} transition: all 0.3s ease;">
-                <div class="circle ${badgeDef.isUnlocked ? 'unlocked-badge' : ''}" title="${title}" style="${bgStyle} display: flex; align-items: center; justify-content: center; font-size: 24px; width: 50px; height: 50px; border-radius: 50%;">
-                    ${badgeDef.icon}
+            badgeList.innerHTML += `
+                <div class="badge" 
+                     data-name="${badgeDef.name}" 
+                     data-desc="${badgeDef.desc}" 
+                     data-icon="${badgeDef.icon}" 
+                     data-unlocked="${badgeDef.isUnlocked}"
+                     style="display: flex; flex-direction: column; align-items: center; ${filterStyle} transition: all 0.3s ease; cursor: pointer;">
+                    <div class="circle ${badgeDef.isUnlocked ? 'unlocked-badge' : ''}" title="${title}" style="${bgStyle} display: flex; align-items: center; justify-content: center; font-size: 24px; width: 50px; height: 50px; border-radius: 50%;">
+                        ${badgeDef.icon}
+                    </div>
+                    <p title="${title}" style="text-align: center; margin-top: 5px; font-size: 12px; white-space: nowrap; max-width: 65px; overflow: hidden; text-overflow: ellipsis;">${badgeDef.name}</p>
                 </div>
-                <p title="${title}" style="text-align: center; margin-top: 5px; font-size: 12px; white-space: nowrap;">${badgeDef.name}</p>
-            </div>
-        `;
-    });
+            `;
+        });
+    } catch (err) {
+        console.error('Error rendering user badges:', err);
+    }
 }
 
 function getRankColor(rank) {
@@ -797,6 +761,62 @@ async function loadUserProfile() {
 document.addEventListener('DOMContentLoaded', () => {
     loadUserProfile();
     initTabSwitching();
+
+    // Setup Modal Click Events for Badges
+    const badgeModal = document.getElementById('badgeModal');
+    const closeBadgeModal = document.getElementById('closeBadgeModal');
+    
+    if (badgeModal && closeBadgeModal) {
+        closeBadgeModal.addEventListener('click', () => badgeModal.classList.add('hidden'));
+        badgeModal.addEventListener('click', (e) => {
+            if (e.target === badgeModal) badgeModal.classList.add('hidden');
+        });
+        
+        const badgeList = document.getElementById('badge-list');
+        if (badgeList) {
+            badgeList.addEventListener('click', (e) => {
+                const card = e.target.closest('.badge');
+                if (!card) return;
+  
+                const isUnlocked = card.dataset.unlocked === 'true';
+  
+                // Set Modal Content
+                const modalIcon = document.getElementById('modalBadgeIcon');
+                modalIcon.textContent = card.dataset.icon;
+                modalIcon.style.background = isUnlocked ? 'linear-gradient(135deg, #d32f2f, #9e0002)' : '#444';
+                modalIcon.style.color = isUnlocked ? 'white' : '#888';
+                modalIcon.style.filter = isUnlocked ? 'none' : 'grayscale(100%) opacity(40%)';
+                
+                if (isUnlocked) {
+                    modalIcon.classList.add('unlocked-badge');
+                } else {
+                    modalIcon.classList.remove('unlocked-badge');
+                }
+
+                // Re-trigger animation
+                modalIcon.classList.remove('icon-animate');
+                void modalIcon.offsetWidth; // trigger reflow to restart animation
+                modalIcon.classList.add('icon-animate');
+                
+                document.getElementById('modalBadgeName').textContent = card.dataset.name;
+                document.getElementById('modalBadgeDesc').textContent = card.dataset.desc;
+                
+                const statusEl = document.getElementById('modalBadgeStatus');
+                if (isUnlocked) {
+                    statusEl.textContent = '✅ Unlocked';
+                    statusEl.style.backgroundColor = document.body.classList.contains('darkmode') ? 'rgba(46, 125, 50, 0.3)' : '#e8f5e9';
+                    statusEl.style.color = document.body.classList.contains('darkmode') ? '#81c784' : '#2e7d32';
+                } else {
+                    statusEl.textContent = '🔒 Locked';
+                    statusEl.style.backgroundColor = document.body.classList.contains('darkmode') ? '#444' : '#eeeeee';
+                    statusEl.style.color = document.body.classList.contains('darkmode') ? '#bbb' : '#757575';
+                }
+  
+                // Show the modal
+                badgeModal.classList.remove('hidden');
+            });
+        }
+    }
     
     // Allow testing with different users via console
     window.switchUser = (username) => {
