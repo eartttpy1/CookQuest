@@ -19,8 +19,6 @@ tags:
     description: จัดการโปรไฟล์ผู้ใช้ EXP และ Badge
   - name: Menus
     description: รายการเมนูอาหาร (POST/PUT/DELETE — Admin only)
-  - name: Tags
-    description: แท็กสำหรับเมนูและ Quest (POST/DELETE — Admin only)
   - name: Requests
     description: คำขอ Submission (มุมมอง Admin) — ต้อง Login
   - name: Submissions
@@ -1073,74 +1071,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '400':
           $ref: '#/components/responses/NotFound'
-
-  # ══════════════════════════════════════
-  # TAGS
-  # ══════════════════════════════════════
-  /tags:
-    get:
-      tags: [Tags]
-      summary: ดูแท็กทั้งหมด (Public)
-      parameters:
-        - name: search
-          in: query
-          description: กรองแท็กด้วย keyword (case-insensitive)
-          schema:
-            type: string
-          example: "ผัด"
-      responses:
-        '200':
-          description: รายการแท็ก
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Tag'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    post:
-      tags: [Tags]
-      summary: สร้างแท็ก (Admin only)
-      description: ถ้าแท็กมีอยู่แล้วจะ upsert (ไม่ duplicate)
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name]
-              properties:
-                name:
-                  oneOf:
-                    - type: string
-                      example: "ผัด"
-                    - type: array
-                      items:
-                        type: string
-                      example: ["ผัด", "ต้ม", "ทอด"]
-      responses:
-        '201':
-          description: แท็กที่สร้าง (ถ้าส่ง array จะได้ array กลับมา)
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Tag'
-                  - type: array
-                    items:
-                      $ref: '#/components/schemas/Tag'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '400':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/ServerError'
 
   # ══════════════════════════════════════
   # REQUESTS (Admin View)
