@@ -724,6 +724,20 @@ async function loadQuestDetails(questId) {
 
         window.allRelatedMenus = relatedMenus; // เก็บไว้ใช้ใน Modal
         applySearchAndRender();
+
+        if (typeof setupSortSystem === 'function') {
+            setupSortSystem(
+                'menuList',
+                'sortBtn',
+                'sortDropdown',
+                'nameTrigger',
+                'nameOptions',
+                'current-name-text',
+                'expTrigger',
+                'expOptions',
+                'current-exp-text'
+            );
+        }
     };
 
     if (cachedData) {

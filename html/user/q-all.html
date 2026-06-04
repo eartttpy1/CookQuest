@@ -116,8 +116,9 @@
         </ul>
     </nav>
 
-    <!-- ==============search Quest page content ============== -->
+    <!-- ==============All Quest Page content ============== -->
     <div class="container-main">
+        <!-- ==============Search Bar ============== -->
         <div class="search-container">
             <span class="search-label thai">ค้นหา</span>
             <input type="text" class="search-input thai" placeholder="ชื่อเมนู, ส่วนผสม">
@@ -163,7 +164,7 @@
                         </div>
                     </div>
                 </section>
-
+            <!-- ==============Category Grid ============== -->
             <section class="category-grid">
                 <details class="dropdown">
                     <summary class="thai"><span>วัตถุดิบ</span><i class="fa-solid fa-caret-down"></i></summary>
@@ -268,10 +269,11 @@
                     </ul>
                 </details>
             </section>
-
+            <!-- ==============Quest Container ============== -->
             <section class ="category-container">
                 <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
                     <span class="category-header" style="margin-bottom: 0;">Quest</span>
+                    <!-- ==============Go to Menus Buttons ============== -->
                     <a href="#menuSection" class="goto-menu-btn thai" onclick="document.getElementById('menuSection').scrollIntoView({ behavior: 'smooth' }); return false;" 
                     style="text-decoration: none; background: white; color: var(--red-main); border: 2px solid var(--red-main); padding: 6px 14px; border-radius: 10px; font-weight: bold; font-size: 0.95rem; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 0;" 
                     onmouseover="this.style.background='var(--red-main)'; this.style.color='white'; this.querySelector('i').style.color='white';" 
@@ -319,8 +321,10 @@
                     </div>
                 </div>
             </section>
+            <!-- ==============Quest List ============== -->
             <section id="questList" class="quest-section"></section>
             </div>
+            <!-- ==============Menu Section ============== -->
             <section class ="category-container" id="menuSection">
                     <span class="category-header">Menu</span>
                 <div class="sort-container">
@@ -364,7 +368,7 @@
             </section>
             <section id="menuList" class="quest-section"></section>
 
-            <!-- Modal Overlay -->
+            <!------------------- Modal Overlay ---------------------->
             <div id="questModal" class="modal-overlay hidden">
                 <div class="modal-content">
                     <button class="close-modal" id="closeModal">&times;</button>

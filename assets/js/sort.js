@@ -3,10 +3,13 @@ function setupSortSystem(listId, triggerBtnId, dropdownId, nameTriggerId, nameOp
     const list = document.getElementById(listId);
     if (!list) return;
 
+    const sortBtn = document.getElementById(triggerBtnId);
+    if (!sortBtn || sortBtn.dataset.sortBound === 'true') return;
+    sortBtn.dataset.sortBound = 'true';
+
     let currentSortName = 'none';
     let currentSortExp = 'none';
 
-    const sortBtn = document.getElementById(triggerBtnId);
     const sortDropdown = document.getElementById(dropdownId);
     
     if (sortBtn && sortDropdown) {
