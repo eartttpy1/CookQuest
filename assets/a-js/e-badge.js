@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     populatePresetCategories();
     await loadBadges();
-    await loadUsers();
     setupSearch();
     toggleRuleValueInput();
 });
@@ -50,7 +49,6 @@ async function loadBadges() {
         }
         allBadges = await response.json();
         renderBadges(allBadges);
-        populateAssignBadgeDropdown(allBadges);
     } catch (error) {
         console.error('Error loading badges:', error);
         showToast('เกิดข้อผิดพลาดในการโหลดเหรียญตรา', 'error');
@@ -138,8 +136,8 @@ function setupSearch() {
 function toggleRuleValueInput() {
     const ruleType = document.getElementById('ruleType').value;
     const ruleValueRow = document.getElementById('ruleValueRow');
-    const ruleValueUnit = document.getElementById('ruleValueUnit');
     const ruleCategoryRow = document.getElementById('ruleCategoryRow');
+    const ruleValueInput = document.getElementById('ruleValue');
 
     // Show/hide category dropdown
     if (ruleType === 'category_count') {
@@ -153,25 +151,25 @@ function toggleRuleValueInput() {
     } else {
         ruleValueRow.classList.remove('hidden');
         
-        // Update label helper text
+        // Update input placeholder text
         switch (ruleType) {
             case 'level':
-                ruleValueUnit.textContent = 'เลเวลเป้าหมาย';
+                ruleValueInput.placeholder = 'เลเวลเป้าหมาย';
                 break;
             case 'recipes_count':
-                ruleValueUnit.textContent = 'จำนวนเมนูเป้าหมาย';
+                ruleValueInput.placeholder = 'จำนวนเมนูเป้าหมาย';
                 break;
             case 'cooking_streak':
-                ruleValueUnit.textContent = 'จำนวนวันเป้าหมาย';
+                ruleValueInput.placeholder = 'จำนวนวันเป้าหมาย';
                 break;
             case 'star_rating':
-                ruleValueUnit.textContent = 'จำนวนดาวรีวิวเป้าหมาย (1-5)';
+                ruleValueInput.placeholder = 'จำนวนดาวรีวิวเป้าหมาย (1-5)';
                 break;
             case 'category_count':
-                ruleValueUnit.textContent = 'จำนวนเมนูในหมวดหมู่เป้าหมาย';
+                ruleValueInput.placeholder = 'จำนวนเมนูในหมวดหมู่เป้าหมาย';
                 break;
             default:
-                ruleValueUnit.textContent = 'เป้าหมายค่าความต้องการ';
+                ruleValueInput.placeholder = 'เป้าหมายค่าความต้องการ';
         }
     }
 }
@@ -292,98 +290,6 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
         closeDeleteModal();
     }
 });
-
-// Fetch all users list to award badge manually
-async function loadUsers() {
-    const token = localStorage.getItem('authToken');
-    try {
-        const response = await fetch('/api/admin/users', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) {
-            throw new Error('Failed to fetch users');
-        }
-        const users = await response.json();
-        populateUserDropdown(users);
-    } catch (error) {
-        console.error('Error loading users:', error);
-    }
-}
-
-// Populate user dropdown selector
-function populateUserDropdown(users) {
-    const userSelect = document.getElementById('assignUserSelect');
-    if (!userSelect) return;
-
-    userSelect.innerHTML = '<option value="">-- เลือกผู้ใช้งาน --</option>';
-    
-    // Sort users alphabetically by username
-    users.sort((a, b) => a.username.localeCompare(b.username));
-    
-    users.forEach(user => {
-        const option = document.createElement('option');
-        option.value = user._id;
-        option.textContent = `${user.username} (${user.email})`;
-        userSelect.appendChild(option);
-    });
-}
-
-// Populate badge dropdown selector for assignment
-function populateAssignBadgeDropdown(badges) {
-    const badgeSelect = document.getElementById('assignBadgeSelect');
-    if (!badgeSelect) return;
-
-    badgeSelect.innerHTML = '<option value="">-- เลือกเหรียญตรา --</option>';
-    
-    badges.forEach(badge => {
-        const option = document.createElement('option');
-        option.value = badge.name;
-        option.setAttribute('data-icon', badge.icon);
-        option.textContent = `${badge.icon} ${badge.name}`;
-        badgeSelect.appendChild(option);
-    });
-}
-
-// Award a badge manually to a user
-async function assignBadgeToUser() {
-    const badgeName = document.getElementById('assignBadgeSelect').value;
-    const userId = document.getElementById('assignUserSelect').value;
-
-    if (!badgeName || !userId) {
-        showToast('กรุณาเลือกทั้งเหรียญตราและผู้ใช้งาน', 'error');
-        return;
-    }
-
-    const selectedOption = document.getElementById('assignBadgeSelect').selectedOptions[0];
-    const badgeIcon = selectedOption.getAttribute('data-icon');
-
-    const token = localStorage.getItem('authToken');
-
-    try {
-        const response = await fetch('/api/profile/add-badge', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ badgeName, badgeIcon, userId })
-        });
-
-        if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.msg || 'ไม่สามารถมอบเหรียญตราได้');
-        }
-
-        showToast('มอบเหรียญตราสำเร็จ!', 'success');
-        document.getElementById('assignBadgeSelect').value = '';
-        document.getElementById('assignUserSelect').value = '';
-    } catch (error) {
-        console.error('Error awarding badge:', error);
-        showToast(error.message || 'เกิดข้อผิดพลาดในการมอบเหรียญตรา', 'error');
-    }
-}
 
 // Show feedback toasts
 function showToast(message, type = 'info') {

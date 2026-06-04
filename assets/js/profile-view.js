@@ -53,54 +53,84 @@ document.addEventListener('DOMContentLoaded', async () => {
               xpProgress.setAttribute('aria-label', `Experience: ${exp} of ${maxDisplay}`);
           }
 
-          // 1. Filter only 'approved' dishes and sort them by date (oldest to newest)
+          // 1. Separate approved and rejected dishes, sort by date (oldest first)
           const approvedDishes = historyData.filter(item => item.status === 'approved');
+          const rejectedDishes = historyData.filter(item => item.status === 'rejected');
           approvedDishes.sort((a, b) => new Date(a.submittedAt || a.createdAt) - new Date(b.submittedAt || b.createdAt));
+          rejectedDishes.sort((a, b) => new Date(a.submittedAt || a.createdAt) - new Date(b.submittedAt || b.createdAt));
 
-          // 2. Group the dishes by Date
-          const dateCounts = {};
-          approvedDishes.forEach(dish => {
+          // 2. Build a unified sorted label set from ALL submissions (approved + rejected)
+          const allDishes = [...historyData].sort((a, b) => new Date(a.submittedAt || a.createdAt) - new Date(b.submittedAt || b.createdAt));
+          const allDateSet = [];
+          allDishes.forEach(dish => {
             const date = new Date(dish.submittedAt || dish.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
-            dateCounts[date] = (dateCounts[date] || 0) + 1;
+            if (!allDateSet.includes(date)) allDateSet.push(date);
           });
+          const labels = allDateSet;
 
-          const labels = Object.keys(dateCounts);
-          const dailyCounts = Object.values(dateCounts);
+          // 3. Helper: build cumulative data aligned to the unified label set
+          function buildCumulativeData(dishes, allLabels) {
+            const dateCounts = {};
+            dishes.forEach(dish => {
+              const date = new Date(dish.submittedAt || dish.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+              dateCounts[date] = (dateCounts[date] || 0) + 1;
+            });
+            let total = 0;
+            return allLabels.map(label => {
+              total += (dateCounts[label] || 0);
+              return total;
+            });
+          }
 
-          // 3. Make the data cumulative so the chart shows total progress over time
-          let total = 0;
-          const cumulativeData = dailyCounts.map(count => {
-            total += count;
-            return total;
-          });
+          const approvedCumulative = buildCumulativeData(approvedDishes, labels);
+          const rejectedCumulative = buildCumulativeData(rejectedDishes, labels);
 
           const isDarkMode = document.body.classList.contains('darkmode');
           const textColor = isDarkMode ? '#b8c2d8' : '#4a4540';
           const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e0dcd4';
-          const accentColor = isDarkMode ? '#8fa4e8' : '#800002';
-          const fillColor = isDarkMode ? 'rgba(143, 164, 232, 0.2)' : 'rgba(128, 0, 2, 0.12)';
+          const approvedColor = isDarkMode ? '#8fa4e8' : '#800002';
+          const approvedFill = isDarkMode ? 'rgba(143, 164, 232, 0.15)' : 'rgba(128, 0, 2, 0.1)';
+          const rejectedColor = isDarkMode ? '#f4845f' : '#c0392b';
+          const rejectedFill = isDarkMode ? 'rgba(244, 132, 95, 0.1)' : 'rgba(192, 57, 43, 0.07)';
 
-          // 4. Render the Chart
+          // 4. Render the Chart with two datasets
           const ctx = document.getElementById('progressChart').getContext('2d');
           if (chartInstance) chartInstance.destroy();
           chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
               labels: labels.length ? labels : ['No Data'],
-              datasets: [{
-                label: 'Total Completed Dishes',
-                data: cumulativeData.length ? cumulativeData : [0],
-                borderColor: accentColor,
-                backgroundColor: fillColor,
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: isDarkMode ? '#3D4459' : '#fff',
-                pointBorderColor: accentColor,
-                pointBorderWidth: 2,
-                pointRadius: 5,
-                pointHoverRadius: 7
-              }]
+              datasets: [
+                {
+                  label: 'Approved (Cumulative)',
+                  data: approvedCumulative.length ? approvedCumulative : [0],
+                  borderColor: approvedColor,
+                  backgroundColor: approvedFill,
+                  borderWidth: 3,
+                  fill: true,
+                  tension: 0.4,
+                  pointBackgroundColor: isDarkMode ? '#3D4459' : '#fff',
+                  pointBorderColor: approvedColor,
+                  pointBorderWidth: 2,
+                  pointRadius: 5,
+                  pointHoverRadius: 7
+                },
+                {
+                  label: 'Rejected (Cumulative)',
+                  data: rejectedCumulative.length ? rejectedCumulative : [0],
+                  borderColor: rejectedColor,
+                  backgroundColor: rejectedFill,
+                  borderWidth: 2,
+                  fill: false,
+                  tension: 0.4,
+                  borderDash: [5, 4],
+                  pointBackgroundColor: isDarkMode ? '#3D4459' : '#fff',
+                  pointBorderColor: rejectedColor,
+                  pointBorderWidth: 2,
+                  pointRadius: 4,
+                  pointHoverRadius: 6
+                }
+              ]
             },
             options: {
               responsive: true,
@@ -109,7 +139,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                   x: { ticks: { color: textColor, maxRotation: 45, minRotation: 0 }, grid: { color: gridColor } },
                   y: { beginAtZero: true, ticks: { stepSize: 1, color: textColor }, grid: { color: gridColor } }
               },
-              plugins: { legend: { display: false } }
+              plugins: {
+                legend: {
+                  display: true,
+                  labels: { color: textColor, boxWidth: 14, padding: 16, font: { size: 12 } }
+                }
+              }
             }
           });
           window.chartInstance = chartInstance;

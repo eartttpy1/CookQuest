@@ -161,12 +161,24 @@ async function checkAndAwardBadges(user) {
       status: 'approved'
     }).lean();
     const badges = await Badge.find().lean();
+    let userUpdated = false;
+
+    // Sync completedRecipes count in database to match the unique approved recipes count
+    const uniqueApprovedMenus = new Set(
+      approvedDishes
+        .filter(d => d.menuName)
+        .map(d => d.menuName.toLowerCase().trim())
+    );
+    const uniqueCount = uniqueApprovedMenus.size;
+    if (user.completedRecipes !== uniqueCount) {
+      user.completedRecipes = uniqueCount;
+      userUpdated = true;
+    }
     
     if (!user.badges) {
       user.badges = [];
     }
     const earnedBadgeNames = user.badges.map(b => b.name);
-    let userUpdated = false;
 
     // Cache menus for healthy meals check
     let allMenus = null;

@@ -267,8 +267,13 @@ async function loadCompletedRecipes() {
         const response = await axios.get(`http://localhost:4000/api/history?userId=${userId}`);
         userHistoryData = response.data || [];
 
-        // Sync exact completed count dynamically from actual history 
-        const actualCompletedCount = userHistoryData.length;
+        // Sync exact completed count dynamically from actual history (only unique approved recipes)
+        const approvedUnique = new Set(
+            userHistoryData
+                .filter(h => h.status === 'approved' && h.requestId && h.requestId.menuName)
+                .map(h => h.requestId.menuName.toLowerCase().trim())
+        );
+        const actualCompletedCount = approvedUnique.size;
         document.getElementById('profile-completed').textContent = actualCompletedCount;
 
         if (userHistoryData.length === 0) {
@@ -630,7 +635,12 @@ async function loadUserProfile() {
             if (rankEl) rankEl.textContent = levelData.rank;
             
             updateXPDisplay();
-            const actualCompletedCount = (userHistoryData || []).length;
+            const approvedUnique = new Set(
+                (userHistoryData || [])
+                    .filter(h => h.status === 'approved' && h.requestId && h.requestId.menuName)
+                    .map(h => h.requestId.menuName.toLowerCase().trim())
+            );
+            const actualCompletedCount = approvedUnique.size;
             const compEl = document.getElementById('profile-completed');
             if (compEl) compEl.textContent = actualCompletedCount;
             const questsCompEl = document.getElementById('profile-quests-completed');

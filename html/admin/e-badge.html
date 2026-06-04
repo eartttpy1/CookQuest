@@ -122,28 +122,6 @@
                 <!-- Badges rendered from MongoDB dynamic query -->
             </div>
         </div>
-
-        <!-- Manual Badge Assignment Section -->
-        <div class="manual-assign-panel">
-            <h2 class="panel-title thai" style="font-weight: 700;">มอบเหรียญตราด้วยตนเอง</h2>
-            <div class="assign-form">
-                <div class="assign-row">
-                    <label class="assign-label thai" for="assignBadgeSelect">เลือกเหรียญตรา:</label>
-                    <select class="assign-select thai" id="assignBadgeSelect">
-                        <option value="">-- เลือกเหรียญตรา --</option>
-                    </select>
-                </div>
-                <div class="assign-row">
-                    <label class="assign-label thai" for="assignUserSelect">เลือกผู้ใช้งาน:</label>
-                    <select class="assign-select thai" id="assignUserSelect">
-                        <option value="">-- เลือกผู้ใช้งาน --</option>
-                    </select>
-                </div>
-                <button class="btn-assign thai" onclick="assignBadgeToUser()">
-                    <i class="fa-solid fa-gift"></i> มอบเหรียญตรา
-                </button>
-            </div>
-        </div>
     </main>
 
     <!-- ============== Delete Confirmation Modal ============== -->
@@ -190,7 +168,6 @@
                             <option value="cooking_streak">จำนวนวันที่ปรุงอาหารติดต่อกัน (Streak)</option>
                             <option value="star_rating">คะแนนรีวิวรสชาติต่ำสุดที่ได้รับ</option>
                             <option value="category_count">จำนวนเมนูสำเร็จในหมวดหมู่เฉพาะ</option>
-                            <option value="manual">มอบให้ด้วยตนเอง (ผู้ดูแลระบบเท่านั้น)</option>
                         </select>
                     </div>
 
@@ -203,8 +180,7 @@
 
                     <div class="form-row" id="ruleValueRow">
                         <label class="form-label thai" for="ruleValue">เป้าหมายค่าความต้องการ:</label>
-                        <input type="number" class="form-input" id="ruleValue" min="0" value="0">
-                        <span class="unit-label thai" id="ruleValueUnit">ค่าความต้องการ</span>
+                        <input type="number" class="form-input thai" id="ruleValue" min="0" value="0" placeholder="เป้าหมายค่าความต้องการ">
                     </div>
 
                     <div class="form-actions">
