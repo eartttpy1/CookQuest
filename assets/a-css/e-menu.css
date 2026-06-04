@@ -987,22 +987,21 @@ body.darkmode .exp-rank-tooltip::before {
 .exp-tooltip-item {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     gap: 3px;
 }
 
 .exp-rank-badge {
-    padding: 4px 6px;
+    padding: 5px 4px;
     border-radius: 5px;
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     font-weight: 700;
     text-align: center;
-    width: 100%;
     font-family: "Inria Serif", serif;
 }
 
 .exp-rank-xp {
-    font-size: 0.6rem;
+    font-size: 0.62rem;
     opacity: 0.85;
     text-align: center;
 }
